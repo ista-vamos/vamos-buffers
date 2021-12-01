@@ -8,12 +8,14 @@ struct buffer;
 struct buffer *get_shared_buffer(void);
 struct buffer *initialize_shared_buffer(void);
 void release_shared_buffer(struct buffer *);
+void destroy_shared_buffer(struct buffer *);
 /* get a local memory to which we can copy the shared buffer */
 struct buffer *get_local_buffer(struct buffer *shared_buffer);
 
 unsigned char *buffer_get_beginning(struct buffer *);
 unsigned short buffer_get_monitors_num(struct buffer *);
 size_t buffer_get_size(struct buffer *);
+_Bool buffer_is_ready(struct buffer *);
 
 /* TODO: move to monitor.h */
 void buffer_register_monitor(struct buffer *);
