@@ -9,15 +9,15 @@
 
 #include "shm.h"
 
-#define SLEEP_TIME 100
+#define SLEEP_TIME 1000
 #define MEM_SIZE 65536
-const char *default_key = "/monitor.shamon";
+const char *default_key = "/monitor.shamon.1";
 
 struct buffer_info {
 	/* size of the buffer*/
 	size_t size;
 	/* next write position */
-	unsigned char *pos;
+	size_t pos;
 	/* number of monitors monitoring this buffer */
 	unsigned short monitors_num;
 	/* how many monitors need all events, unused atm */
@@ -43,7 +43,12 @@ static inline unsigned char *buffer_get_data(struct buffer *buff)
 
 static inline size_t buffer_get_offset(struct buffer *buff)
 {
-	return buff->info.pos - buffer_get_data(buff);
+	return buff->info.pos;
+}
+
+static inline unsigned char *buffer_get_pos_pointer(struct buffer *buff)
+{
+	return buffer_get_data(buff) + buff->info.pos;
 }
 
 unsigned char *buffer_get_beginning(struct buffer *buff)
@@ -64,7 +69,37 @@ size_t buffer_get_size(struct buffer *buff)
 struct buffer *get_shared_buffer(void)
 {
 	const char *key = default_key;
-	int fd = shm_open(key, O_RDWR|O_CREAT, 0);
+	int fd = shm_open(key, O_RDWR, 0);
+	if(fd < 0) {
+		perror("shm_open");
+		return NULL;
+	}
+
+	void *mem = mmap(0, MEM_SIZE,
+			 PROT_READ|PROT_WRITE|PROT_EXEC, MAP_SHARED, fd, 0);
+	if (mem == MAP_FAILED) {
+		perror("mmap failure");
+		if (close(fd) == -1) {
+			perror("closing fd after mmap failure");
+		}
+		if (shm_unlink(key) == -1) {
+			perror("shm_unlink after mmap failure");
+		}
+		return NULL;
+	}
+
+	struct buffer *buff = (struct buffer *)mem;
+	/* FIXME -- we need to store fd somewhere locally... */
+	assert(buff->info.size == MEM_SIZE);
+//	buff->info.fd = fd;
+
+	return buff;
+}
+
+struct buffer *initialize_shared_buffer(void)
+{
+	const char *key = default_key;
+	int fd = shm_open(key, O_RDWR|O_CREAT, S_IRWXU);
 	if(fd < 0) {
 		perror("shm_open");
 		return NULL;
@@ -92,7 +127,6 @@ struct buffer *get_shared_buffer(void)
 	memset(buff, 0, sizeof(struct buffer_info));
 	buff->info.size = MEM_SIZE;
 	buff->info.fd = fd;
-	buff->info.pos = buffer_get_beginning(buff);
 
 	return buff;
 }
@@ -104,7 +138,6 @@ struct buffer *get_local_buffer(struct buffer *shared_buff)
 		return NULL;
 	memset(buff, 0, sizeof(struct buffer_info));
 	buff->info.size = shared_buff->info.size;
-	buff->info.pos = buffer_get_beginning(buff);
 
 	return buff;
 }
@@ -143,68 +176,73 @@ int buffer_write(struct buffer *buff, void *mem, size_t size) {
 			buff->info.full = 0;
 		}
 
-		buff->info.pos = buffer_get_data(buff);
+		buff->info.pos = 0;
 	}
 
-	memcpy(buff->info.pos, mem, size);
+	memcpy(buffer_get_pos_pointer(buff), mem, size);
 	buff->info.pos += size;
 
 	return 0;
 }
 
-static inline void _sync_buffers(struct buffer *shm_buff, struct buffer *buff,
-		    	         size_t shmlen, size_t len)
-{
-	size_t size = shmlen - len;
-	memcpy(buff->info.pos, shm_buff->info.pos - size, size);
-	buff->info.pos += size;
-	assert(buffer_get_offset(buff) == shmlen);
+static inline void checked_sleep(void) {
+	if (usleep(SLEEP_TIME) == -1) {
+		perror("usleep error");
+	}
 }
 
-size_t buffer_sync(struct buffer *shm_buff, struct buffer *buff)
+static inline size_t _copy_and_sync_buffers(struct buffer *shm_buff, struct buffer *buff,
+		    	                  size_t shmlen, size_t len)
+{
+	size_t size = shmlen - len;
+	/* we always write the new data at the beginning of the buffer */
+	memcpy(buffer_get_pos_pointer(buff),
+	       buffer_get_data(shm_buff) + (shm_buff->info.pos - size),
+	       size);
+	buff->info.pos += size;
+	assert(buffer_get_offset(buff) == shmlen);
+	return size;
+}
+
+
+size_t buffer_read(struct buffer *shm_buff, struct buffer *buff)
 {
 	/* do we have something to read? */
-	size_t shmlen = buffer_get_offset(shm_buff);
+	size_t shmlen;
 	size_t len = buffer_get_offset(buff);
 
 	/* wait for data if needed */
-	assert(shmlen >= len);
-	if (shmlen == len) {
-		_Bool synced_full = 0;
-		while ((shmlen = buffer_get_offset(shm_buff)) == len) {
-			if (!synced_full && shm_buff->info.full) {
-				/* there may have been some data written
-				 * between the last check and setting the
-				 * full flag. But right now with the
-				 * flag set the data cannot change */
-				if (shmlen != len) {
-					_sync_buffers(shm_buff, buff,
-						      shmlen, len);
-				}
-				assert(shm_buff->info.sync_monitors_num
-						> shm_buff->info.monitors_synced);
-				++buff->info.monitors_synced;
-				/* keep waiting until the buffer gets rotated */
-				synced_full = 1;
+	while ((shmlen = buffer_get_offset(shm_buff)) == len) {
+		if (shm_buff->info.full) {
+			/* there may have been some data written
+			 * between the last check and setting the
+			 * full flag. Read these data, so that we are
+			 * synced in the next call of buffer_read() */
+			if (shmlen != len) {
+				return _copy_and_sync_buffers(shm_buff, buff,
+				                              shmlen, len);
 			}
-			if (usleep(SLEEP_TIME) == -1) {
-				perror("usleep error");
+
+			/* we are synced (as the shared buffer cannot change
+			 * when it is full until we signal it */
+			assert(shm_buff->info.sync_monitors_num
+					> shm_buff->info.monitors_synced);
+			// FIXME: we must do this atomically!
+			++buff->info.monitors_synced;
+			/* keep waiting until the buffer gets rotated */
+			while (shm_buff->info.full) {
+				checked_sleep();
 			}
-		}
-		if (synced_full) {
 			/* shared buffer got rotated, so rotate also
 			 * the local buffer */
-			buff->info.pos = buffer_get_data(buff);
-			len = 0;
+			buff->info.pos = 0;
+			return 0;
 		}
-		_sync_buffers(shm_buff, buff, shmlen, len);
-	} else {
-		/* there are some data to sync */
-		assert(shmlen > len);
-		_sync_buffers(shm_buff, buff, shmlen, 0);
+		assert(!shm_buff->info.full);
+		checked_sleep();
 	}
 
-	return 0;
+	return _copy_and_sync_buffers(shm_buff, buff, shmlen, len);
 }
 
 /* TODO: make these operations atomic once we have multiple monitors/clients */

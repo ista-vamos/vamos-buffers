@@ -1,4 +1,4 @@
-CFLAGS=-fPIC -Wall -Werror -Wextra -O2
+CFLAGS=-fPIC -Wall -Werror -Wextra -g
 
 all: shamon.so shamon.a
 
