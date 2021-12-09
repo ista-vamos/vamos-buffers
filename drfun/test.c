@@ -8,7 +8,8 @@ int foo2(int *y) {
 
 int main(void) {
 	int a = 10;
-	a = foo2(&a);
+	for (int i = 0; i < 1000; ++i)
+		a = foo2(&a);
 	printf("%d\n", a);
 	return 0;
 }

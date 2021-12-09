@@ -1,11 +1,11 @@
 CFLAGS=-fPIC -Wall -Werror -Wextra -g
 
-all: shamon.so shamon.a
+all: libshamon.so libshamon.a
 
-shamon.so: shm.o client.o monitor.o
+libshamon.so: shm.o client.o monitor.o
 	$(CC) -shared $^ -o $@
 
-shamon.a: shm.o client.o monitor.o
+libshamon.a: shm.o client.o monitor.o
 	ar rcs $@ $^
 
 shm.o: shm.c shm.h

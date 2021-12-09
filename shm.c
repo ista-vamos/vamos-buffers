@@ -6,11 +6,12 @@
 #include <sys/mman.h>
 #include <errno.h>
 #include <string.h>
+#include <time.h>
 
 #include "shm.h"
 
-#define SLEEP_TIME 1000
-#define MEM_SIZE 65536
+#define SLEEP_TIME_NS 10000
+#define MEM_SIZE 1041664
 const char *default_key = "/monitor.shamon.1";
 
 struct buffer_info {
@@ -174,8 +175,9 @@ void destroy_shared_buffer(struct buffer *buff)
 
 
 static inline void checked_sleep(void) {
-	if (usleep(SLEEP_TIME) == -1) {
-		perror("usleep error");
+	static struct timespec ts = { .tv_nsec = SLEEP_TIME_NS };
+	if (nanosleep(&ts, NULL) == -1) {
+		perror("nanosleep error");
 	}
 }
 

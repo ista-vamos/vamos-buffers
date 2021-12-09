@@ -9,3 +9,8 @@ endif(NOT DynamoRIO_FOUND)
 use_DynamoRIO_extension(funs drmgr)
 use_DynamoRIO_extension(funs drsyms)
 configure_DynamoRIO_client(funs)
+
+SET (CMAKE_VERBOSE_MAKEFILE 1)
+include_directories("${CMAKE_SOURCE_DIR}/..")
+target_link_libraries(funs pthread rt)
+
