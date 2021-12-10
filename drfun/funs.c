@@ -67,6 +67,7 @@
 #    include "drsyms.h"
 #endif
 
+#include "shm.h"
 
 static void
 event_exit(void);
@@ -75,74 +76,8 @@ static dr_emit_flags_t
 event_app_instruction(void *drcontext, void *tag, instrlist_t *bb, instr_t *instr,
                       bool for_trace, bool translating, void *user_data);
 
-#define SLEEP_TIME_NS 10000
-#define MEM_SIZE 1041664
-const char *default_key = "/monitor.shamon.1";
-
-struct buffer_info {
-	/* size of the buffer*/
-	size_t size;
-	/* next write position */
-	size_t pos;
-	/* number of monitors monitoring this buffer */
-	unsigned short monitors_num;
-	/* how many monitors need all events, unused atm */
-	unsigned short sync_monitors_num;
-	/* counter of already synced monitors, unused atm */
-	unsigned short monitors_synced;
-	/* is the buffer full? (serves also as a counter) */
-	size_t full;
-	/* the monitored program exited/destroyed the buffer */
-	_Bool destroyed;
-	/* shm filedescriptor */
-	int fd; 
-} __attribute__((aligned(8)));
-
-struct buffer {
-	struct buffer_info __attribute__((aligned(8))) info;
-	/* pointer to the beginning of data */
-	unsigned char data[MEM_SIZE];
-};
-
-
-
 static struct buffer *shm;
 
-static struct buffer *
-initialize_shared_buffer(void)
-{
-	const char *key = default_key;
-	int fd = shm_open(key, O_RDWR|O_CREAT, S_IRWXU);
-	if(fd < 0) {
-		perror("shm_open");
-		return NULL;
-	}
-
-	if((ftruncate(fd, sizeof(struct buffer))) == -1) {
-		perror("ftruncate");
-		return NULL;
-	}
-
-	void *mem = mmap(0, sizeof(struct buffer),
-			 PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-	if (mem == MAP_FAILED) {
-		perror("mmap failure");
-		if (close(fd) == -1) {
-			perror("closing fd after mmap failure");
-		}
-		if (shm_unlink(key) == -1) {
-			perror("shm_unlink after mmap failure");
-		}
-		return NULL;
-	}
-
-	struct buffer *buff = (struct buffer *)mem;
-	memset(buff, 0, sizeof(struct buffer_info));
-	buff->info.size = MEM_SIZE;
-	buff->info.fd = fd;
-
-	return buff;
-}
 
 DR_EXPORT void
 dr_client_main(client_id_t id, int argc, const char *argv[])
@@ -171,14 +106,14 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
     dr_register_exit_event(event_exit);
 
     shm = initialize_shared_buffer();
-   //DR_ASSERT(shm);
+    DR_ASSERT(shm);
     drmgr_register_bb_instrumentation_event(NULL, event_app_instruction, 0);
 }
 
 static void
 event_exit(void)
 {
-    //destroy_shared_buffer(shm);
+    destroy_shared_buffer(shm);
 #ifdef SHOW_SYMBOLS
     if (drsym_exit() != DRSYM_SUCCESS) {
         dr_log(NULL, DR_LOG_ALL, 1, "WARNING: error cleaning up symbol library\n");
@@ -277,8 +212,7 @@ static dr_emit_flags_t
 event_app_instruction(void *drcontext, void *tag, instrlist_t *bb, instr_t *instr,
                       bool for_trace, bool translating, void *user_data)
 {
-#define VERBOSE 1
-#define VERBOSE_VERBOSE 1
+/*
 #ifdef VERBOSE
     if (drmgr_is_first_instr(drcontext, instr)) {
         dr_printf("in dr_basic_block(tag=" PFX ")\n", tag);
@@ -297,14 +231,5 @@ event_app_instruction(void *drcontext, void *tag, instrlist_t *bb, instr_t *inst
         dr_insert_mbr_instrumentation(drcontext, bb, instr, (app_pc)at_return,
                                       SPILL_SLOT_1);
     }
-#ifdef VERBOSE
-    if (drmgr_is_last_instr(drcontext, instr)) {
-        dr_printf("---- after instrumentation ----\n");
-#    if VERBOSE_VERBOSE
-        instrlist_disassemble(drcontext, tag, bb, STDOUT);
-#    endif
-    }
-#endif
-
     return DR_EMIT_DEFAULT;
 }

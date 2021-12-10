@@ -1,7 +1,7 @@
 project(DrShamon)
 cmake_minimum_required(VERSION 3.0)
 
-add_library(funs SHARED funs.c)
+add_library(funs SHARED funs.c ../shm.c)
 find_package(DynamoRIO)
 if (NOT DynamoRIO_FOUND)
 	  message(FATAL_ERROR "DynamoRIO package required to build")
@@ -12,5 +12,4 @@ configure_DynamoRIO_client(funs)
 
 SET (CMAKE_VERBOSE_MAKEFILE 1)
 include_directories("${CMAKE_SOURCE_DIR}/..")
-target_link_libraries(funs pthread rt)
 

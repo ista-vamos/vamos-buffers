@@ -10,6 +10,7 @@
 
 #include "shm.h"
 
+#define SHM_NAME_MAXLEN 256
 #define SLEEP_TIME_NS 10000
 #define MEM_SIZE 1041664
 const char *default_key = "/monitor.shamon.1";
@@ -74,10 +75,55 @@ size_t buffer_get_size(struct buffer *buff)
 	return buff->info.size;
 }
 
+const char *shm_dir = "/dev/shm/";
+const size_t shm_dirlen = 9;
+
+/* adapted function from musl project, src/mman/shm_open.c
+ * and from libc sysdeps/posix/shm-directory.h */
+char *shm_mapname(const char *name, char *buf)
+{
+	printf("key: %s\n", name);
+	assert(name[0] == '/');
+	/* Construct the filename.  */
+	while (name[0] == '/')
+		++name;	
+	size_t namelen = strlen (name) + 1;
+	/* Validate the filename.  */
+	if (namelen == 1 || namelen >= SHM_NAME_MAXLEN ||
+	    strchr(name, '/') != NULL) {
+		assert(0 && "valid shm name");
+		return 0;
+	}
+	if (SHM_NAME_MAXLEN <= shm_dirlen + namelen) {
+		assert(0 && "buffer too short");
+		return 0;
+	}
+	memcpy(buf, shm_dir, shm_dirlen);
+	memcpy(buf + shm_dirlen, name, namelen);
+	buf[shm_dirlen + namelen] = '\0';
+
+	return buf;
+}
+
+static int shamon_shm_open(const char *key, int flags, mode_t mode)
+{
+	char name[SHM_NAME_MAXLEN];
+	if (shm_mapname(key, name) == 0)
+		abort();
+	return open(name, flags | O_NOFOLLOW|O_CLOEXEC|O_NONBLOCK, mode);
+}
+
+static int shamon_shm_unlink(const char *key) {
+	char name[SHM_NAME_MAXLEN];
+	if (shm_mapname(key, name) == 0)
+		abort();
+	return unlink(key);
+}
+
 struct buffer *get_shared_buffer(void)
 {
 	const char *key = default_key;
-	int fd = shm_open(key, O_RDWR, 0);
+	int fd = shamon_shm_open(key, O_RDWR, 0);
 	if(fd < 0) {
 		perror("shm_open");
 		return NULL;
@@ -90,7 +136,7 @@ struct buffer *get_shared_buffer(void)
 		if (close(fd) == -1) {
 			perror("closing fd after mmap failure");
 		}
-		if (shm_unlink(key) == -1) {
+		if (shamon_shm_unlink(key) == -1) {
 			perror("shm_unlink after mmap failure");
 		}
 		return NULL;
@@ -107,7 +153,7 @@ struct buffer *get_shared_buffer(void)
 struct buffer *initialize_shared_buffer(void)
 {
 	const char *key = default_key;
-	int fd = shm_open(key, O_RDWR|O_CREAT, S_IRWXU);
+	int fd = shamon_shm_open(key, O_RDWR|O_CREAT, S_IRWXU);
 	if(fd < 0) {
 		perror("shm_open");
 		return NULL;
@@ -125,7 +171,7 @@ struct buffer *initialize_shared_buffer(void)
 		if (close(fd) == -1) {
 			perror("closing fd after mmap failure");
 		}
-		if (shm_unlink(key) == -1) {
+		if (shamon_shm_unlink(key) == -1) {
 			perror("shm_unlink after mmap failure");
 		}
 		return NULL;
@@ -160,7 +206,7 @@ void release_shared_buffer(struct buffer *buff)
 	if (close(fd) == -1) {
 		perror("closing fd after mmap failure");
 	}
-	if (shm_unlink(default_key) == -1) {
+	if (shamon_shm_unlink(default_key) == -1) {
 		perror("shm_unlink failure");
 	}
 }
