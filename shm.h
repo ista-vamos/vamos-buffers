@@ -30,6 +30,9 @@ size_t buffer_sync(struct buffer *, struct buffer *);
 /* sync shared buffer into a local buffer but always put the new data at
  * the beginning of the buffer (and return the size of data) */
 size_t buffer_read(struct buffer *, struct buffer *);
+
+size_t buffer_get_pos_offset(void);
+size_t buffer_allocation_size(void);
 /*
 int buffer_sync_read(struct buffer *, unsigned char *pos, void *mem, size_t size);
 int buffer_read(struct buffer *, unsigned char *pos, void *mem, size_t size);

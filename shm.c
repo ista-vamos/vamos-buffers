@@ -50,6 +50,15 @@ static inline size_t buffer_get_offset(struct buffer *buff)
 	return buff->info.pos;
 }
 
+size_t buffer_allocation_size(void) {
+	return sizeof(struct buffer);
+}
+
+size_t buffer_get_pos_offset(void)
+{
+	return offsetof(struct buffer, info) + offsetof(struct buffer_info, pos);
+}
+
 static inline unsigned char *buffer_get_pos_pointer(struct buffer *buff)
 {
 	return buffer_get_data(buff) + buff->info.pos;
