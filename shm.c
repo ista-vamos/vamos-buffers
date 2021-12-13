@@ -82,7 +82,6 @@ const size_t shm_dirlen = 9;
  * and from libc sysdeps/posix/shm-directory.h */
 char *shm_mapname(const char *name, char *buf)
 {
-	printf("key: %s\n", name);
 	assert(name[0] == '/');
 	/* Construct the filename.  */
 	while (name[0] == '/')
@@ -136,7 +135,7 @@ struct buffer *get_shared_buffer(void)
 		if (close(fd) == -1) {
 			perror("closing fd after mmap failure");
 		}
-		if (shamon_shm_unlink(key) == -1) {
+		if (shamon_shm_unlink(key) != 0) {
 			perror("shm_unlink after mmap failure");
 		}
 		return NULL;
@@ -171,7 +170,7 @@ struct buffer *initialize_shared_buffer(void)
 		if (close(fd) == -1) {
 			perror("closing fd after mmap failure");
 		}
-		if (shamon_shm_unlink(key) == -1) {
+		if (shamon_shm_unlink(key) != 0) {
 			perror("shm_unlink after mmap failure");
 		}
 		return NULL;
@@ -200,13 +199,13 @@ struct buffer *get_local_buffer(struct buffer *shared_buff)
 void release_shared_buffer(struct buffer *buff)
 {
 	int fd = buff->info.fd;
-	if (munmap(buff, sizeof(struct buffer))) {
+	if (munmap(buff, sizeof(struct buffer)) != 0) {
 		perror("munmap failure");
 	}
 	if (close(fd) == -1) {
 		perror("closing fd after mmap failure");
 	}
-	if (shamon_shm_unlink(default_key) == -1) {
+	if (shamon_shm_unlink(default_key) != 0) {
 		perror("shm_unlink failure");
 	}
 }
