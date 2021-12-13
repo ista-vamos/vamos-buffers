@@ -226,28 +226,35 @@ static inline void checked_sleep(void) {
 	}
 }
 
+static void buffer_rotate(struct buffer *buff) {
+	if (buff->info.sync_monitors_num > 0) {
+		buff->info.monitors_synced = 0;
+		assert(buff->info.monitors_synced == 0);
+		/* XXX: we assume only one writer */
+		++buff->info.full;
+		/* wait until all synchronous monitors read the buffer */
+		while (buff->info.monitors_synced
+				!= buff->info.sync_monitors_num) {
+			checked_sleep();
+		}
+		++buff->info.full;
+	}
+
+	buff->info.pos = 0;
+}
+
 
 int buffer_write(struct buffer *buff, void *mem, size_t size) {
 	assert(!buff->info.destroyed && "Writing to a destroyed buffer");
 
+	/*
 	if (size > MEM_SIZE)
 		return -1;
+	*/
 	if (buffer_get_offset(buff) > MEM_SIZE - size) {
-		/* buffer is full */
-		if (buff->info.sync_monitors_num > 0) {
-			buff->info.monitors_synced = 0;
-			assert(buff->info.monitors_synced == 0);
-			/* XXX: we assume only one writer */
-			++buff->info.full;
-			/* wait until all synchronous monitors read the buffer */
-			while (buff->info.monitors_synced
-					!= buff->info.sync_monitors_num) {
-				checked_sleep();
-			}
-			++buff->info.full;
-		}
-
-		buff->info.pos = 0;
+		/* buffer is full, wait until all monitors
+		 * are synced and then rotate it */
+		buffer_rotate(buff);
 	}
 
 	memcpy(buffer_get_pos_pointer(buff), mem, size);
