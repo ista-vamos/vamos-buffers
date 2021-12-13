@@ -23,6 +23,7 @@ void buffer_register_sync_monitor(struct buffer *);
 void buffer_unregister_monitor(struct buffer *);
 void buffer_unregister_sync_monitor(struct buffer *);
 
+void buffer_rotate(struct buffer *buff);
 int buffer_write(struct buffer *buff, void *mem, size_t size);
 /* sync shared buffer into a local buffer */
 size_t buffer_sync(struct buffer *, struct buffer *);

@@ -226,7 +226,7 @@ static inline void checked_sleep(void) {
 	}
 }
 
-static void buffer_rotate(struct buffer *buff) {
+void buffer_rotate(struct buffer *buff) {
 	if (buff->info.sync_monitors_num > 0) {
 		buff->info.monitors_synced = 0;
 		assert(buff->info.monitors_synced == 0);
