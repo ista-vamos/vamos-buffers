@@ -12,7 +12,7 @@
 
 #define SHM_NAME_MAXLEN 256
 #define SLEEP_TIME_NS 10000
-#define MEM_SIZE 1041664
+#define MEM_SIZE 1024 //1041664
 const char *default_key = "/monitor.shamon.1";
 
 struct buffer_info {
@@ -45,7 +45,7 @@ static inline unsigned char *buffer_get_data(struct buffer *buff)
 	return buff->data;
 }
 
-static inline size_t buffer_get_offset(struct buffer *buff)
+size_t buffer_get_offset(struct buffer *buff)
 {
 	return buff->info.pos;
 }
@@ -312,8 +312,8 @@ size_t buffer_read(struct buffer *shm_buff, struct buffer *buff)
 			assert(shm_buff->info.full == fullid + 1);
 			assert(shm_buff->info.sync_monitors_num
 					> shm_buff->info.monitors_synced);
-			// __sync_fetch_and_add(&shm_buff->info.monitors_synced, 1);
-			++shm_buff->info.monitors_synced;
+			 __sync_fetch_and_add(&shm_buff->info.monitors_synced, 1);
+			//++shm_buff->info.monitors_synced;
 			/* monitors_synced now cannot be reset */
 			assert(shm_buff->info.monitors_synced >= 1);
 

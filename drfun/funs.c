@@ -1,7 +1,5 @@
 /* **********************************************************
  * Copyright (c) 2021 IST Austria.  All rights reserved.
- * Copyright (c) 2012-2018 Google, Inc.  All rights reserved.
- * Copyright (c) 2002-2010 VMware, Inc.  All rights reserved.
  * **********************************************************/
 
 /*
@@ -33,41 +31,35 @@
  */
 
 /* 
- * This code is a rewritten file instrcalls.c from DynamoRIO API samples.
- *
- * Code Manipulation API Sample:
- * instrcalls.c
- *
- * Instruments direct calls, indirect calls, and returns in the target
- * application.  For each dynamic execution, the call target and other
- * key information is written to a log file.  Note that this log file
- * can become quite large, and this client incurs more overhead than
- * the other clients due to its log file.
- *
- * If the SHOW_SYMBOLS define is on, this sample uses the drsyms
- * DynamoRIO Extension to obtain symbol information from raw
- * addresses.  This requires a relatively recent copy of dbghelp.dll
- * (6.0+), which is not available in the system directory by default
- * on Windows 2000.  To use this sample with SHOW_SYMBOLS on Windows
- * 2000, download the Debugging Tools for Windows package from
- * http://www.microsoft.com/whdc/devtools/debugging/default.mspx and
- * place dbghelp.dll in the same directory as either drsyms.dll or as
- * this sample client library.
+ * We took inspiration in instrace_simple.c and instrcalls.c sample
+ * tools from DynamoRIO.
  */
 
 #define SHOW_SYMBOLS 1
 #include <string.h>
 #include <unistd.h>
+#include <stdint.h>
 #include <sys/mman.h>
 #include <sys/file.h>
 
 #include "dr_api.h"
 #include "drmgr.h"
+#include "drreg.h"
+#include "drutil.h"
 #ifdef SHOW_SYMBOLS
 #    include "drsyms.h"
 #endif
 
 #include "shm.h"
+#include "client.h"
+
+#ifdef WINDOWS
+#    define IF_WINDOWS(x) x
+#else
+#    define IF_WINDOWS(x) /* nothing */
+#endif
+
+#include "events.h"
 
 static void
 event_exit(void);
@@ -77,18 +69,24 @@ event_app_instruction(void *drcontext, void *tag, instrlist_t *bb, instr_t *inst
                       bool for_trace, bool translating, void *user_data);
 
 static struct buffer *shm;
+static module_data_t *main_module;
 
+struct call_event_spec events[] = {
+	{
+		.name = "isprime",
+		.signature = "i"
+	},
+};
 
 DR_EXPORT void
 dr_client_main(client_id_t id, int argc, const char *argv[])
 {
-    dr_set_client_name("DynamoRIO Sample Client 'instrcalls'",
+    dr_set_client_name("Track calls and returns",
                        "http://dynamorio.org/issues");
     drmgr_init();
     /* make it easy to tell, by looking at log file, which client executed */
-    dr_log(NULL, DR_LOG_ALL, 1, "Client 'instrcalls' initializing\n");
+    dr_log(NULL, DR_LOG_ALL, 1, "Client 'drfun' initializing\n");
     /* also give notification to stderr */
-#ifdef SHOW_RESULTS
     if (dr_is_notify_on()) {
 #    ifdef WINDOWS
         /* ask for best-effort printing to cmd window.  must be called at init. */
@@ -96,23 +94,41 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
 #    endif
         dr_fprintf(STDERR, "Client instrcalls is running\n");
     }
-#endif
 
-#ifdef SHOW_SYMBOLS
     if (drsym_init(0) != DRSYM_SUCCESS) {
         dr_log(NULL, DR_LOG_ALL, 1, "WARNING: unable to initialize symbol translation\n");
     }
-#endif
     dr_register_exit_event(event_exit);
 
+    // TODO: use to instrument only main module: dr_module_set_should_instrument()
+    main_module = dr_get_main_module();
+    drsym_error_t ok = drsym_lookup_symbol(main_module->full_path,
+					   events[0].name,
+					   &events[0].addr,
+					   /* flags = */ 0);
+    if (ok == DRSYM_ERROR_LINE_NOT_AVAILABLE || ok == DRSYM_SUCCESS) {
+	    dr_printf("Found %s:%s at %lu\n",
+		      main_module->full_path,
+		      events[0].name,
+		      events[0].addr);
+    } else {
+	    dr_fprintf(STDERR, "Cannot find %s:%s\n",
+		       main_module->full_path,
+		       events[0].name);
+	    DR_ASSERT(0);
+    }
+    DR_ASSERT(main_module);
     shm = initialize_shared_buffer();
     DR_ASSERT(shm);
     drmgr_register_bb_instrumentation_event(NULL, event_app_instruction, 0);
+
+    buffer_wait_for_monitor(shm);
 }
 
 static void
 event_exit(void)
 {
+    dr_free_module_data(main_module);
     destroy_shared_buffer(shm);
 #ifdef SHOW_SYMBOLS
     if (drsym_exit() != DRSYM_SUCCESS) {
@@ -122,114 +138,244 @@ event_exit(void)
     drmgr_exit();
 }
 
-#ifdef WINDOWS
-#    define IF_WINDOWS(x) x
-#else
-#    define IF_WINDOWS(x) /* nothing */
-#endif
+#define INSERT instrlist_meta_preinsert
 
-#ifdef SHOW_SYMBOLS
-#    define MAX_SYM_RESULT 256
+/* load the offset in buffer and store it into 'reg_tmp' */
 static void
-print_address(file_t f, app_pc addr, const char *prefix)
+insert_load_buf_off(void *drcontext, instrlist_t *ilist,
+		    instr_t *where, reg_id_t reg_ptr, reg_id_t reg_tmp)
 {
-    drsym_error_t symres;
-    drsym_info_t sym;
-    char name[MAX_SYM_RESULT];
-    char file[MAXIMUM_PATH];
-    module_data_t *data;
-    data = dr_lookup_module(addr);
-    if (data == NULL) {
-        dr_fprintf(f, "%s " PFX " ? ??:0\n", prefix, addr);
-        return;
-    }
-    sym.struct_size = sizeof(sym);
-    sym.name = name;
-    sym.name_size = MAX_SYM_RESULT;
-    sym.file = file;
-    sym.file_size = MAXIMUM_PATH;
-    symres = drsym_lookup_address(data->full_path, addr - data->start, &sym,
-                                  DRSYM_DEFAULT_FLAGS);
-    if (symres == DRSYM_SUCCESS || symres == DRSYM_ERROR_LINE_NOT_AVAILABLE) {
-        const char *modname = dr_module_preferred_name(data);
-        if (modname == NULL)
-            modname = "<noname>";
-        dr_fprintf(f, "%s " PFX " %s!%s+" PIFX, prefix, addr, modname, sym.name,
-                   addr - data->start - sym.start_offs);
-        if (symres == DRSYM_ERROR_LINE_NOT_AVAILABLE) {
-            dr_fprintf(f, " ??:0\n");
-        } else {
-            dr_fprintf(f, " %s:%" UINT64_FORMAT_CODE "+" PIFX "\n", sym.file, sym.line,
-                       sym.line_offs);
+	if (!drutil_insert_get_mem_addr(drcontext, ilist, where,
+				   opnd_create_rel_addr(shm, sizeof(shm)),
+				   reg_ptr, reg_tmp)) {
+		DR_ASSERT(0);
+	}
+	INSERT(ilist, where,
+	       XINST_CREATE_load(drcontext,
+				 opnd_create_reg(reg_tmp),
+	                         OPND_CREATE_MEMPTR(reg_ptr,
+						    buffer_get_pos_offset())));
+}
+
+static void
+compare_buf_off(void *drcontext, instrlist_t *ilist,
+		instr_t *where, reg_id_t scratch,
+		reg_id_t reg_tmp, size_t max_val, size_t len)
+{
+	/* scratch has been used to store a pointer, so it has size
+	 * to fit size_t. Store the maximal offset into it */
+	INSERT(ilist, where,
+		XINST_CREATE_load_int(drcontext, opnd_create_reg(scratch),
+                                  OPND_CREATE_INT64(max_val - len)));
+	/* compare the buffer offset with the maximal offset that
+	 * we can have */
+	INSERT(ilist, where,
+	       XINST_CREATE_cmp(drcontext,
+				opnd_create_reg(reg_tmp),
+	                        opnd_create_reg(scratch)));
+}
+
+
+static void rotate_buffer(void) {
+	dr_fprintf(STDOUT, "Rotating buffer\n");
+	buffer_rotate(shm);
+}
+
+static void
+rotate_if_needed(void *drcontext, instrlist_t *ilist,
+		 instr_t *where, reg_id_t scratch,
+		 reg_id_t reg_tmp)
+{
+
+	/* reg_tmp now contains the offset into the buffer */
+	compare_buf_off(drcontext, ilist, where, scratch, reg_tmp,
+			buffer_allocation_size(), /* len = */ 12);
+
+	/* this is the last inserted instruction */
+	instr_t *cmp = instr_get_prev(where);
+	DR_ASSERT(cmp); /* we've already inserted instruction before */
+	instr_t *call_entry = INSTR_CREATE_label(drcontext);
+
+	dr_insert_clean_call(drcontext, ilist, where,
+			     (void *) rotate_buffer,
+			     /* safe_fp_state = */ false,
+			     /* num_args = */ 0);
+
+	/* set the offset to 0 after rotating*/
+	INSERT(ilist, where,
+		XINST_CREATE_load_int(drcontext, opnd_create_reg(reg_tmp),
+                                  OPND_CREATE_INT64(0)));
+
+	INSERT(ilist, where, call_entry);
+	/* Note that this instruction is inserted 'before'
+	 * all the code that has been inserted by dr_insert_clean_call() */
+	INSERT(ilist, instr_get_next(cmp),
+	       XINST_CREATE_jump_cond(drcontext,
+				      DR_PRED_L,
+				      opnd_create_instr(call_entry)));
+}
+
+static size_t
+write_call(void *drcontext, instrlist_t *ilist,
+	   instr_t *where, reg_id_t reg_ptr, reg_id_t reg_tmp,
+	   size_t addr)
+{
+	/* get pointer to the data */
+	if (!drutil_insert_get_mem_addr(drcontext, ilist, where,
+				   opnd_create_rel_addr(buffer_get_beginning(shm),
+					                sizeof(void *)),
+				   reg_ptr, reg_ptr)) {
+		// TODO: cannot reg_ptr, reg_ptr make trouble?
+		DR_ASSERT(0);
+	}
+	INSERT(ilist, where,
+	       XINST_CREATE_add(drcontext,
+				opnd_create_reg(reg_ptr),
+				opnd_create_reg(reg_tmp)));
+
+	INSERT(ilist, where,
+		XINST_CREATE_load_int(drcontext, opnd_create_reg(reg_tmp),
+	                          OPND_CREATE_INT64(addr)));
+	INSERT(ilist, where,
+	       XINST_CREATE_store(drcontext,
+				  OPND_CREATE_MEM64(reg_ptr, 0),
+				  opnd_create_reg(reg_tmp)));
+
+	/* store the first argument */
+	INSERT(ilist, where,
+	       XINST_CREATE_store(drcontext,
+				  OPND_CREATE_MEM32(reg_ptr, sizeof(size_t)),
+				  opnd_create_reg(DR_REG_EDI)));
+
+	return sizeof(size_t) + 4;
+#if 0
+	/* shift pointer by 4 bytes */
+	INSERT(ilist, where,
+	       XINST_CREATE_add(drcontext,
+				opnd_create_reg(reg_ptr),
+				OPND_CREATE_INT64(4)));
+
+	/* store the second argument */
+	INSERT(ilist, where,
+	       XINST_CREATE_store(drcontext,
+				  OPND_CREATE_MEM32(reg_ptr, 0),
+				  opnd_create_reg(DR_REG_ESI)));
+
+#endif
+}
+
+static void
+update_buf_off(void *drcontext, instrlist_t *ilist,
+	       instr_t *where, reg_id_t reg_ptr, reg_id_t reg_tmp,
+	       size_t add_len)
+{
+	if (!drutil_insert_get_mem_addr(drcontext, ilist, where,
+				   opnd_create_rel_addr(shm, sizeof(shm)),
+				   reg_ptr, reg_tmp)) {
+		DR_ASSERT(0);
+	}
+	INSERT(ilist, where,
+	       XINST_CREATE_load(drcontext,
+				 opnd_create_reg(reg_tmp),
+	                         OPND_CREATE_MEMPTR(reg_ptr,
+						    buffer_get_pos_offset())));
+	INSERT(ilist, where,
+	       XINST_CREATE_add(drcontext,
+				opnd_create_reg(reg_tmp),
+				OPND_CREATE_INT64(add_len)));
+	INSERT(ilist, where,
+	       XINST_CREATE_store(drcontext,
+	                          OPND_CREATE_MEMPTR(reg_ptr,
+						    buffer_get_pos_offset()),
+				  opnd_create_reg(reg_tmp)));
+}
+
+/* adapted from instrcalls.c */
+static app_pc
+call_get_target(instr_t *instr) {
+    app_pc target = 0;
+    opnd_t targetop = instr_get_target(instr);
+    if (opnd_is_pc(targetop)) {
+        if (opnd_is_far_pc(targetop)) {
+            DR_ASSERT(false &&
+                          "call_get_target: far pc not supported");
         }
-    } else
-        dr_fprintf(f, "%s " PFX " ? ??:0\n", prefix, addr);
-    dr_free_module_data(data);
-}
-#endif
-
-static void
-at_call(app_pc instr_addr, app_pc target_addr)
-{
-    file_t f = STDOUT;
-    dr_mcontext_t mc = { sizeof(mc), DR_MC_CONTROL /*only need xsp*/ };
-    dr_get_mcontext(dr_get_current_drcontext(), &mc);
-#ifdef SHOW_SYMBOLS
-    print_address(f, instr_addr, "CALL @ ");
-    print_address(f, target_addr, "\t to ");
-    dr_fprintf(f, "\tTOS is " PFX "\n", mc.xsp);
-#else
-    dr_fprintf(f, "CALL @ " PFX " to " PFX ", TOS is " PFX "\n", instr_addr, target_addr,
-               mc.xsp);
-#endif
-}
-
-static void
-at_call_ind(app_pc instr_addr, app_pc target_addr)
-{
-    file_t f = STDOUT;
-#ifdef SHOW_SYMBOLS
-    print_address(f, instr_addr, "CALL INDIRECT @ ");
-    print_address(f, target_addr, "\t to ");
-#else
-    dr_fprintf(f, "CALL INDIRECT @ " PFX " to " PFX "\n", instr_addr, target_addr);
-#endif
-}
-
-static void
-at_return(app_pc instr_addr, app_pc target_addr)
-{
-    file_t f = STDOUT;
-#ifdef SHOW_SYMBOLS
-    print_address(f, instr_addr, "RETURN @ ");
-    print_address(f, target_addr, "\t to ");
-#else
-    dr_fprintf(f, "RETURN @ " PFX " to " PFX "\n", instr_addr, target_addr);
-#endif
+        target = (app_pc)opnd_get_pc(targetop);
+    } else if (opnd_is_instr(targetop)) {
+       //instr_t *tgt = opnd_get_instr(targetop);
+       //target = (app_pc)instr_get_translation(tgt);
+        DR_ASSERT(target != 0 &&
+                  "call_get_target: unknown target");
+       //if (opnd_is_far_instr(targetop)) {
+       //    /* FIXME: handle far instr */
+       //    DR_ASSERT(false &&
+       //              "call_get_target: far instr "
+       //              "not supported");
+       //}
+    } else {
+        DR_ASSERT(false && "call_get_target: unknown target");
+        target = 0;
+    }
+    return target;
 }
 
 static dr_emit_flags_t
 event_app_instruction(void *drcontext, void *tag, instrlist_t *bb, instr_t *instr,
                       bool for_trace, bool translating, void *user_data)
 {
-/*
+   if (instr_is_meta(instr) || translating)
+	   return DR_EMIT_DEFAULT;
+   /* instrument only calls/returns from the main binary */
+   if (!dr_module_contains_addr(main_module, instr_get_app_pc(instr)))
+	   return DR_EMIT_DEFAULT;
 #ifdef VERBOSE
     if (drmgr_is_first_instr(drcontext, instr)) {
-        dr_printf("in dr_basic_block(tag=" PFX ")\n", tag);
-#    if VERBOSE_VERBOSE
         instrlist_disassemble(drcontext, tag, bb, STDOUT);
-#    endif
     }
 #endif
-    /* instrument calls and returns -- ignore far calls/rets */
     if (instr_is_call_direct(instr)) {
-        dr_insert_call_instrumentation(drcontext, bb, instr, (app_pc)at_call);
-    } else if (instr_is_call_indirect(instr)) {
+	app_pc target = call_get_target(instr);
+	DR_ASSERT(target && "Do not have call target");
+	size_t off = dr_module_addr_offset(main_module, target);
+	//dr_printf("off: %lu == %lu events[0].addr\n", off, events[0].addr);
+	if (off == (~(size_t)0))
+		return DR_EMIT_DEFAULT;
+	if (off != events[0].addr) {
+		return DR_EMIT_DEFAULT;
+	}
+
+	/* We need two registers */
+	reg_id_t reg_ptr, reg_tmp;
+	if (drreg_reserve_register(drcontext, bb, instr, NULL, &reg_ptr)
+		!= DRREG_SUCCESS ||
+	    drreg_reserve_register(drcontext, bb, instr, NULL, &reg_tmp)
+		!= DRREG_SUCCESS) {
+		DR_ASSERT(false); /* just fail for now */
+		abort();
+	}
+	//dr_printf("Found a call of %s\n", events[0].name);
+
+	insert_load_buf_off(drcontext, bb, instr, reg_ptr, reg_tmp);
+	rotate_if_needed(drcontext, bb, instr, reg_ptr, reg_tmp);
+	size_t written = write_call(drcontext, bb, instr, reg_ptr, reg_tmp, off);
+	update_buf_off(drcontext, bb, instr, reg_ptr, reg_tmp, written);
+
+	if (drreg_unreserve_register(drcontext, bb, instr, reg_ptr) != DRREG_SUCCESS ||
+	    drreg_unreserve_register(drcontext, bb, instr, reg_tmp) != DRREG_SUCCESS) {
+		DR_ASSERT(false);
+		abort();
+	}
+
+	instrlist_disassemble(drcontext, tag, bb, STDOUT);
+        //dr_insert_call_instrumentation(drcontext, bb, instr, (app_pc)at_call);
+    }/* else if (instr_is_call_indirect(instr)) {
         dr_insert_mbr_instrumentation(drcontext, bb, instr, (app_pc)at_call_ind,
                                       SPILL_SLOT_1);
+
     } else if (instr_is_return(instr)) {
         dr_insert_mbr_instrumentation(drcontext, bb, instr, (app_pc)at_return,
                                       SPILL_SLOT_1);
     }
+    */
     return DR_EMIT_DEFAULT;
 }

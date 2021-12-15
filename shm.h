@@ -14,6 +14,7 @@ struct buffer *get_local_buffer(struct buffer *shared_buffer);
 
 unsigned char *buffer_get_beginning(struct buffer *);
 unsigned short buffer_get_monitors_num(struct buffer *);
+size_t buffer_get_offset(struct buffer *buff);
 size_t buffer_get_size(struct buffer *);
 _Bool buffer_is_ready(struct buffer *);
 
