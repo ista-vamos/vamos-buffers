@@ -23,6 +23,7 @@ typedef struct buffer_entry
 	int64_t payload64_2;
 } buffer_entry;
 
+char *shm_mapname_thread_pid(char *buf, pid_t pid);
 char *shm_mapname_thread_pid_tid(char *buf, pid_t pid, pid_t tid);
 
 

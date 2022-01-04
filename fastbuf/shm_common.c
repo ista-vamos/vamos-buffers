@@ -14,9 +14,18 @@
 
 // SHARED
 
+char *shm_mapname_thread_pid(char *buf, pid_t pid)
+{
+	if (snprintf(buf, SHM_NAME_MAXLEN, "/dev/shm/%i.mon", pid)<=0)
+	{
+		return NULL;
+	}
+	return buf;
+}
+
 char *shm_mapname_thread_pid_tid(char *buf, pid_t pid, pid_t tid)
 {
-	if (snprintf(buf, SHM_NAME_MAXLEN, "/dev/shm/%i.%i", pid, tid))
+	if (snprintf(buf, SHM_NAME_MAXLEN, "/dev/shm/%i.%i.mon", pid, tid)<=0)
 	{
 		return NULL;
 	}

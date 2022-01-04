@@ -23,6 +23,25 @@ struct monitor_buffer
 	int stopped;
 };
 
+struct monitor_buffer_node
+{
+	struct monitor_buffer buffer;
+	struct monitor_buffer_node *next;
+	struct monitor_buffer_node *prev;
+};
+
+typedef struct monitored_process
+{
+	struct monitor_buffer buffer;
+	pid_t pid;
+	thrd_t main_event_loop_thrd;
+	int status;
+	mtx_t status_mtx;
+	cnd_t status_cond;
+	int (*register_thread_buffer)(monitor_buffer buffer);
+	struct monitor_buffer_node* thread_buffers;
+} * monitored_process;
+
 static int shamon_shm_unlink(monitor_buffer buffer, pid_t pid, pid_t tid)
 {
 	char name[SHM_NAME_MAXLEN];
@@ -33,16 +52,29 @@ static int shamon_shm_unlink(monitor_buffer buffer, pid_t pid, pid_t tid)
 	return unlink(name);
 }
 
-int attach_to_buffer(monitor_buffer buffer, pid_t pid, pid_t tid, size_t size_in_pages)
+void wait_for_process(monitored_process proc)
+{
+	mtx_lock(&proc->status_mtx);
+	while(proc->status==0)
+	{
+		cnd_wait(&proc->status_cond, &proc->status_mtx);
+	}
+	mtx_unlock(&proc->status_mtx);
+}
+
+struct monitor_buffer_node * attach_to_buffer(pid_t pid, pid_t tid, size_t size_in_pages)
 {
 	char name[SHM_NAME_MAXLEN];
-	if (shm_mapname_thread_pid_tid(name, pid, tid) == 0)
+	if (shm_mapname_thread_pid_tid(name, pid, tid) <= 0)
 	{
 		abort();
 	}
-	buffer->fd = open(name, O_RDWR | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK, 0);
-	if (!buffer->fd)
+	struct monitor_buffer_node *buffer_node = (struct monitor_buffer_node *)malloc(sizeof(struct monitor_buffer_node));
+	monitor_buffer buffer=&buffer_node->buffer;
+	buffer->fd = open(name, O_RDWR | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK, 0644);
+	if (buffer->fd<=0)
 	{
+		perror("could not open file");
 		abort();
 	}
 	size_t alloc_size = size_in_pages * sysconf(_SC_PAGESIZE);
@@ -58,7 +90,108 @@ int attach_to_buffer(monitor_buffer buffer, pid_t pid, pid_t tid, size_t size_in
 	buffer->buf_last = buffer->buf_start + (entry_count - 1);
 	buffer->buf_prev = buffer->buf_last - 1;
 	buffer->stopped=0;
+	return buffer_node;
 }
+
+void insert_thread_buffer(monitored_process proc, struct monitor_buffer_node * node)
+{
+	if(proc->thread_buffers==NULL)
+	{
+		node->next=node;
+		node->prev=node;
+		proc->thread_buffers=node;
+	}
+	else
+	{
+		node->next=proc->thread_buffers;
+		node->prev=proc->thread_buffers->prev;
+		node->prev->next=node;
+		node->next->prev=node;
+	}
+}
+
+void stop_threads(monitored_process proc)
+{
+	struct monitor_buffer_node * current=proc->thread_buffers;
+	if(current!=NULL)
+	{
+		do
+		{
+			current->buffer.stopped=1;
+		} while (current->next!=proc->thread_buffers);
+		
+	}
+}
+
+int main_process_event_loop(void* arg)
+{
+	buffer_entry entry;
+	monitored_process proc=(monitored_process)arg;
+	while(proc->status==0)
+	{
+		if(copy_events_wait(&proc->buffer, &entry, 1)==1)
+		{
+			switch(entry.kind)
+			{
+				case 1:
+				mtx_lock(&proc->status_mtx);
+				proc->status=entry.payload32_1;
+				stop_threads(proc);
+				cnd_broadcast(&proc->status_cond);
+				mtx_unlock(&proc->status_mtx);
+				break;
+				case 2:
+				{
+					struct monitor_buffer_node * buffer_node=attach_to_buffer(proc->pid, entry.payload32_1, entry.payload64_1);
+					insert_thread_buffer(proc, buffer_node);
+					proc->register_thread_buffer(&buffer_node->buffer);
+				}
+				break;
+			}
+		}
+	}
+}
+
+monitored_process attach_to_process(pid_t pid, int (*register_thread_buffer)(monitor_buffer buffer))
+{
+	char name[SHM_NAME_MAXLEN];
+	if (shm_mapname_thread_pid(name, pid) <=0)
+	{
+		abort();
+	}
+	size_t mallocsize = sizeof(struct monitored_process);
+	monitored_process buffer=(monitored_process)malloc(mallocsize);
+	buffer->buffer.fd = open(name, O_RDWR | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK, 0644);
+	if (buffer->buffer.fd<=0)
+	{
+		printf("%s\n",name);
+		perror("could not open file");
+		abort();
+	}
+	size_t alloc_size = sysconf(_SC_PAGESIZE);
+
+	void *mem = mmap(0, alloc_size,
+					 PROT_READ | PROT_WRITE, MAP_SHARED, buffer->buffer.fd, 0);
+
+	buffer->buffer.buf_start = (buffer_entry *)mem;
+	buffer->buffer.buf_pos = (buffer_entry *)mem;
+	buffer->buffer.size_in_pages = 1;
+
+	size_t entry_count = alloc_size / sizeof(buffer_entry);
+	buffer->buffer.buf_last = buffer->buffer.buf_start + (entry_count - 1);
+	buffer->buffer.buf_prev = buffer->buffer.buf_last - 1;
+	buffer->buffer.stopped=0;
+	buffer->register_thread_buffer=register_thread_buffer;
+
+	mtx_init(&buffer->status_mtx, mtx_plain);
+	cnd_init(&buffer->status_cond);
+	buffer->status=0;
+	buffer->pid=pid;
+	thrd_create(&buffer->main_event_loop_thrd, &main_process_event_loop, (void*)buffer);
+
+	return buffer;
+}
+
 
 size_t copy_events_wait(monitor_buffer buffer, buffer_entry *buffer_buffer, size_t count)
 {
