@@ -185,7 +185,7 @@ event_pre_syscall(void *drcontext, int sysnum)
         return true; /* data unreadable: execute normally */
     }
 
-    dr_printf("[%d (%u)]: %s", fd, len, output);
+    dr_printf("\033[0;36m[%d (%u)]: %.*s\033[0m", fd, len, len, output);
     return true; /* execute normally */
 }
 
