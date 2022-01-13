@@ -73,23 +73,25 @@ static int tcls_idx;
 #endif
 
 /* The system call number of SYS_write/NtWriteFile */
-static int write_sysnum;
+static int write_sysnum, read_sysnum;
 
 static int
 get_write_sysnum(void);
+static int
+get_read_sysnum(void);
 static void
 event_exit(void);
 static bool
 event_filter_syscall(void *drcontext, int sysnum);
 static bool
 event_pre_syscall(void *drcontext, int sysnum);
+static void
+event_post_syscall(void *drcontext, int sysnum);
 /*
 static void
 event_thread_context_init(void *drcontext, bool new_depth);
 static void
 event_thread_context_exit(void *drcontext, bool process_exit);
-static void
-event_post_syscall(void *drcontext, int sysnum);
 */
 
 DR_EXPORT void
@@ -98,9 +100,10 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
     dr_set_client_name("Shamon intercept write and read syscalls", "http://...");
     drmgr_init();
     write_sysnum = get_write_sysnum();
+    read_sysnum = get_read_sysnum();
     dr_register_filter_syscall_event(event_filter_syscall);
     drmgr_register_pre_syscall_event(event_pre_syscall);
-    //drmgr_register_post_syscall_event(event_post_syscall);
+    drmgr_register_post_syscall_event(event_post_syscall);
     dr_register_exit_event(event_exit);
     /*
     tcls_idx =
@@ -122,8 +125,8 @@ event_exit(void)
 {
     if (/*!drmgr_unregister_cls_field(event_thread_context_init, event_thread_context_exit,
                                     tcls_idx) ||*/
-        !drmgr_unregister_pre_syscall_event(event_pre_syscall) /*||
-        !drmgr_unregister_post_syscall_event(event_post_syscall)*/)
+        !drmgr_unregister_pre_syscall_event(event_pre_syscall) ||
+        !drmgr_unregister_post_syscall_event(event_post_syscall))
         DR_ASSERT(false && "failed to unregister");
     drmgr_exit();
 }
@@ -164,7 +167,7 @@ event_thread_context_exit(void *drcontext, bool thread_exit)
 static bool
 event_filter_syscall(void *drcontext, int sysnum)
 {
-    return sysnum == write_sysnum;
+    return sysnum == write_sysnum || sysnum == read_sysnum ;
 }
 
 static bool
@@ -172,77 +175,45 @@ event_pre_syscall(void *drcontext, int sysnum)
 {
     if (sysnum != write_sysnum)
 	return true;
-    // per_thread_t *data = (per_thread_t *)drmgr_get_cls_field(drcontext, tcls_idx);
 
-    /* suppress stderr */
     int fd = dr_syscall_get_param(drcontext, 0);
-    unsigned int len = dr_syscall_get_param(drcontext, 2);
+    if (fd != STDERR && fd != STDOUT)
+	return true;
     
     byte *output = (byte *)dr_syscall_get_param(drcontext, 1);
     byte first;
     if (!dr_safe_read(output, 1, &first, NULL)) {
-        dr_fprintf(STDERR, "err: cannot read syscall data");
+        dr_fprintf(STDERR, "err: cannot read syscall data (write)");
         return true; /* data unreadable: execute normally */
     }
 
-    dr_printf("\033[0;36m[%d (%u)]: %.*s\033[0m", fd, len, len, output);
+    unsigned int len = dr_syscall_get_param(drcontext, 2);
+    // per_thread_t *data = (per_thread_t *)drmgr_get_cls_field(drcontext, tcls_idx);
+    dr_printf("\033[0;36m[write@%d (%u)]: %.*s\033[0m", fd, len, len, output);
     return true; /* execute normally */
 }
 
-#if 0
 static void
 event_post_syscall(void *drcontext, int sysnum)
 {
-#ifdef SHOW_RESULTS
-    dr_syscall_result_info_t info = {
-        sizeof(info),
-    };
-    dr_syscall_get_result_ex(drcontext, &info);
-    if (!info.succeeded) {
-        /* XXX: we could use the "drsyscall" Extension from the Dr. Memory
-         * Framework (DRMF) to obtain the name of the system call (as well as
-         * the number of arguments and the type of each).  Please see the strace
-         * sample and drstrace tool within DRMF for further information.
-         */
-        dr_fprintf(STDERR,
-                   "<---- syscall %d failed (returned " PFX " == " SZFMT ") ---->\n",
-                   sysnum, info.value, (ptr_int_t)info.value);
+    if (sysnum != read_sysnum)
+	return;
+
+    int fd = dr_syscall_get_param(drcontext, 0);
+    if (fd != STDIN)
+	return;
+    
+    byte *output = (byte *)dr_syscall_get_param(drcontext, 1);
+    byte first;
+    if (!dr_safe_read(output, 1, &first, NULL)) {
+        dr_fprintf(STDERR, "err: cannot read syscall data (read)");
+	return;
     }
-#endif
-    if (sysnum == write_sysnum) {
-        per_thread_t *data = (per_thread_t *)drmgr_get_cls_field(drcontext, tcls_idx);
-        /* we repeat a write originally to stdout that we redirected to
-         * stderr: on the repeat we use stdout
-         */
-        if (data->repeat) {
-            /* repeat syscall with stdout */
-            int i;
-#ifdef SHOW_RESULTS
-            dr_fprintf(STDERR, "<---- repeating write ---->\n");
-#endif
-            dr_syscall_set_sysnum(drcontext, write_sysnum);
-            dr_syscall_set_param(drcontext, 0, (reg_t)STDOUT);
-            for (i = 1; i < SYS_MAX_ARGS; i++)
-                dr_syscall_set_param(drcontext, i, data->param[i]);
-#ifdef WINDOWS
-            if (dr_is_wow64()) {
-                /* Set the xcx emulation parameter for wow64: since
-                 * we're executing the same system call again we can
-                 * use that same parameter.  For new system calls we'd
-                 * need to determine the parameter from the ntdll
-                 * wrapper.
-                 */
-                dr_mcontext_t mc = { sizeof(mc), DR_MC_INTEGER /*only need xcx*/ };
-                dr_get_mcontext(drcontext, &mc);
-                mc.xcx = data->xcx;
-                dr_set_mcontext(drcontext, &mc);
-            }
-#endif
-            dr_syscall_invoke_another(drcontext);
-        }
-    }
+
+    unsigned int len = dr_syscall_get_result(drcontext);
+    //per_thread_t *data = (per_thread_t *)drmgr_get_cls_field(drcontext, tcls_idx);
+    dr_printf("\033[0;34m[read@%d (%u)]: %.*s\033[0m", fd, len, len, output);
 }
-#endif
 
 static int
 get_write_sysnum(void)
@@ -257,6 +228,22 @@ get_write_sysnum(void)
     module_data_t *data = dr_lookup_module_by_name("ntdll.dll");
     DR_ASSERT(data != NULL);
     entry = (byte *)dr_get_proc_address(data->handle, "NtWriteFile");
+    DR_ASSERT(entry != NULL);
+    dr_free_module_data(data);
+    return drmgr_decode_sysnum_from_wrapper(entry);
+#endif
+}
+
+static int
+get_read_sysnum(void)
+{
+#ifdef UNIX
+    return SYS_read;
+#else
+    byte *entry;
+    module_data_t *data = dr_lookup_module_by_name("ntdll.dll");
+    DR_ASSERT(data != NULL);
+    entry = (byte *)dr_get_proc_address(data->handle, "NtReadFile");
     DR_ASSERT(entry != NULL);
     dr_free_module_data(data);
     return drmgr_decode_sysnum_from_wrapper(entry);
