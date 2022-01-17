@@ -210,9 +210,11 @@ event_post_syscall(void *drcontext, int sysnum)
 	return;
     }
 
-    unsigned int len = dr_syscall_get_result(drcontext);
-    //per_thread_t *data = (per_thread_t *)drmgr_get_cls_field(drcontext, tcls_idx);
-    dr_printf("\033[0;34m[read@%d (%u)]: %.*s\033[0m", fd, len, len, output);
+    int len = dr_syscall_get_result(drcontext);
+    if (len > 0) {
+    	//per_thread_t *data = (per_thread_t *)drmgr_get_cls_field(drcontext, tcls_idx);
+    	dr_printf("\033[0;34m[read@%d (%u)]: %.*s\033[0m", fd, len, len, output);
+    }
 }
 
 static int
