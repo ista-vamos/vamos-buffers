@@ -1,7 +1,7 @@
 project(DrShamonSyscalls)
 cmake_minimum_required(VERSION 3.0)
 
-add_library(syscalls SHARED syscalls.c)
+add_library(syscalls SHARED syscalls.c ../fastbuf/shm_monitored.c  ../fastbuf/shm_common.c)
 find_package(DynamoRIO)
 if (NOT DynamoRIO_FOUND)
 	  message(FATAL_ERROR "DynamoRIO package required to build")
