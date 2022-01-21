@@ -12,7 +12,6 @@ typedef uint16_t buffer_kind;
 #define BUF_ENTRY_FREE_ID 0
 
 #define SHM_NAME_MAXLEN 128
-#define LINUX
 
 #define SHM_PAGE_SIZE (sysconf(_SC_PAGESIZE))
 
