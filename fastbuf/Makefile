@@ -4,7 +4,7 @@ CFLAGS=-O3 -g3
 all: monitor primes #gennums_hardcoded-instr
 
 monitor: monitor.o shm_monitor.o shm_common.o isprime.o
-	$(CC) $^ -O3 -g3 $(CPPFLAGS) -o $@ -lrt -lm -lpthread
+	$(CC) $^ -O0 -g $(CPPFLAGS) -o $@ -lrt -lm -lpthread
 
 isprime.o: isprime.c
 	$(CC) -c $< $(CFLAGS) $(CPPFLAGS) -o $@

@@ -32,3 +32,12 @@ char *shm_mapname_thread_pid_tid(char *buf, pid_t pid, pid_t tid)
 	return buf;
 }
 
+char *shm_mapname_thread_data(char *buf, pid_t pid, pid_t tid, uint64_t dbufid)
+{
+	if (snprintf(buf, SHM_NAME_MAXLEN, "/dev/shm/%i.%i.%lu.mon", pid, tid, dbufid)<=0)
+	{
+		return NULL;
+	}
+	return buf;
+}
+
