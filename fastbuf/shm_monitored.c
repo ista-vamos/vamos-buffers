@@ -378,7 +378,7 @@ static void* get_databuffer_space(buffer * buffer, size_t size)
 		return NULL;
 	}
 	databuffer * dbuf = &buffer->dbuf;
-	printf("getting space for %lu bytes\n", size);
+	//printf("getting space for %lu bytes\n", size);
 	if(dbuf->free_space<size)
 	{
 		// if(dbuf->size_in_pages>0)
@@ -424,7 +424,7 @@ static void* get_databuffer_space(buffer * buffer, size_t size)
 		dbuf->start=mem;
 		dbuf->fd=fd;
 		buf_push_event_wait_32_64_64(&appbuf, ABMGMT_NEWDATA, gettid(), size_in_pages, bufid);
-		printf("New buffer %lu: %lu pages\n", dbuf->id, dbuf->size_in_pages);
+		//printf("New buffer %lu: %lu pages\n", dbuf->id, dbuf->size_in_pages);
 	}
 	dbuf->last_offset=dbuf->offset;
 	dbuf->offset+=size;
@@ -468,8 +468,8 @@ ssize_t wrap_push_read(int fd, void* data, size_t size)
 	void* target = get_databuffer_space(buf, size + sizeof(size_t) + sizeof(int64_t));
 	
 	buffer_entry *curpos = buf->buf_pos;
-	*((int64_t*)data) = fd;
-	*(((int64_t*)data)+1) = result;
+	*((int64_t*)target) = fd;
+	*(((int64_t*)target)+1) = result;
 	memcpy((void*)(((char*)target)+sizeof(int64_t)+sizeof(size_t)), data, size);
 	buffer_entry_id curentryid = atomic_load_explicit(&curpos->id, memory_order_acquire);
 	push_wait_for_monitor(buf, &curpos, &curentryid);
@@ -492,8 +492,8 @@ ssize_t wrap_push_write(int fd, const void* data, size_t size)
 	void* target = get_databuffer_space(buf, result + sizeof(size_t) + sizeof(int64_t));
 	
 	buffer_entry *curpos = buf->buf_pos;
-	*((int64_t*)data) = fd;
-	*(((int64_t*)data)+1) = size;
+	*((int64_t*)target) = fd;
+	*(((int64_t*)target)+1) = size;
 	memcpy((void*)(((char*)target)+sizeof(int64_t)+sizeof(size_t)), data, result);
 	buffer_entry_id curentryid = atomic_load_explicit(&curpos->id, memory_order_acquire);
 	push_wait_for_monitor(buf, &curpos, &curentryid);
@@ -516,13 +516,13 @@ void push_read(int fd, void* data, size_t size, ssize_t result)
 		return;
 	}
 	buffer * buf=&threadbuf;
-	printf("pushing read of %li bytes\n", result);
+	//printf("pushing read of %li bytes\n", result);
 
 	void* target = get_databuffer_space(buf, result + sizeof(size_t) + sizeof(int64_t));
 	
 	buffer_entry *curpos = buf->buf_pos;
-	*((int64_t*)data) = fd;
-	*(((int64_t*)data)+1) = size;
+	*((int64_t*)target) = fd;
+	*(((int64_t*)target)+1) = size;
 	memcpy((void*)(((char*)target)+sizeof(int64_t)+sizeof(size_t)), data, result);
 	buffer_entry_id curentryid = atomic_load_explicit(&curpos->id, memory_order_acquire);
 	push_wait_for_monitor(buf, &curpos, &curentryid);
@@ -543,13 +543,13 @@ void push_write(int fd, const void* data, size_t size, ssize_t result)
 		return;
 	}
 	buffer * buf=&threadbuf;
-	printf("pushing write of %li bytes\n", result);
+	//printf("pushing write of %li bytes\n", result);
 
 	void* target = get_databuffer_space(buf, result + sizeof(size_t) + sizeof(int64_t));
 	
 	buffer_entry *curpos = buf->buf_pos;
-	*((int64_t*)data) = fd;
-	*(((int64_t*)data)+1) = size;
+	*((int64_t*)target) = fd;
+	*(((int64_t*)target)+1) = size;
 	memcpy((void*)(((char*)target)+sizeof(int64_t)+sizeof(size_t)), data, result);
 	buffer_entry_id curentryid = atomic_load_explicit(&curpos->id, memory_order_acquire);
 	push_wait_for_monitor(buf, &curpos, &curentryid);

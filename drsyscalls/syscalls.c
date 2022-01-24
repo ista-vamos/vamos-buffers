@@ -198,11 +198,11 @@ event_pre_syscall(void *drcontext, int sysnum)
 static void
 event_post_syscall(void *drcontext, int sysnum)
 {
-    dr_syscall_result_info_t scri;
-    scri.size=sizeof(ssize_t);
-    scri.use_high=0;
-    scri.use_errno=0;
-    int success = dr_syscall_get_result_ex(drcontext, &scri);
+    // dr_syscall_result_info_t scri;
+    // scri.size=sizeof(dr_syscall_result_info_t)+sizeof(ssize_t);
+    // scri.use_high=0;
+    // scri.use_errno=0;
+    reg_t retval = dr_syscall_get_result(drcontext);
     // if (sysnum != read_sysnum)
 	// return;
     if(sysnum!=read_sysnum&&sysnum!=write_sysnum)
@@ -214,15 +214,15 @@ event_post_syscall(void *drcontext, int sysnum)
     {
         return;
     }
-    ssize_t len;
-    if(success==0)
-    {
-        len=data->size;
-    }
-    else
-    {
-        len=*((ssize_t*)&scri.value);
-    }
+    ssize_t len = *((ssize_t*)&retval);
+    // if(success==0)
+    // {
+    //     len=data->size;
+    // }
+    // else
+    // {
+    //     len=*((ssize_t*)&scri.value);
+    // }
     // /* dr_syscall_get_param can be called only from pre-event
     // int fd = dr_syscall_get_param(drcontext, 0);
     // */
@@ -238,7 +238,7 @@ event_post_syscall(void *drcontext, int sysnum)
     // if (len > 0) {
     // 	dr_printf("\033[0;34m[read@%d (%u)]: %.*s\033[0m", fd, len, len, output);
     // }
-    printf("Syscall: %i; len: %li; result: %lu\n",sysnum, len, scri.value);
+    //printf("Syscall: %i; len: %li; result: %lu\n",sysnum, len, len);
     if(sysnum==read_sysnum)
     {
         push_read(data->fd, data->buf, data->size, len);

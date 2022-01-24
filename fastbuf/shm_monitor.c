@@ -419,8 +419,9 @@ size_t copy_events_wait(monitor_buffer buffer, buffer_entry *targetbuffers, size
 		{
 			databuffer * dbuf = progress_data_buffer(buffer, buffer_buffer->payload64_1);
 			size_t dsize = buffer_buffer->payload64_2;
-			void* newmem = malloc(dsize);
+			void* newmem = malloc(dsize+1);
 			memcpy(newmem, (void*)(((intptr_t)dbuf->start)+buffer_buffer->payload32_1), dsize);
+			((char*)newmem)[dsize]=0;
 			buffer_buffer->payload64_1=(intptr_t)newmem;
 			dbuf->last_offset=buffer_buffer->payload64_1+dsize;
 			buffer_buffer->payload32_1=0;
@@ -506,8 +507,9 @@ size_t copy_events_nowait(monitor_buffer buffer, buffer_entry *buffer_buffer, si
 		{
 			databuffer * dbuf = progress_data_buffer(buffer, buffer_buffer->payload64_1);
 			size_t dsize = buffer_buffer->payload64_2;
-			void* newmem = malloc(dsize);
+			void* newmem = malloc(dsize+1);
 			memcpy(newmem, (void*)(((intptr_t)dbuf->start)+buffer_buffer->payload32_1), dsize);
+			((char*)newmem)[dsize]=0;
 			buffer_buffer->payload64_1=(intptr_t)newmem;
 			dbuf->last_offset=buffer_buffer->payload64_1+dsize;
 			buffer_buffer->payload32_1=0;
