@@ -15,7 +15,7 @@ typedef uint16_t buffer_kind;
 
 #define SHM_PAGE_SIZE (sysconf(_SC_PAGESIZE))
 
-enum appbuffer_management_msgkind { ABMGMT_NONE, ABMGMT_CLOSE, ABMGMT_NEW, ABMGMT_NEWDATA, ABMGMT_CLOSEDATA };
+enum appbuffer_management_msgkind { ABMGMT_NONE, ABMGMT_HELLO, ABMGMT_CLOSE, ABMGMT_NEW, ABMGMT_NEWDATA, ABMGMT_CLOSEDATA };
 enum threadbuffer_management_msgflags { TBMGMT_STD, TBMGMT_DATA };
 
 typedef struct buffer_entry

@@ -6,7 +6,7 @@
 #include "dr_api.h"
 #include "drmgr.h"
 
-#include "fastbuf/shm_monitored.h"
+#include "../fastbuf/shm_monitored.h"
 
 #ifdef UNIX
 #    if defined(MACOS) || defined(ANDROID)
@@ -25,6 +25,8 @@
 
 typedef struct {
 	int fd;
+    void * buf;
+    size_t size;
 } per_thread_t;
 
 /* Thread-context-local storage index from drmgr */
@@ -50,6 +52,33 @@ event_thread_context_init(void *drcontext, bool new_depth);
 static void
 event_thread_context_exit(void *drcontext, bool process_exit);
 
+// dr_emit_flags_t process_basic_block(void *drcontext, void *tag, instrlist_t *bb, bool for_trace, bool translating)
+// {
+//   instr_t *instr, *next;
+//   for (instr = instrlist_first(bb);
+//        instr != NULL;
+//        instr = next) {
+//     next = instr_get_next(instr);
+//         #ifdef WINDOWS
+//         //ugh...
+//         #else
+//         if(instr_is_syscall(instr)&&next!=NULL)
+//         {
+//             instr_t *jump_end  = XINST_CREATE_jump(drcontext,opnd_create_instr(next));
+//             instrlist_preinsert(bb, instr, jump_end);
+
+//             instr_t *comp0 = XINST_CREATE_cmp(drcontext,opnd_create_reg(DR_REG_RAX), opnd_create_immed_int64(0));
+//             instr_t *comp1 = XINST_CREATE_cmp(drcontext,opnd_create_reg(DR_REG_RAX), opnd_create_immed_int64(1));
+//             instr_t *jump_not1 = XINST_CREATE_jump_cond(drcontext, DR_PRED_NE, opnd_create_instr(comp0));
+//             instr_t *jump_not0 = XINST_CREATE_jump_cond(drcontext, DR_PRED_NE, opnd_create_instr(instr));
+//             instr_t *jump_end1 = XINST_CREATE_jump(drcontext,opnd_create_instr(next));
+//             instrlist_preinsert(bb, jump_end, jump_not1);
+//         }
+//         #endif
+//   }
+//   return DR_EMIT_DEFAULT;
+// }
+
 DR_EXPORT void
 dr_client_main(client_id_t id, int argc, const char *argv[])
 {
@@ -72,6 +101,7 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
         dr_fprintf(STDERR, "Client syscall is running\n");
     }
     initialize_application_buffer();
+	app_buffer_wait_for_client();
 }
 
 
@@ -124,52 +154,98 @@ event_filter_syscall(void *drcontext, int sysnum)
 static bool
 event_pre_syscall(void *drcontext, int sysnum)
 {
-    if (sysnum != write_sysnum)
-	return true;
-
-    int fd = dr_syscall_get_param(drcontext, 0);
-    if (fd != STDERR && fd != STDOUT)
-	return true;
-    
-    byte *output = (byte *)dr_syscall_get_param(drcontext, 1);
-    byte first;
-    if (!dr_safe_read(output, 1, &first, NULL)) {
-        dr_fprintf(STDERR, "err: cannot read syscall data (write)");
-        return true; /* data unreadable: execute normally */
-    }
-
-    unsigned int len = dr_syscall_get_param(drcontext, 2);
+    reg_t fd = dr_syscall_get_param(drcontext, 0);
+    reg_t buf = dr_syscall_get_param(drcontext, 1);
+    reg_t size = dr_syscall_get_param(drcontext, 2);
     per_thread_t *data = (per_thread_t *)drmgr_get_cls_field(drcontext, tcls_idx);
     data->fd = fd; /* store the fd for post-event */
+    data->buf=(void*)buf;
+    data->size=size;
+    // dr_insert_clean_call(drcontext, ilist, nxt, (void *) at_mbr,
+    //                     false/*don't need to save fp state*/,
+    //                     2 /* 2 parameters */,
+    //                     /* opcode is 1st parameter */
+    //                     OPND_CREATE_REG(fdreg),
+    //                     /* address is 2nd parameter */
+    //                     OPND_CREATE_REG(bufreg),
+    //                     OPND_CREATE_REG(sizereg)
+    //                     );
 
-    dr_printf("\033[0;36m[write@%d (%u)]: %.*s\033[0m", fd, len, len, output);
+                        
+
+    // if (sysnum != write_sysnum)
+	// return true;
+
+    // int fd = dr_syscall_get_param(drcontext, 0);
+    // if (fd != STDERR && fd != STDOUT)
+	// return true;
+    
+    // byte *output = (byte *)dr_syscall_get_param(drcontext, 1);
+    // byte first;
+    // if (!dr_safe_read(output, 1, &first, NULL)) {
+    //     dr_fprintf(STDERR, "err: cannot read syscall data (write)");
+    //     return true; /* data unreadable: execute normally */
+    // }
+
+    // unsigned int len = dr_syscall_get_param(drcontext, 2);
+    // per_thread_t *data = (per_thread_t *)drmgr_get_cls_field(drcontext, tcls_idx);
+    // data->fd = fd; /* store the fd for post-event */
+
+    // dr_printf("\033[0;36m[write@%d (%u)]: %.*s\033[0m", fd, len, len, output);
     return true; /* execute normally */
 }
 
 static void
 event_post_syscall(void *drcontext, int sysnum)
 {
-    if (sysnum != read_sysnum)
-	return;
-
-    per_thread_t *data = (per_thread_t *)drmgr_get_cls_field(drcontext, tcls_idx);
-    int fd = data->fd;
-    /* dr_syscall_get_param can be called only from pre-event
-    int fd = dr_syscall_get_param(drcontext, 0);
-    */
-    if (fd != STDIN || fd == -1)
-	return;
-    
-    byte *output = (byte *)dr_syscall_get_param(drcontext, 1);
-    byte first;
-    if (!dr_safe_read(output, 1, &first, NULL)) {
-        dr_fprintf(STDERR, "err: cannot read syscall data (read)");
-	return;
+    dr_syscall_result_info_t scri;
+    scri.size=sizeof(ssize_t);
+    scri.use_high=0;
+    scri.use_errno=0;
+    int success = dr_syscall_get_result_ex(drcontext, &scri);
+    // if (sysnum != read_sysnum)
+	// return;
+    if(sysnum!=read_sysnum&&sysnum!=write_sysnum)
+    {
+        return;
     }
-
-    int len = dr_syscall_get_result(drcontext);
-    if (len > 0) {
-    	dr_printf("\033[0;34m[read@%d (%u)]: %.*s\033[0m", fd, len, len, output);
+    per_thread_t *data = (per_thread_t *)drmgr_get_cls_field(drcontext, tcls_idx);
+    if(data->fd>2)
+    {
+        return;
+    }
+    ssize_t len;
+    if(success==0)
+    {
+        len=data->size;
+    }
+    else
+    {
+        len=*((ssize_t*)&scri.value);
+    }
+    // /* dr_syscall_get_param can be called only from pre-event
+    // int fd = dr_syscall_get_param(drcontext, 0);
+    // */
+    // if (fd != STDIN || fd == -1)
+	// return;
+    
+    // byte *output = (byte *)dr_syscall_get_param(drcontext, 1);
+    // byte first;
+    // if (!dr_safe_read(output, 1, &first, NULL)) {
+    //     dr_fprintf(STDERR, "err: cannot read syscall data (read)");
+	// return;
+    // }
+    // if (len > 0) {
+    // 	dr_printf("\033[0;34m[read@%d (%u)]: %.*s\033[0m", fd, len, len, output);
+    // }
+    printf("Syscall: %i; len: %li; result: %lu\n",sysnum, len, scri.value);
+    if(sysnum==read_sysnum)
+    {
+        push_read(data->fd, data->buf, data->size, len);
+    }
+    else if(sysnum==write_sysnum)
+    {
+        push_write(data->fd, data->buf, data->size, len);
     }
 }
 

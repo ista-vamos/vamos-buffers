@@ -5,12 +5,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <threads.h>
-#ifdef LINUX
+#include <fcntl.h>
+//#ifdef LINUX
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/mman.h>
 //TODO: handle windows case
-#endif
+//#endif
 
 typedef struct databuffer
 {
@@ -315,6 +316,11 @@ int main_process_event_loop(void *arg)
 			{
 				databuffer * dbuf = attach_to_databuffer(proc->pid, entry.payload32_1, entry.payload64_1, entry.payload64_2);
 				insert_data_buffer(proc, entry.payload32_1, dbuf);
+			}
+			break;
+			case ABMGMT_HELLO:
+			{
+
 			}
 			break;
 			}
