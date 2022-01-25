@@ -66,6 +66,7 @@ static int shamon_shm_open_app_buffer(int flags, mode_t mode)
 		abort();
 	}
 	printf("%s\n",name);
+	fflush(stdout);
 	return open(name, flags | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK | O_CREAT, mode);
 }
 
@@ -530,7 +531,7 @@ void push_read(int fd, void* data, size_t size, ssize_t result)
 	curpos->kind = 2;
 	curpos->payload32_1 = buf->dbuf.last_offset;
 	curpos->payload64_1 = buf->dbuf.id;
-	curpos->payload64_2 = size+sizeof(size_t) + sizeof(int64_t);
+	curpos->payload64_2 = result+sizeof(size_t) + sizeof(int64_t);
 	atomic_store_explicit(&curpos->id, buf->current_id, memory_order_release);
 	buf->current_id += 2;
 	curpos++;

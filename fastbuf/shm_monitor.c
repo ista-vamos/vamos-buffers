@@ -338,11 +338,9 @@ monitored_process attach_to_process(pid_t pid, int (*register_thread_buffer)(mon
 	size_t mallocsize = sizeof(struct monitored_process);
 	monitored_process buffer = (monitored_process)malloc(mallocsize);
 	buffer->buffer.fd = open(name, O_RDWR | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK, 0644);
-	if (buffer->buffer.fd <= 0)
+	while (buffer->buffer.fd <= 0)
 	{
-		printf("%s\n", name);
-		perror("could not open file");
-		abort();
+		buffer->buffer.fd = open(name, O_RDWR | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK, 0644);
 	}
 	size_t alloc_size = sysconf(_SC_PAGESIZE);
 
