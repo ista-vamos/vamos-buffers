@@ -1,15 +1,39 @@
 #include "eventinterface.h"
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 
 /*****
  * EVENT
  *****/
 
-shm_kind shm_mk_event_kind(char* name) {
-    (void)name;
-    abort();
+struct _ev_kind_rec {
+    char *name;
 };
+
+struct _ev_kind_rec *event_kinds = NULL;
+size_t ev_kinds_num = 0;
+size_t ev_kinds_num_allocated = 0;
+
+shm_kind shm_mk_event_kind(const char* name) {
+    size_t idx = ev_kinds_num++;
+    if (ev_kinds_num_allocated < ev_kinds_num) {
+        ev_kinds_num += 10;
+        event_kinds = realloc(event_kinds, sizeof(struct _ev_kind_rec) * ev_kinds_num);
+        assert(event_kinds && "Allocation failed");
+    }
+
+    // FIXME: we leak these right now, create a destructor or use atexit?
+    event_kinds[idx].name = strdup(name);
+    assert(event_kinds[idx].name);
+    return idx + 1;
+};
+
+const char *shm_kind_get_name(shm_kind kind) {
+    if (kind > ev_kinds_num)
+        return NULL;
+    return event_kinds[kind - 1].name;
+}
 
 shm_eventid shm_event_id(shm_event *event) {
 	return event->id;
@@ -93,17 +117,17 @@ shm_event *shm_streams_get_next_ev(shm_streams *streams_mgr) {
 }
 
 void shm_streams_add_stream(shm_streams *streams_mgr, shm_stream *stream) {
-    size_t num = ++streams_mgr->num_of_streams;
+    size_t num = streams_mgr->num_of_streams++;
 
-    if (num > streams_mgr->allocated_streams) {
+    if (num >= streams_mgr->allocated_streams) {
         streams_mgr->allocated_streams += 10;
         streams_mgr->streams = realloc(streams_mgr->streams,
                                        streams_mgr->allocated_streams * sizeof(shm_stream *));
         assert(streams_mgr->streams != NULL);
     }
 
-    assert(num <= streams_mgr->allocated_streams);
-    streams_mgr->streams[num - 1] = stream;
+    assert(num < streams_mgr->allocated_streams);
+    streams_mgr->streams[num] = stream;
 
 }
 

@@ -58,7 +58,8 @@ shm_event *shm_streams_get_next_ev(shm_streams *);
 //Returns some form of identifier represents a particular name,
 //used for event kinds, field names, etc. (so we don't need to do string
 //comparisons everywhere)
-shm_kind shm_mk_event_kind(char* name);
+shm_kind shm_mk_event_kind(const char* name);
+const char *shm_kind_get_name(shm_kind kind);
 
 // special kinds to mark special event kinds: hole and end of stream
 shm_kind shm_get_hole_kind();
