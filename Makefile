@@ -1,29 +1,26 @@
 CFLAGS=-fPIC -Wall -Werror -Wextra -g
 
-all: libshamon.so libshamon.a drfun drsyscalls
+all: shmbuf fastbuf drfun drsyscalls experiments events.o
 
-libshamon.so: shm.o client.o monitor.o
-	$(CC) -shared $^ -o $@
+shmbuf:
+	make -C shmbuf
 
-libshamon.a: shm.o client.o monitor.o
-	ar rcs $@ $^
-
-shm.o: shm.c shm.h
-
-client.o: client.c client.h
-
-monitor.o: monitor.c monitor.h
-
-drfun: libshamon.so
+drfun: shmbuf
 	make -C drfun
 
 drsyscalls:
 	make -C drsyscalls
 
+experiments:
+	make -C experiments
+
 clean:
 	-rm *.o *.a *.so
 	make -C drfun clean
 	make -C drsyscalls clean
+	make -C streams clean
+	make -C shmbuf clean
+	make -C fastbuf clean
 
-.PHONY: clean all drfun drsyscalls
+.PHONY: clean all shmbuf fastbuf drfun drsyscalls experiments
 
