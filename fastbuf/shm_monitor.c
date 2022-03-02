@@ -328,7 +328,7 @@ int main_process_event_loop(void *arg)
 	}
 }
 
-monitored_process attach_to_process(pid_t pid, int (*register_thread_buffer)(monitor_buffer buffer))
+monitored_process only_attach_to_process(pid_t pid, int (*register_thread_buffer)(monitor_buffer buffer))
 {
 	char name[SHM_NAME_MAXLEN];
 	if (shm_mapname_thread_pid(name, pid) <= 0)
@@ -362,9 +362,17 @@ monitored_process attach_to_process(pid_t pid, int (*register_thread_buffer)(mon
 	cnd_init(&buffer->status_cond);
 	buffer->status = 0;
 	buffer->pid = pid;
-	thrd_create(&buffer->main_event_loop_thrd, &main_process_event_loop, (void *)buffer);
+    buffer->main_event_loop_thrd = 0;
 
 	return buffer;
+}
+
+monitored_process attach_to_process(pid_t pid, int (*register_thread_buffer)(monitor_buffer buffer))
+{
+    monitored_process buffer = only_attach_to_process(pid, register_thread_buffer);
+    thrd_create(&buffer->main_event_loop_thrd, &main_process_event_loop, (void *)buffer);
+
+    return buffer;
 }
 
 size_t copy_events_wait(monitor_buffer buffer, buffer_entry *targetbuffers, size_t count)
