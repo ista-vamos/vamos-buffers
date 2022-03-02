@@ -3,6 +3,8 @@
 #include <time.h>
 
 #include "eventinterface.h"
+#include "streams.h"
+#include "queue.h"
 
 typedef struct _shm_event_fd_in {
 	// mandatory
@@ -30,6 +32,8 @@ typedef struct _shm_stream_fds {
     size_t fds_num;
     // buffer for each fd for reading
     shm_string *fds_buffer;
+    // events to be pushed to the monitor
+    shm_queue *pending_events;
 } shm_stream_fds;
 
 shm_stream *shm_create_fds_stream();

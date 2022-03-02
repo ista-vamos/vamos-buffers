@@ -6,12 +6,17 @@
 
 #include "stream-fds.h"
 
-static void read_events(shm_stream_fds *ss) {
+static size_t read_events(shm_stream_fds *ss) {
+    size_t read_ev = 0;
     size_t remove_num = 0;
+    // TODO: this should be taken even earlier
+    shm_timestamp timestamp_lb = (shm_timestamp)clock();
     for (unsigned i = 0; i < ss->fds_num; ++i) {
         struct pollfd *pfd = ss->fds + i;
         if (pfd->revents & POLLIN) {
             shm_string *str = ss->fds_buffer + i;
+            // FIXME: set O_NONBLOCK and read all the data right now
+            // to have the right timestamps?
             ssize_t len = read(pfd->fd, str->data, str->alloc_size);
             if (len == 0) {
                 // EOF, remove fd from fds (set POLLHUP so that we know
@@ -24,18 +29,22 @@ static void read_events(shm_stream_fds *ss) {
                 pfd->revents &= POLLHUP;
             } else {
                 assert(len > 0);
-                 // FIXME: set O_NONBLOCK and read all the data right now
-                 // to have the right timestamps?
-                 printf("Read from %d:\n'%.*s'\n", pfd->fd, len, str->data);
-                //ev.base.size = sizeof(ev);
-                //ev.base.stream = stream;
-                //ev.base.kind = ss->ev_kind;
-                //ev.base.timestamp_lb = (shm_timestamp)clock();
-                //ev.base.timestamp_ub = (shm_timestamp)clock();
-                //ev.base.id = shm_stream_get_next_id(stream);
-                //ev.fd = fileno(fds);
-                //ev.str_ref.size = str->size;
-                //ev.str_ref.data = str->data;
+                shm_event_fd_in *ev = shm_queue_extend(ss->pending_events);
+                if (ev == NULL) {
+                    // queue is full
+                    assert(false && "Not implemented");
+                }
+                ev->base.size = sizeof(*ev);
+                ev->base.stream = (shm_stream *) ss;
+                ev->base.kind = ss->ev_kind_in;
+                // FIX ME
+                ev->base.timestamp_lb = timestamp_lb;
+                ev->base.timestamp_ub = (shm_timestamp)clock();
+                ev->base.id = shm_stream_get_next_id((shm_stream *)ss);
+                ev->fd = pfd->fd;
+                ev->str_ref.size = len;
+                ev->str_ref.data = str->data;
+                ++read_ev;
             }
         }
         if (pfd->revents & POLLHUP) {
@@ -67,7 +76,7 @@ static void read_events(shm_stream_fds *ss) {
         ss->fds_size = ss->fds_num;
         ss->fds_buffer = new_fds_buffer;
     }
-
+    return read_ev;
 }
 
 static bool fds_has_event(shm_stream *stream) {
@@ -77,7 +86,9 @@ static bool fds_has_event(shm_stream *stream) {
         perror("poll failed");
         assert(0 && "poll returned -1");
     } else if (ret > 0) {
-	    read_events(fs);
+        size_t num = read_events(fs);
+        assert(num > 0);
+        assert(shm_queue_size(fs->pending_events) > 0);
 	    return true;
     }
 
@@ -85,10 +96,12 @@ static bool fds_has_event(shm_stream *stream) {
 }
 
 static shm_event_fd_in *fds_get_next_event(shm_stream *stream) {
-    static shm_event_fd_in ev_in;
     shm_stream_fds *ss = (shm_stream_fds *) stream;
+    static shm_event_fd_in ev;
+    if (shm_queue_pop(ss->pending_events, &ev))
+        return &ev;
 
-    return 0;//&ev_in;
+    return NULL;
 }
 
 shm_stream *shm_create_fds_stream() {
@@ -102,6 +115,10 @@ shm_stream *shm_create_fds_stream() {
     ss->fds_size = 0;
     ss->fds_num = 0;
     ss->fds_buffer = NULL;
+    ss->pending_events = malloc(sizeof(shm_queue));
+    assert(ss->pending_events);
+    shm_queue_init(ss->pending_events, 32, sizeof(shm_event_fd_in));
+
     return (shm_stream *) ss;
 }
 
@@ -129,5 +146,6 @@ void shm_destroy_fds_stream(shm_stream_fds *ss) {
     }
     free(ss->fds_buffer);
     free(ss->fds);
+    free(ss->pending_events);
     free(ss);
 }

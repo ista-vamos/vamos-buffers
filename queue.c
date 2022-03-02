@@ -19,14 +19,17 @@ void shm_queue_destroy(shm_queue *q) {
     free(q->data);
 }
 
-bool shm_queue_push(shm_queue *q, const void *elem) {
+// allocate space for one element
+// and return the pointer to this element.
+// If there is no room, NULL is returned.
+// The returned memory can be filled manually.
+void *shm_queue_extend(shm_queue *q) {
     // queue is full
     if (q->elem_num == q->size)
-        return false;
+        return NULL;
 
     // all ok, copy the data
-    unsigned char *pos = q->data + q->head*q->elem_size;
-    memcpy(pos, elem, q->elem_size);
+    void *pos = q->data + q->head*q->elem_size;
     ++q->head;
     ++q->elem_num;
 
@@ -34,7 +37,18 @@ bool shm_queue_push(shm_queue *q, const void *elem) {
     if (q->head == q->size) {
         q->head = 0;
     }
-    return true;
+
+    return pos;
+}
+
+
+bool shm_queue_push(shm_queue *q, const void *elem) {
+    void *pos = shm_queue_extend(q);
+    if (pos) {
+        memcpy(pos, elem, q->elem_size);
+        return true;
+    }
+    return false;
 }
 
 bool shm_queue_pop(shm_queue *q, void *buff) {
@@ -51,4 +65,10 @@ bool shm_queue_pop(shm_queue *q, void *buff) {
     return true;
 }
 
+size_t shm_queue_max_size(shm_queue *q) {
+    return q->size;
+}
 
+size_t shm_queue_size(shm_queue *q) {
+    return q->elem_num;
+}

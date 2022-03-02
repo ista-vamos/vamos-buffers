@@ -3,6 +3,7 @@
 #include <time.h>
 
 #include "eventinterface.h"
+#include "streams.h"
 
 typedef struct _shm_event_stdin {
 	// mandatory
