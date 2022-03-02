@@ -22,5 +22,8 @@ clean:
 	make -C shmbuf clean
 	make -C fastbuf clean
 
-.PHONY: clean all shmbuf fastbuf drfun drsyscalls experiments
+check:
+	make -C tests test
+
+.PHONY: clean all check shmbuf fastbuf drfun drsyscalls experiments
 

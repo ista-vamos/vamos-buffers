@@ -6,22 +6,7 @@
 
 #include "stream-fds.h"
 
-static bool fds_has_event(shm_stream *stream) {
-    shm_stream_fds *fs = (shm_stream_fds *) stream;
-    return poll(fs->fds, fs->fds_num, 0) != 0;
-}
-
-static shm_event_fd_in *fds_get_next_event(shm_stream *stream) {
-    static shm_event_fd_in ev_in;
-    shm_stream_fds *ss = (shm_stream_fds *) stream;
-
-    // FIXME: do not call poll twice...
-    int ret = poll(ss->fds, ss->fds_num, 0);
-    if (ret == -1) {
-        perror("poll failed");
-        assert(0 && "poll returned -1");
-    }
-
+static void read_events(shm_stream_fds *ss) {
     size_t remove_num = 0;
     for (unsigned i = 0; i < ss->fds_num; ++i) {
         struct pollfd *pfd = ss->fds + i;
@@ -40,8 +25,7 @@ static shm_event_fd_in *fds_get_next_event(shm_stream *stream) {
             } else {
                 assert(len > 0);
                  // FIXME: set O_NONBLOCK and read all the data right now
-                 // to have the right timestamps
-                 // create the event
+                 // to have the right timestamps?
                  printf("Read from %d:\n'%.*s'\n", pfd->fd, len, str->data);
                 //ev.base.size = sizeof(ev);
                 //ev.base.stream = stream;
@@ -83,6 +67,26 @@ static shm_event_fd_in *fds_get_next_event(shm_stream *stream) {
         ss->fds_size = ss->fds_num;
         ss->fds_buffer = new_fds_buffer;
     }
+
+}
+
+static bool fds_has_event(shm_stream *stream) {
+    shm_stream_fds *fs = (shm_stream_fds *) stream;
+    int ret = poll(fs->fds, fs->fds_num, 0);
+    if (ret == -1) {
+        perror("poll failed");
+        assert(0 && "poll returned -1");
+    } else if (ret > 0) {
+	    read_events(fs);
+	    return true;
+    }
+
+    return false;
+}
+
+static shm_event_fd_in *fds_get_next_event(shm_stream *stream) {
+    static shm_event_fd_in ev_in;
+    shm_stream_fds *ss = (shm_stream_fds *) stream;
 
     return 0;//&ev_in;
 }
