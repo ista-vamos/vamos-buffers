@@ -37,7 +37,7 @@ static size_t read_events(shm_stream_fds *ss) {
                 ev->base.size = sizeof(*ev);
                 ev->base.stream = (shm_stream *) ss;
                 ev->base.kind = ss->ev_kind_in;
-                // FIX ME
+                // FIXME
                 ev->base.timestamp_lb = timestamp_lb;
                 ev->base.timestamp_ub = (shm_timestamp)clock();
                 ev->base.id = shm_stream_get_next_id((shm_stream *)ss);
@@ -81,18 +81,24 @@ static size_t read_events(shm_stream_fds *ss) {
 
 static bool fds_has_event(shm_stream *stream) {
     shm_stream_fds *fs = (shm_stream_fds *) stream;
+
+    // dispatch pending events if available
+    if (shm_queue_size(fs->pending_events) > 0)
+        return true;
+
+    // check for new events
     int ret = poll(fs->fds, fs->fds_num, 0);
     if (ret == -1) {
         perror("poll failed");
         assert(0 && "poll returned -1");
     } else if (ret > 0) {
         size_t num = read_events(fs);
-        assert(num > 0);
-        assert(shm_queue_size(fs->pending_events) > 0);
-	    return true;
+        // num can be 0 if all fds get closed (which
+        // is what poll detects)
+        assert(num == 0 || shm_queue_size(fs->pending_events));
     }
 
-    return false;
+    return shm_queue_size(fs->pending_events);
 }
 
 static shm_event_fd_in *fds_get_next_event(shm_stream *stream) {

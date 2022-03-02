@@ -106,8 +106,11 @@ shm_streams *shm_streams_mgr(void) {
 }
 
 shm_event *shm_streams_get_next_ev(shm_streams *streams_mgr) {
+    // use static counter to do round robin -- so that some stream
+    // does not starve
     static unsigned i = 0;
     shm_stream *stream = NULL;
+    // reset counter if we're at the end
     if (i >= streams_mgr->num_of_streams)
         i = 0;
 
@@ -122,7 +125,8 @@ shm_event *shm_streams_get_next_ev(shm_streams *streams_mgr) {
         }
     }
 
-    // for now, we should check if the stream is finished...
+    // TODO: we should check if the stream is finished and remove it
+    // in that case
     return NULL;
 }
 
