@@ -180,7 +180,7 @@ void insert_data_buffer(monitored_process proc, pid_t tid, databuffer * dbuf)
 	monitor_buffer buf=find_thread_buffer(proc,tid);
 	if(buf==NULL)
 	{
-		abort;
+        abort();
 	}
 	mtx_lock(&buf->data_mtx);
 	if(buf->dbuf==NULL)
