@@ -1,7 +1,9 @@
-#include "eventinterface.h"
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+
+#include "eventinterface.h"
+#include "streams.h"
 
 /*****
  * EVENT
