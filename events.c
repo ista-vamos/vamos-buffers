@@ -55,12 +55,20 @@ size_t shm_event_size(shm_event *event) {
     return event->size;
 };
 
+shm_stream *shm_event_get_stream(shm_event *event) {
+    return event->stream;
+}
+
 
 /*****
  * STREAM
  *****/
 shm_eventid shm_stream_get_next_id(shm_stream *stream) {
       return ++stream->last_event_id;
+}
+
+const char *shm_stream_get_name(shm_stream *stream) {
+    return stream->name;
 }
 
 static uint64_t last_stream_id = 0;
@@ -95,7 +103,6 @@ shm_streams *shm_streams_mgr(void) {
     return &global_stream;
 }
 
-// just a comfy fun
 shm_event *shm_streams_get_next_ev(shm_streams *streams_mgr) {
     static unsigned i = 0;
     shm_stream *stream = NULL;
@@ -105,11 +112,12 @@ shm_event *shm_streams_get_next_ev(shm_streams *streams_mgr) {
     while (i < streams_mgr->num_of_streams) {
         assert(streams_mgr->streams);
         stream = streams_mgr->streams[i];
-        printf("Dispatching stream %d (%s)\n", i, stream->name);
+        // printf("Dispatching stream %d (%s)\n", i, stream->name);
+        ++i;
+
         if (stream && stream->has_event(stream)) {
             return stream->get_next_event(stream);
         }
-        ++i;
     }
 
     // for now, we should check if the stream is finished...
@@ -128,7 +136,7 @@ void shm_streams_add_stream(shm_streams *streams_mgr, shm_stream *stream) {
 
     assert(num < streams_mgr->allocated_streams);
     streams_mgr->streams[num] = stream;
-
+    printf("Added a stream id %lu: '%s'\n", num, stream->name);
 }
 
 /*

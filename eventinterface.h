@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-typedef intptr_t shm_eventqueue;
+//typedef intptr_t shm_eventqueue;
 
-// typedef struct _shm_event shm_event;
+struct _shm_stream;
 
 typedef uint64_t shm_kind;
 
@@ -21,12 +21,12 @@ typedef struct _shm_event {
     size_t size;                // must be set for each event type
     shm_kind kind;
     shm_eventid id;
+    struct _shm_stream *stream;
     shm_timestamp timestamp_lb;
     shm_timestamp timestamp_ub;
 } shm_event;
 
 
-struct _shm_stream;
 typedef bool (*shm_stream_has_event_fn)(struct _shm_stream *);
 typedef shm_event *(*shm_stream_get_next_event_fn)(struct _shm_stream *);
 // TODO: make this opaque
@@ -44,6 +44,7 @@ void shm_stream_init(shm_stream *stream,
                      const char * const name);
 shm_eventid shm_stream_get_next_id(shm_stream *);
 shm_event *shm_stream_get_next_ev(shm_stream *);
+const char *shm_stream_get_name(shm_stream *);
 
 typedef struct _shm_streams shm_streams;
 
@@ -97,14 +98,18 @@ shm_constraint shm_constraint_mk_or(shm_constraint left, shm_constraint right);
 // void shm_eventqueue_close(shm_eventqueue queue);
 
 //blocks while waiting; returns event with kind shm_get_end_of_stream_id() at end of stream
-shm_event get_next_event(shm_eventqueue queue);
+// shm_event get_next_event(shm_eventqueue queue);
 
 //EVENTS
+void shm_event_init(size_t size, shm_kind kind, shm_stream *stream);
+void shm_event_init_with_time(size_t size, shm_kind kind, shm_stream *stream);
+
 shm_eventid shm_event_id(shm_event *event);
 size_t shm_event_size(shm_event *event);
 shm_timestamp shm_event_timestamp_lb(shm_event *event);
 shm_timestamp shm_event_timestamp_ub(shm_event *event);
 shm_kind shm_event_kind(shm_event *event);
+shm_stream *shm_event_get_stream(shm_event *event);
 // full copy of the event including full copy of the data
 // (i.e., if the data is a string, the whole string is copied)
 void shm_event_copy(shm_event *event, shm_event *new_event);
@@ -137,5 +142,11 @@ typedef struct _shm_string_ref {
     size_t size;
     const char *data;
 } shm_string_ref;
+
+typedef struct _shm_string {
+    size_t size;
+    size_t alloc_size;
+    char *data;
+} shm_string;
 
 #endif // SHAMON_EVENTINTERFACE_H_
