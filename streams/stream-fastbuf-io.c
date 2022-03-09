@@ -8,7 +8,7 @@
 #include "stream-fastbuf-io.h"
 
 // FIXME: do these local to a stream
-static int monitoring_active = 1;
+static int monitoring_active = 0;
 static size_t processed_bytes = 0;
 
 typedef struct msgbuf
@@ -55,17 +55,23 @@ int monitoring_thread(void *arg)
 #ifdef SHM_DOMONITOR_NOWAIT
         size_t count = copy_events_nowait(buffer, buffer_buffer, 32);
 #else
+	printf("Monitoring events\n");
         size_t count = copy_events_wait(buffer, buffer_buffer, 32);
 #endif
+	printf("Recv bytes: %lu\n");
         for (size_t i = 0; i < count; i++)
         {
             if (buffer_buffer[i].kind == 1)
             {
+		char *text = ((char *)(buffer_buffer[i].payload64_1)) + sizeof(size_t) + sizeof(int64_t);
                 //insert_message(&write_msg, ((char *)(buffer_buffer[i].payload64_1)) + sizeof(size_t) + sizeof(int64_t));
+		printf("%s\n", text);
             }
             else
             {
+		char *text = ((char *)(buffer_buffer[i].payload64_1)) + sizeof(size_t) + sizeof(int64_t);
                 //insert_message(&read_msg, ((char *)(buffer_buffer[i].payload64_1)) + sizeof(size_t) + sizeof(int64_t));
+		printf("%s\n", text);
             }
             processed_bytes += buffer_buffer[i].payload64_2;
         }
@@ -76,6 +82,7 @@ int monitoring_thread(void *arg)
 int register_monitored_thread(monitor_buffer buffer)
 {
     thrd_t thrd;
+    printf("Registering thread\n");
     thrd_create(&thrd, &monitoring_thread, buffer);
 }
 
@@ -100,7 +107,7 @@ static bool io_has_event(shm_stream *stream) {
    //}
 
    // return shm_queue_size(fs->pending_events);
-   return false;
+   return true;
 }
 
 static shm_event_io *io_get_next_event(shm_stream *stream) {
@@ -129,10 +136,10 @@ shm_stream *shm_create_io_stream(pid_t pid) {
     ss->ev_kind_in = shm_mk_event_kind("io-in");
     ss->ev_kind_out = shm_mk_event_kind("io-out");
 
+    monitoring_active = 1;
     monitored_process proc = attach_to_process(pid, &register_monitored_thread);
 
     //wait_for_process(proc);
-    // monitoring_active = 0;
 
     return (shm_stream *) ss;
 }
