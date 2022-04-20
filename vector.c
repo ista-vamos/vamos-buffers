@@ -13,7 +13,7 @@ void shm_vector_destroy(shm_vector *vec) {
         free(vec->data);
 }
 
-size_t shm_vector_push(shm_vector *vec, void *elem) {
+void *shm_vector_extend(shm_vector *vec) {
     if (vec->size >= vec->alloc_size) {
         // TODO: exp. growth?
         vec->alloc_size += 10;
@@ -23,10 +23,14 @@ size_t shm_vector_push(shm_vector *vec, void *elem) {
     }
 
     assert(vec->size < vec->alloc_size && "Vector too small");
-    memcpy((((unsigned char *)vec->data) + vec->size*vec->element_size),
-           elem, vec->element_size);
+    void *addr = ((unsigned char *)vec->data) + vec->size*vec->element_size;
+    ++vec->size;
+    return addr;
+}
 
-    return ++vec->size;
+size_t shm_vector_push(shm_vector *vec, void *elem) {
+    memcpy(shm_vector_extend(vec), elem, vec->element_size);
+    return vec->size;
 }
 
 size_t shm_vector_pop(shm_vector *vec) {

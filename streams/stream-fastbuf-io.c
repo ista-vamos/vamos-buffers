@@ -1,8 +1,9 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 #include <assert.h>
 #include <threads.h>
+#include <sys/types.h>
 
 #include "fastbuf/shm_monitor.h"
 #include "stream-fastbuf-io.h"
@@ -58,7 +59,7 @@ int monitoring_thread(void *arg)
 	printf("Monitoring events\n");
         size_t count = copy_events_wait(buffer, buffer_buffer, 32);
 #endif
-	printf("Recv bytes: %lu\n");
+    printf("Recv bytes: %lu\n", count);
         for (size_t i = 0; i < count; i++)
         {
             if (buffer_buffer[i].kind == 1)
@@ -129,7 +130,7 @@ shm_stream *shm_create_io_stream(pid_t pid) {
 
     shm_stream_io *ss = malloc(sizeof *ss);
     assert(ss);
-    shm_stream_init((shm_stream *)ss,
+    shm_stream_init((shm_stream *)ss, sizeof(shm_event_io),
                     (shm_stream_has_event_fn) io_has_event,
                     (shm_stream_get_next_event_fn) io_get_next_event,
                      name);

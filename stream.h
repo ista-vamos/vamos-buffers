@@ -10,11 +10,13 @@ typedef struct _shm_stream {
     uint64_t id;
     const char *name;
     shm_eventid last_event_id;
+    size_t event_size;
     shm_stream_has_event_fn has_event;
     shm_stream_get_next_event_fn get_next_event;
 } shm_stream;
 
 void shm_stream_init(shm_stream *stream,
+                     size_t event_size,
                      shm_stream_has_event_fn has_event,
                      shm_stream_get_next_event_fn get_next_event,
                      const char * const name);

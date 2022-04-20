@@ -109,7 +109,7 @@ static shm_event_fd_in *fds_get_next_event(shm_stream *stream) {
 
 shm_stream *shm_create_fds_stream() {
     shm_stream_fds *ss = malloc(sizeof *ss);
-    shm_stream_init((shm_stream *)ss,
+    shm_stream_init((shm_stream *)ss, sizeof(shm_event_fd_in),
                     (shm_stream_has_event_fn) fds_has_event,
                     (shm_stream_get_next_event_fn) fds_get_next_event,
                      "fds-stream");
