@@ -38,7 +38,6 @@ shm_event *shamon_get_next_ev(shamon *shmn) {
 
     while (i < shm_vector_size(&shmn->streams)) {
         stream = *((shm_stream**)shm_vector_at(&shmn->streams, i));
-        // printf("Dispatching stream %d (%s)\n", i, stream->name);
         ++i;
 
         if (stream && stream->has_event(stream)) {
@@ -53,8 +52,8 @@ shm_event *shamon_get_next_ev(shamon *shmn) {
 
 void shamon_add_stream(shamon *shmn, shm_stream *stream) {
     shm_vector_push(&shmn->streams, &stream);
-   //assert(*((shm_stream**)shm_vector_at(&shmn->streams, shm_vector_size(&shmn->streams) - 1)) == stream
-   //       && "BUG: shm_vector_push");
+    assert((*((shm_stream**)shm_vector_at(&shmn->streams, shm_vector_size(&shmn->streams) - 1)) == stream)
+           && "BUG: shm_vector_push");
     printf("Added a stream id %lu: '%s'\n",
            shm_vector_size(&shmn->streams) - 1,
            stream->name);
