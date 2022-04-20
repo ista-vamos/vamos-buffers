@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 #include <assert.h>
 #include <threads.h>
 #include <stdbool.h>
@@ -9,6 +10,17 @@
 #include "stream.h"
 #include "vector.h"
 #include "queue.h"
+
+static void sleep_ns(uint64_t ns) {
+    struct timespec ts = { .tv_nsec = ns };
+    nanosleep(&ts, NULL);
+}
+
+/*
+static void sleep_ms(uint64_t ms) {
+    sleep_ns(ms * 1000000);
+}
+*/
 
 /*****
  * STREAMS
@@ -40,6 +52,7 @@ int buffer_manager(void *data) {
     while (!buffer->active)
         ;
 
+    printf("Running fill & autodrop for stream %s\n", stream->name);
     while (buffer->active) {
         if (stream->has_event(stream)) {
             shm_event *ev = stream->get_next_event(stream);
@@ -56,8 +69,10 @@ int buffer_manager(void *data) {
                 buffer->dropped_num = 0;
             }
 
+            printf("Buffering event from stream %s\n", stream->name);
             shm_queue_push(queue, ev);
         }
+        sleep_ns(10000);
     }
 
     // TODO: we should check if the stream is finished and remove it
@@ -89,8 +104,13 @@ shamon *shamon_create(void) {
 
 void shamon_destroy(shamon *shmn) {
         shm_vector_destroy(&shmn->streams);
-        shm_vector_destroy(&shmn->buffers);
+        for (size_t i = 0; i < shm_vector_size(&shmn->buffer_threads); ++i) {
+            shm_arbiter_buffer *buff = *((shm_arbiter_buffer **)shm_vector_at(&shmn->buffers, i));
+            buff->active = false;
+            thrd_join(*(thrd_t*)shm_vector_at(&shmn->buffer_threads, i), NULL);
+        }
         shm_vector_destroy(&shmn->buffer_threads);
+        shm_vector_destroy(&shmn->buffers);
         free(shmn->_ev);
         free(shmn);
 }
@@ -105,11 +125,12 @@ shm_event *shamon_get_next_ev(shamon *shmn) {
         i = 0;
 
     while (i < shm_vector_size(&shmn->buffers)) {
-        buffer = *((shm_arbiter_buffer**)shm_vector_at(&shmn->buffers, i));
+        buffer = ((shm_arbiter_buffer*)shm_vector_at(&shmn->buffers, i));
         assert(buffer);
         ++i;
 
         if (shm_queue_size(&buffer->buffer) > 0) {
+            assert(shmn->_ev);
             shm_queue_pop(&buffer->buffer, shmn->_ev);
             return shmn->_ev;
         }
