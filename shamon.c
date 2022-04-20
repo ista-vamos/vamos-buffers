@@ -5,29 +5,25 @@
 
 #include "shamon.h"
 #include "stream.h"
+#include "vector.h"
 
 /*****
  * STREAMS
  *****/
 typedef struct _shamon {
-        size_t num_of_streams;
-        size_t allocated_streams;
-        shm_stream **streams;
+        shm_vector streams;
 } shamon;
 
 shamon *shamon_create(void) {
         shamon *shmn = malloc(sizeof(shamon));
         assert(shmn);
 
-        shmn->num_of_streams = 0;
-        shmn->allocated_streams = 0;
-        shmn->streams = NULL;
-
+        shm_vector_init(&shmn->streams, sizeof(shm_stream *));
         return shmn;
 }
 
 void shamon_destroy(shamon *shmn) {
-        free(shmn->streams);
+        shm_vector_destroy(&shmn->streams);
         free(shmn);
 }
 
@@ -37,12 +33,11 @@ shm_event *shamon_get_next_ev(shamon *shmn) {
     static unsigned i = 0;
     shm_stream *stream = NULL;
     // reset counter if we're at the end
-    if (i >= shmn->num_of_streams)
+    if (i >= shm_vector_size(&shmn->streams))
         i = 0;
 
-    while (i < shmn->num_of_streams) {
-        assert(shmn->streams);
-        stream = shmn->streams[i];
+    while (i < shm_vector_size(&shmn->streams)) {
+        stream = *((shm_stream**)shm_vector_at(&shmn->streams, i));
         // printf("Dispatching stream %d (%s)\n", i, stream->name);
         ++i;
 
@@ -57,18 +52,12 @@ shm_event *shamon_get_next_ev(shamon *shmn) {
 }
 
 void shamon_add_stream(shamon *shmn, shm_stream *stream) {
-    size_t num = shmn->num_of_streams++;
-
-    if (num >= shmn->allocated_streams) {
-        shmn->allocated_streams += 10;
-        shmn->streams = realloc(shmn->streams,
-                                       shmn->allocated_streams * sizeof(shm_stream *));
-        assert(shmn->streams != NULL);
-    }
-
-    assert(num < shmn->allocated_streams);
-    shmn->streams[num] = stream;
-    printf("Added a stream id %lu: '%s'\n", num, stream->name);
+    shm_vector_push(&shmn->streams, &stream);
+   //assert(*((shm_stream**)shm_vector_at(&shmn->streams, shm_vector_size(&shmn->streams) - 1)) == stream
+   //       && "BUG: shm_vector_push");
+    printf("Added a stream id %lu: '%s'\n",
+           shm_vector_size(&shmn->streams) - 1,
+           stream->name);
 }
 
 
