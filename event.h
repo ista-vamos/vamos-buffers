@@ -5,22 +5,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-// typedef intptr_t shm_eventqueue;
-//QUEUES
-
-//creates new event queue
-// shm_eventqueue shm_eventqueue_create(shm_constraint constraint);
-
-//stops recording events, but events can still be retrieved
-// void shm_eventqueue_stop(shm_eventqueue queue);
-
-//releases all resources associated with queue
-// void shm_eventqueue_close(shm_eventqueue queue);
-
-//blocks while waiting; returns event with kind shm_get_end_of_stream_id() at end of stream
-// shm_event get_next_event(shm_eventqueue queue);
-
-
 typedef uint64_t shm_kind;
 
 typedef uint64_t shm_eventid;
@@ -64,38 +48,6 @@ shm_stream *shm_event_get_stream(shm_event *event);
 // void shm_event_shallow_copy(shm_event *event, shm_event *new_event);
 bool shm_event_is_hole(shm_event *);
 bool shm_event_is_eos(shm_event *);
-
-// CONSTRAINTS
-//  To be implemented independently in monitors
-/*
-typedef intptr_t shm_constraint;
-
-shm_constraint shm_constraint_mk_true();
-
-//event.fieldid == value
-shm_constraint shm_constraint_mk_eq_int(shm_kind fieldid, uint64_t value);
-
-//event.kind == id
-shm_constraint shm_constraint_mk_kind(shm_kind kind);
-
-//basic constraint combinators
-shm_constraint shm_constraint_mk_not(shm_constraint constr);
-shm_constraint shm_constraint_mk_and(shm_constraint left, shm_constraint right);
-shm_constraint shm_constraint_mk_or(shm_constraint left, shm_constraint right);
-*/
-
-
-
-//VALUES -- will be handled by inheritance
-//abstract, depends on the kinds of values we'll support. for now, basically
-//just integers, maybe booleans
-// typedef intptr_t shm_value;
-/*
-int64_t shm_value_get_int64(shm_value value);
-int shm_value_get_boolean(shm_value value);
-//shm_value shm_event_get_value(shm_event *event, shm_kind field);
-*/
-
 
 // auxiliary structs
 typedef struct _shm_string_ref {
