@@ -1,6 +1,10 @@
 CFLAGS=-fPIC -Wall -Werror -Wextra -g
 
-all: shmbuf fastbuf drfun drsyscalls experiments events.o
+all: shamon.a shmbuf fastbuf drfun drsyscalls experiments
+
+shamon.a: shamon.o event.o arbiter.o queue.o stream.o
+	ar ru $@ $^
+	ranlib $@
 
 shmbuf:
 	make -C shmbuf

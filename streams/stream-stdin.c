@@ -13,14 +13,13 @@ shm_event_stdin *stdin_get_next_event(shm_stream *stream) {
     static shm_event_stdin ev;
     shm_stream_stdin *ss = (shm_stream_stdin *) stream;
     size_t len = 0;
-    ev.base.timestamp_lb = (shm_timestamp)clock();
     ssize_t line_len = getline(&ss->line, &len, stdin);
-    ev.base.timestamp_ub = (shm_timestamp)clock();
 
     // TODO: return end-of-stream event
     if (line_len == -1)
         return NULL;
 
+    ev.time = clock();
     ev.base.size = sizeof(ev);
     ev.base.stream = stream;
     ev.base.kind = ss->ev_kind;

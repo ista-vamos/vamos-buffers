@@ -2,8 +2,8 @@
 #include <unistd.h>
 #include <time.h>
 
-#include "eventinterface.h"
-#include "streams.h"
+#include "event.h"
+#include "stream.h"
 #include "queue.h"
 
 typedef struct _shm_event_fd_in {
@@ -11,6 +11,7 @@ typedef struct _shm_event_fd_in {
 	shm_event base;
 	// data
 	int fd;
+    uint64_t time;
 	shm_string_ref str_ref;
 } shm_event_fd_in;
 

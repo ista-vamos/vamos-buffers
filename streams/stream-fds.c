@@ -9,8 +9,7 @@
 static size_t read_events(shm_stream_fds *ss) {
     size_t read_ev = 0;
     size_t remove_num = 0;
-    // TODO: this should be taken even earlier
-    shm_timestamp timestamp_lb = (shm_timestamp)clock();
+
     for (unsigned i = 0; i < ss->fds_num; ++i) {
         struct pollfd *pfd = ss->fds + i;
         if (pfd->revents & POLLIN) {
@@ -34,12 +33,10 @@ static size_t read_events(shm_stream_fds *ss) {
                     // queue is full
                     assert(false && "Not implemented");
                 }
+                ev->time = clock();
                 ev->base.size = sizeof(*ev);
                 ev->base.stream = (shm_stream *) ss;
                 ev->base.kind = ss->ev_kind_in;
-                // FIXME
-                ev->base.timestamp_lb = timestamp_lb;
-                ev->base.timestamp_ub = (shm_timestamp)clock();
                 ev->base.id = shm_stream_get_next_id((shm_stream *)ss);
                 ev->fd = pfd->fd;
                 ev->str_ref.size = len;

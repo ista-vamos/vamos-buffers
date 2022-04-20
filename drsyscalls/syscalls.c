@@ -101,7 +101,7 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
         dr_fprintf(STDERR, "Client syscall is running\n");
     }
     initialize_application_buffer();
-	app_buffer_wait_for_client();
+    app_buffer_wait_for_client();
 }
 
 
@@ -198,14 +198,9 @@ event_pre_syscall(void *drcontext, int sysnum)
 static void
 event_post_syscall(void *drcontext, int sysnum)
 {
-    // dr_syscall_result_info_t scri;
-    // scri.size=sizeof(dr_syscall_result_info_t)+sizeof(ssize_t);
-    // scri.use_high=0;
-    // scri.use_errno=0;
     reg_t retval = dr_syscall_get_result(drcontext);
-    // if (sysnum != read_sysnum)
-	// return;
-    if(sysnum!=read_sysnum&&sysnum!=write_sysnum)
+
+    if(sysnum != read_sysnum && sysnum != write_sysnum)
     {
         return;
     }
@@ -215,30 +210,7 @@ event_post_syscall(void *drcontext, int sysnum)
         return;
     }
     ssize_t len = *((ssize_t*)&retval);
-    // if(success==0)
-    // {
-    //     len=data->size;
-    // }
-    // else
-    // {
-    //     len=*((ssize_t*)&scri.value);
-    // }
-    // /* dr_syscall_get_param can be called only from pre-event
-    // int fd = dr_syscall_get_param(drcontext, 0);
-    // */
-    // if (fd != STDIN || fd == -1)
-	// return;
-    
-    // byte *output = (byte *)dr_syscall_get_param(drcontext, 1);
-    // byte first;
-    // if (!dr_safe_read(output, 1, &first, NULL)) {
-    //     dr_fprintf(STDERR, "err: cannot read syscall data (read)");
-	// return;
-    // }
-    // if (len > 0) {
-    // 	dr_printf("\033[0;34m[read@%d (%u)]: %.*s\033[0m", fd, len, len, output);
-    // }
-    //printf("Syscall: %i; len: %li; result: %lu\n",sysnum, len, len);
+    printf("Syscall: %i; len: %li; result: %lu\n",sysnum, len, len);
     if(sysnum==read_sysnum)
     {
         push_read(data->fd, data->buf, data->size, len);

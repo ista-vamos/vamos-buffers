@@ -23,8 +23,6 @@
 
 typedef uint64_t shm_kind;
 
-typedef uint64_t shm_timestamp;
-
 typedef uint64_t shm_eventid;
 
 struct _shm_stream;
@@ -37,8 +35,6 @@ typedef struct _shm_event {
     shm_kind kind;
     shm_eventid id;
     struct _shm_stream *stream;
-    shm_timestamp timestamp_lb;
-    shm_timestamp timestamp_ub;
 } shm_event;
 
 //Returns some form of identifier represents a particular name,
@@ -57,8 +53,6 @@ shm_kind shm_get_eos_kind();
 
 shm_eventid shm_event_id(shm_event *event);
 size_t shm_event_size(shm_event *event);
-shm_timestamp shm_event_timestamp_lb(shm_event *event);
-shm_timestamp shm_event_timestamp_ub(shm_event *event);
 shm_kind shm_event_kind(shm_event *event);
 shm_stream *shm_event_get_stream(shm_event *event);
 // full copy of the event including full copy of the data
@@ -70,17 +64,6 @@ shm_stream *shm_event_get_stream(shm_event *event);
 // void shm_event_shallow_copy(shm_event *event, shm_event *new_event);
 bool shm_event_is_hole(shm_event *);
 bool shm_event_is_eos(shm_event *);
-
-//TIMESTAMPS
-// have numerical upper and lower bounds, and possibly also pre-orderings
-// w.r.t. other timestamps (-1 = less than, 0 = equal, 1 = greater than)
-// shm_timestamp shm_timestamp_lb(shm_timestamp ts);
-// shm_timestamp shm_timestamp_ub(shm_timestamp ts);
-/* ??
-size_t shm_timestamp_additional_bound_count(shm_timestamp ts);
-size_t shm_timestamp_additional_bound_value(shm_timestamp ts, size_t index);
-int shm_timestamp_additional_bound_kind(shm_timestamp ts, size_t index);
-*/
 
 // CONSTRAINTS
 //  To be implemented independently in monitors
