@@ -79,9 +79,3 @@ shm_kind shm_event_kind(shm_event *event) {
 shm_stream *shm_event_get_stream(shm_event *event) {
     return event->stream;
 }
-
-
-/*
-shm_value shm_event_get_value(shm_event *event, shm_kind field) {
-}
-*/

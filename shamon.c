@@ -1,7 +1,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
 #include <assert.h>
 #include <threads.h>
 #include <stdbool.h>
@@ -10,17 +9,7 @@
 #include "stream.h"
 #include "vector.h"
 #include "queue.h"
-
-static void sleep_ns(uint64_t ns) {
-    struct timespec ts = { .tv_nsec = ns };
-    nanosleep(&ts, NULL);
-}
-
-/*
-static void sleep_ms(uint64_t ms) {
-    sleep_ns(ms * 1000000);
-}
-*/
+#include "utils.h"
 
 /*****
  * STREAMS
