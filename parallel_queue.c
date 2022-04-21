@@ -20,7 +20,12 @@ void shm_par_queue_destroy(shm_par_queue *q) {
     free(q->data);
 }
 
-bool shm_par_queue_push(shm_par_queue *q, const void *elem) {
+/* push an element into the queue.
+ * 'size' is the actual size of the pushed element
+ * and it must hold that 'size' <= 'elem_size' */
+bool shm_par_queue_push(shm_par_queue *q,
+                        const void *elem,
+                        size_t size) {
     // queue is full
     if (q->elem_num == q->capacity) {
         return false;
@@ -35,7 +40,8 @@ bool shm_par_queue_push(shm_par_queue *q, const void *elem) {
         q->head = 0;
     }
 
-    memcpy(pos, elem, q->elem_size);
+    assert(q->elem_size >= size && "Size does not fit the slot");
+    memcpy(pos, elem, size);
 
     // the increment must come after everything is done
     ++q->elem_num;

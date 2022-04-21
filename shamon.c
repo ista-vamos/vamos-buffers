@@ -64,14 +64,13 @@ int buffer_manager_thrd(void *data) {
                 assert(0 && "Send dropped event");
                 dropped.n = buffer->dropped_num;
                 assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
-                shm_par_queue_push(queue, &dropped);
+                shm_par_queue_push(queue, &dropped, sizeof(dropped));
                 buffer->dropped_num = 0;
             }
 
             printf("Buffering event from stream %s\n", stream->name);
-            assert(shm_event_size(ev) <= shm_par_queue_elem_size(queue));
             assert(shm_event_copy_fn(ev) == NULL && "Not implemented yet");
-            shm_par_queue_push(queue, ev);
+            shm_par_queue_push(queue, ev, shm_event_size(ev));
         }
         sleep_ns(10000);
     }
