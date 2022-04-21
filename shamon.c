@@ -13,22 +13,26 @@
 #include "parallel_queue.h"
 #include "utils.h"
 
-/*****
- * STREAMS
- *****/
-enum buffer_status {
-    NONE,   // nothig happens to the buffer
-    READ,   // buffer is being read
-    WRITE,  // buffer is being written
-};
 
 typedef struct _shm_arbiter_buffer {
     shm_stream *stream; // the source for the buffer
     shm_par_queue buffer;   // the buffer itself
     size_t dropped_num; // the number of dropped events
     bool active;        // true while the events are being queued
-    volatile enum buffer_status status;
 } shm_arbiter_buffer;
+
+typedef struct _shamon {
+        shm_vector streams;
+        shm_vector buffers;
+        shm_vector buffer_threads;
+        /* callbacks and their data */
+        shamon_process_events_fn process_events;
+        void *process_events_data;
+        /* the memory for passing the next event in the default
+           process_events handler */
+        shm_event *_ev;
+        size_t _ev_size;
+} shamon;
 
 static void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
                                     shm_stream *stream) {
@@ -84,16 +88,57 @@ int buffer_manager_thrd(void *data) {
     thrd_exit(EXIT_SUCCESS);
 }
 
-typedef struct _shamon {
-        shm_vector streams;
-        shm_vector buffers;
-        shm_vector buffer_threads;
-        // memory for passing the next event
-        shm_event *_ev;
-        size_t _ev_size;
-} shamon;
 
-shamon *shamon_create(void) {
+static
+shm_event *default_process_events(shm_vector *buffers, void *data) {
+    assert(buffers);
+    assert(data);
+    shamon *shmn = (shamon *)data;
+
+    // use static counter to do round robin -- so that some stream
+    // does not starve
+    static unsigned i = 0;
+    shm_arbiter_buffer *buffer = NULL;
+    size_t qsize;
+    shm_event_dropped dropped;
+
+    // reset counter if we're at the end
+    if (i >= shm_vector_size(buffers))
+        i = 0;
+
+    while (i < shm_vector_size(buffers)) {
+        buffer = ((shm_arbiter_buffer*)shm_vector_at(buffers, i));
+        assert(buffer);
+        ++i;
+
+        qsize = shm_par_queue_size(&buffer->buffer);
+        if (qsize > 0) {
+            assert(shmn->_ev);
+            /* is the buffer full from 80 or more percent? */
+            if (qsize > (int)(0.8*shm_par_queue_capacity(&buffer->buffer))) {
+                /* drop half of the buffer */
+                dropped.n = shm_par_queue_capacity(&buffer->buffer) / 2;
+                if (!shm_par_queue_drop(&buffer->buffer, dropped.n)) {
+                    assert(0 && "Failed dropping events");
+                }
+                assert(shmn->_ev_size >= sizeof(dropped));
+                memcpy(shmn->_ev, &dropped, sizeof(dropped));
+                return shmn->_ev;
+            }
+
+            shm_par_queue_pop(&buffer->buffer, shmn->_ev);
+            return shmn->_ev;
+        }
+    }
+
+    // TODO: we should check if the stream is finished and remove it
+    // in that case
+    return NULL;
+}
+
+
+shamon *shamon_create(shamon_process_events_fn process_events,
+                      void *process_events_data) {
         initialize_events();
 
         shamon *shmn = malloc(sizeof(shamon));
@@ -104,6 +149,8 @@ shamon *shamon_create(void) {
         shm_vector_init(&shmn->buffer_threads, sizeof(thrd_t));
         shmn->_ev = NULL;
         shmn->_ev_size = sizeof(shm_event_dropped);
+        shmn->process_events = process_events ? process_events : default_process_events;
+        shmn->process_events_data = process_events ? process_events_data : shmn;
 
         return shmn;
 }
@@ -122,29 +169,7 @@ void shamon_destroy(shamon *shmn) {
 }
 
 shm_event *shamon_get_next_ev(shamon *shmn) {
-    // use static counter to do round robin -- so that some stream
-    // does not starve
-    static unsigned i = 0;
-    shm_arbiter_buffer *buffer = NULL;
-    // reset counter if we're at the end
-    if (i >= shm_vector_size(&shmn->buffers))
-        i = 0;
-
-    while (i < shm_vector_size(&shmn->buffers)) {
-        buffer = ((shm_arbiter_buffer*)shm_vector_at(&shmn->buffers, i));
-        assert(buffer);
-        ++i;
-
-        if (shm_par_queue_size(&buffer->buffer) > 0) {
-            assert(shmn->_ev);
-            shm_par_queue_pop(&buffer->buffer, shmn->_ev);
-            return shmn->_ev;
-        }
-    }
-
-    // TODO: we should check if the stream is finished and remove it
-    // in that case
-    return NULL;
+    return shmn->process_events(&shmn->buffers, shmn->process_events_data);
 }
 
 void shamon_add_stream(shamon *shmn, shm_stream *stream) {
