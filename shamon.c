@@ -66,7 +66,7 @@ int buffer_manager_thrd(void *data) {
 
     // TODO: we should check if the stream is finished and remove it
     // in that case
-    return 0;
+    thrd_exit(EXIT_SUCCESS);
 }
 
 typedef struct _shamon {
