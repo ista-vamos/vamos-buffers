@@ -67,3 +67,7 @@ size_t shm_par_queue_capacity(shm_par_queue *q) {
 size_t shm_par_queue_size(shm_par_queue *q) {
     return q->elem_num;
 }
+
+size_t shm_par_queue_elem_size(shm_par_queue *q) {
+    return q->elem_size;
+}

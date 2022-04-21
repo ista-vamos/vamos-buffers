@@ -22,6 +22,7 @@ struct _ev_kind_rec {
 static struct _ev_kind_rec *events_info = NULL;
 static size_t ev_kinds_num = 0;
 static size_t ev_kinds_num_allocated = 0;
+static shm_kind dropped_kind;
 
 shm_kind shm_mk_event_kind(const char* name,
                            size_t event_size,
@@ -43,26 +44,48 @@ shm_kind shm_mk_event_kind(const char* name,
     return idx + 1;
 };
 
+void initialize_events() {
+    if (events_info)
+        return;  /* events are initialized */
+
+    dropped_kind = shm_mk_event_kind("dropped",
+                                     sizeof(shm_event_dropped),
+                                     NULL, NULL);
+
+    assert(dropped_kind > 0 && "Events not initialized");
+    assert(events_info && "Events not initialized");
+}
+
+bool shm_event_is_dropped(shm_event *ev) {
+    assert(dropped_kind > 0 && "Events not initialized");
+    assert(events_info && "Events not initialized");
+    return shm_event_kind(ev) == dropped_kind;
+}
+
 const char *shm_event_kind_name(shm_kind kind) {
+    assert(events_info && "Events not initialized");
     if (kind > ev_kinds_num)
         return NULL;
     return events_info[kind - 1].name;
 }
 
-ev_copy_fn shm_event_get_copy_fn(shm_event *ev) {
+ev_copy_fn shm_event_copy_fn(shm_event *ev) {
+    assert(events_info && "Events not initialized");
     shm_kind kind = shm_event_kind(ev);
     if (kind > ev_kinds_num)
         return NULL;
     return events_info[kind - 1].ev_copy;
 }
 
-ev_destroy_fn shm_event_get_destroy_fn(shm_event *ev) {
+ev_destroy_fn shm_event_destroy_fn(shm_event *ev) {
+    assert(events_info && "Events not initialized");
     shm_kind kind = shm_event_kind(ev);
     assert(kind <= ev_kinds_num);
     return events_info[kind - 1].ev_destroy;
 }
 
 size_t shm_event_size(shm_event *ev) {
+    assert(events_info && "Events not initialized");
     shm_kind kind = shm_event_kind(ev);
     assert(kind <= ev_kinds_num);
     return events_info[kind - 1].ev_size;
@@ -76,6 +99,6 @@ shm_kind shm_event_kind(shm_event *event) {
     return event->kind;
 };
 
-shm_stream *shm_event_get_stream(shm_event *event) {
+shm_stream *shm_event_stream(shm_event *event) {
     return event->stream;
 }

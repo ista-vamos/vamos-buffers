@@ -44,6 +44,7 @@ int buffer_manager_thrd(void *data) {
     shm_stream *stream = buffer->stream;
     shm_par_queue *queue = &buffer->buffer;
     size_t max_size = shm_par_queue_capacity(queue);
+    shm_event_dropped dropped;
 
     // wait for buffer->active
     while (!buffer->active)
@@ -61,12 +62,15 @@ int buffer_manager_thrd(void *data) {
 
             if (buffer->dropped_num > 0) {
                 assert(0 && "Send dropped event");
-               //dropped.num = buffer->dropped_num;
-               //shm_par_queue_push(queue, &dropped);
+                dropped.n = buffer->dropped_num;
+                assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
+                shm_par_queue_push(queue, &dropped);
                 buffer->dropped_num = 0;
             }
 
             printf("Buffering event from stream %s\n", stream->name);
+            assert(shm_event_size(ev) <= shm_par_queue_elem_size(queue));
+            assert(shm_event_copy_fn(ev) == NULL && "Not implemented yet");
             shm_par_queue_push(queue, ev);
         }
         sleep_ns(10000);
@@ -87,6 +91,8 @@ typedef struct _shamon {
 } shamon;
 
 shamon *shamon_create(void) {
+        initialize_events();
+
         shamon *shmn = malloc(sizeof(shamon));
         assert(shmn);
 
