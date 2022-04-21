@@ -19,7 +19,7 @@ int writer(void *data) {
     int num[] = {0, 1, 2, 3};
     shm_par_queue *q = (shm_par_queue*)data;
     for (int i = 1; i < 4; ++i)
-        shm_par_queue_push(q, &num[i]);
+        shm_par_queue_push(q, &num[i], sizeof(int));
 
     thrd_exit(0);
 }

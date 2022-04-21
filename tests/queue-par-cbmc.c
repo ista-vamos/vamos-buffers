@@ -19,7 +19,7 @@ void *reader(void *data) {
 void *writer(void *data) {
     shm_par_queue *q = (shm_par_queue*)data;
     for (int i = 1; i < 4; ++i) {
-        assert(shm_par_queue_push(q, &i));
+        assert(shm_par_queue_push(q, &i, sizeof(i)));
     }
 
     pthread_exit(0);

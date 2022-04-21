@@ -21,7 +21,7 @@ void *writer(void *data) {
     shm_par_queue *q = (shm_par_queue*)data;
     int n = 0;
     while (n < 3) {
-        if (shm_par_queue_push(q, &num[n+1])) {
+        if (shm_par_queue_push(q, &num[n+1], sizeof(int))) {
                 ++n;
         }
     }
