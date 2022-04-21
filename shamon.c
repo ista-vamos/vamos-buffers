@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 #include <threads.h>
 #include <stdbool.h>
@@ -34,7 +35,10 @@ static void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
     const size_t capacity = 1024; // FIXME
 
     buffer->stream = stream;
-    shm_par_queue_init(&buffer->buffer, capacity, stream->event_size);
+    shm_par_queue_init(&buffer->buffer, capacity,
+                       /* the stream must be able to contain the event 'dropped' */
+                       stream->event_size < sizeof(shm_event_dropped) ?
+                           sizeof(shm_event_dropped) : stream->event_size);
     buffer->active = false;
     buffer->dropped_num = 0;
 }
@@ -99,7 +103,7 @@ shamon *shamon_create(void) {
         shm_vector_init(&shmn->buffers, sizeof(shm_arbiter_buffer));
         shm_vector_init(&shmn->buffer_threads, sizeof(thrd_t));
         shmn->_ev = NULL;
-        shmn->_ev_size = 0;
+        shmn->_ev_size = sizeof(shm_event_dropped);
 
         return shmn;
 }
@@ -147,7 +151,7 @@ void shamon_add_stream(shamon *shmn, shm_stream *stream) {
     shm_vector_push(&shmn->streams, &stream);
     assert((*((shm_stream**)shm_vector_at(&shmn->streams, shm_vector_size(&shmn->streams) - 1)) == stream)
            && "BUG: shm_vector_push");
-    if (stream->event_size > shmn->_ev_size) {
+    if ((shmn->_ev == NULL) || (stream->event_size > shmn->_ev_size)) {
         shmn->_ev = realloc(shmn->_ev, stream->event_size);
         shmn->_ev_size = stream->event_size;
     }
