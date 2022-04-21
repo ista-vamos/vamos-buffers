@@ -60,6 +60,24 @@ bool shm_par_queue_pop(shm_par_queue *q, void *buff) {
     return true;
 }
 
+bool shm_par_queue_drop(shm_par_queue *q, size_t k) {
+    if (k > q->capacity)
+        k = q->capacity;
+
+    if (q->elem_num < k) {
+        return false;
+    }
+
+    q->tail += k;
+    if (q->tail >= q->capacity)
+        q->tail -= q->capacity;
+
+    assert(q->elem_num >= k);
+    q->elem_num -= k;
+
+    return true;
+}
+
 size_t shm_par_queue_capacity(shm_par_queue *q) {
     return q->capacity;
 }
