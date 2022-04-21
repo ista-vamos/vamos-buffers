@@ -113,7 +113,7 @@ shm_stream *shm_create_fds_stream() {
                     (shm_stream_has_event_fn) fds_has_event,
                     (shm_stream_get_next_event_fn) fds_get_next_event,
                      "fds-stream");
-    ss->ev_kind_in = shm_mk_event_kind("fd-in");
+    ss->ev_kind_in = shm_mk_event_kind("fd-in", NULL, NULL);
     ss->fds = NULL;
     ss->fds_size = 0;
     ss->fds_num = 0;

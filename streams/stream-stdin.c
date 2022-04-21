@@ -38,7 +38,7 @@ shm_stream *shm_create_stdin_stream() {
                     (shm_stream_get_next_event_fn) stdin_get_next_event,
                      "stdin-stream");
     ss->line = NULL;
-    ss->ev_kind = shm_mk_event_kind("stdin");
+    ss->ev_kind = shm_mk_event_kind("stdin", NULL, NULL);
     return (shm_stream *) ss;
 }
 
