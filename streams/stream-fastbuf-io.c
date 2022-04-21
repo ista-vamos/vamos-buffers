@@ -132,8 +132,8 @@ shm_stream *shm_create_io_stream(pid_t pid) {
                     (shm_stream_has_event_fn) io_has_event,
                     (shm_stream_get_next_event_fn) io_get_next_event,
                      name);
-    ss->ev_kind_in = shm_mk_event_kind("io-in", NULL, NULL);
-    ss->ev_kind_out = shm_mk_event_kind("io-out", NULL, NULL);
+    ss->ev_kind_in = shm_mk_event_kind("io-in", sizeof(shm_event_io), NULL, NULL);
+    ss->ev_kind_out = shm_mk_event_kind("io-out", sizeof(shm_event_io), NULL, NULL);
 
     monitoring_active = 1;
     monitored_process proc = attach_to_process(pid, &register_monitored_thread);

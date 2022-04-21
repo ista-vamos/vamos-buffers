@@ -14,8 +14,6 @@ typedef struct _shm_stream shm_stream;
 // TODO: make this opaque? but how to do the inheritance, then? Via
 // pointers to an interface?
 typedef struct _shm_event {
-    // FIXME: move to kind record
-    size_t size;                // must be set for each event type
     shm_kind kind;
     shm_eventid id;
     struct _shm_stream *stream;
@@ -28,6 +26,7 @@ typedef void (*ev_destroy_fn) (shm_event *src);
 //used for event kinds, field names, etc. (so we don't need to do string
 //comparisons everywhere)
 shm_kind shm_mk_event_kind(const char* name,
+                           size_t event_size,
                            ev_copy_fn copy_fn,
                            ev_destroy_fn destroy_fn);
 const char *shm_event_kind_name(shm_kind kind);

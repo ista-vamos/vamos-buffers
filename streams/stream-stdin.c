@@ -20,7 +20,6 @@ shm_event_stdin *stdin_get_next_event(shm_stream *stream) {
         return NULL;
 
     ev.time = clock();
-    ev.base.size = sizeof(ev);
     ev.base.stream = stream;
     ev.base.kind = ss->ev_kind;
     ev.base.id = shm_stream_get_next_id(stream);
@@ -38,7 +37,7 @@ shm_stream *shm_create_stdin_stream() {
                     (shm_stream_get_next_event_fn) stdin_get_next_event,
                      "stdin-stream");
     ss->line = NULL;
-    ss->ev_kind = shm_mk_event_kind("stdin", NULL, NULL);
+    ss->ev_kind = shm_mk_event_kind("stdin", sizeof(shm_event_stdin), NULL, NULL);
     return (shm_stream *) ss;
 }
 

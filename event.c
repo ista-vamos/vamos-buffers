@@ -11,6 +11,7 @@
 
 struct _ev_kind_rec {
     char *name;
+    size_t ev_size;
     /* copying and destroying the event
        (important if the event carries some
        dynamically allocated memory */
@@ -23,6 +24,7 @@ size_t ev_kinds_num = 0;
 size_t ev_kinds_num_allocated = 0;
 
 shm_kind shm_mk_event_kind(const char* name,
+                           size_t event_size,
                            ev_copy_fn copy_fn,
                            ev_destroy_fn destroy_fn) {
     size_t idx = ev_kinds_num++;
@@ -34,6 +36,7 @@ shm_kind shm_mk_event_kind(const char* name,
 
     // FIXME: we leak these right now, create a destructor or use atexit?
     event_kinds[idx].name = strdup(name);
+    event_kinds[idx].ev_size = event_size;
     event_kinds[idx].ev_copy = copy_fn;
     event_kinds[idx].ev_destroy = destroy_fn;
     assert(event_kinds[idx].name);
@@ -55,21 +58,22 @@ ev_copy_fn shm_event_get_copy_fn(shm_event *ev) {
 
 ev_destroy_fn shm_event_get_destroy_fn(shm_event *ev) {
     shm_kind kind = shm_event_kind(ev);
-    if (kind > ev_kinds_num)
-        return NULL;
+    assert(kind <= ev_kinds_num);
     return event_kinds[kind - 1].ev_destroy;
 }
 
+size_t shm_event_size(shm_event *ev) {
+    shm_kind kind = shm_event_kind(ev);
+    assert(kind <= ev_kinds_num);
+    return event_kinds[kind - 1].ev_size;
+};
+
 shm_eventid shm_event_id(shm_event *event) {
-	return event->id;
+    return event->id;
 }
 
 shm_kind shm_event_kind(shm_event *event) {
-	return event->kind;
-};
-
-size_t shm_event_size(shm_event *event) {
-    return event->size;
+    return event->kind;
 };
 
 shm_stream *shm_event_get_stream(shm_event *event) {
