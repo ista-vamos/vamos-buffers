@@ -31,7 +31,7 @@ static void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
     buffer->dropped_num = 0;
 }
 
-int buffer_manager(void *data) {
+int buffer_manager_thrd(void *data) {
     shm_arbiter_buffer *buffer = (shm_arbiter_buffer*) data;
     shm_stream *stream = buffer->stream;
     shm_queue *queue = &buffer->buffer;
@@ -143,7 +143,7 @@ void shamon_add_stream(shamon *shmn, shm_stream *stream) {
     shm_arbiter_buffer_init(buffer, stream);
 
     thrd_t thread_id;
-    thrd_create(&thread_id, buffer_manager, buffer);
+    thrd_create(&thread_id, buffer_manager_thrd, buffer);
     shm_vector_push(&shmn->buffer_threads, &thread_id);
     buffer->active = true;
 
