@@ -34,7 +34,7 @@ typedef struct _shm_stream_fds {
     // buffer for each fd for reading
     shm_string *fds_buffer;
     // events to be pushed to the monitor
-    shm_queue *pending_events;
+    shm_queue pending_events;
 } shm_stream_fds;
 
 shm_stream *shm_create_fds_stream();

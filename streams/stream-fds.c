@@ -28,7 +28,7 @@ static size_t read_events(shm_stream_fds *ss) {
                 pfd->revents &= POLLHUP;
             } else {
                 assert(len > 0);
-                shm_event_fd_in *ev = shm_queue_extend(ss->pending_events);
+                shm_event_fd_in *ev = shm_queue_extend(&ss->pending_events);
                 if (ev == NULL) {
                     // queue is full
                     assert(false && "Not implemented");
@@ -79,7 +79,7 @@ static bool fds_has_event(shm_stream *stream) {
     shm_stream_fds *fs = (shm_stream_fds *) stream;
 
     // dispatch pending events if available
-    if (shm_queue_size(fs->pending_events) > 0)
+    if (shm_queue_size(&fs->pending_events) > 0)
         return true;
 
     // check for new events
@@ -91,16 +91,17 @@ static bool fds_has_event(shm_stream *stream) {
         size_t num = read_events(fs);
         // num can be 0 if all fds get closed (which
         // is what poll detects)
-        assert(num == 0 || shm_queue_size(fs->pending_events));
+        printf("Read %lu events\n", num);
+        assert(num == 0 || shm_queue_size(&fs->pending_events) > 0);
     }
 
-    return shm_queue_size(fs->pending_events);
+    return shm_queue_size(&fs->pending_events);
 }
 
 static shm_event_fd_in *fds_get_next_event(shm_stream *stream) {
     shm_stream_fds *ss = (shm_stream_fds *) stream;
     static shm_event_fd_in ev;
-    if (shm_queue_pop(ss->pending_events, &ev))
+    if (shm_queue_pop(&ss->pending_events, &ev))
         return &ev;
 
     return NULL;
@@ -117,9 +118,7 @@ shm_stream *shm_create_fds_stream() {
     ss->fds_size = 0;
     ss->fds_num = 0;
     ss->fds_buffer = NULL;
-    ss->pending_events = malloc(sizeof(shm_queue));
-    assert(ss->pending_events);
-    shm_queue_init(ss->pending_events, 32, sizeof(shm_event_fd_in));
+    shm_queue_init(&ss->pending_events, 32, sizeof(shm_event_fd_in));
 
     return (shm_stream *) ss;
 }
@@ -148,6 +147,5 @@ void shm_destroy_fds_stream(shm_stream_fds *ss) {
     }
     free(ss->fds_buffer);
     free(ss->fds);
-    free(ss->pending_events);
     free(ss);
 }
