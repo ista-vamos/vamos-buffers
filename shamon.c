@@ -51,7 +51,8 @@ int buffer_manager_thrd(void *data) {
     shm_arbiter_buffer *buffer = (shm_arbiter_buffer*) data;
     shm_stream *stream = buffer->stream;
     shm_par_queue *queue = &buffer->buffer;
-    size_t max_size = shm_par_queue_capacity(queue);
+    size_t capacity = shm_par_queue_capacity(queue);
+    assert(capacity >= 3 && "We need at least 3 elements in the buffer");
     shm_event_dropped dropped;
 
     // wait for buffer->active
@@ -63,7 +64,7 @@ int buffer_manager_thrd(void *data) {
         if (stream->has_event(stream)) {
             shm_event *ev = stream->get_next_event(stream);
             assert(ev);
-            if (max_size - shm_par_queue_size(queue) < 2) {
+            if (capacity - shm_par_queue_size(queue) < 2) {
                 ++buffer->dropped_num;
                 continue;
             }
