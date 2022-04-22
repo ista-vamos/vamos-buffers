@@ -115,7 +115,7 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
         if (qsize > 0) {
             assert(shmn->_ev);
             /* is the buffer full from 80 or more percent? */
-            if (qsize > (int)(0.8*shm_par_queue_capacity(&buffer->buffer))) {
+            if (qsize > 0.8*shm_par_queue_capacity(&buffer->buffer)) {
                 /* drop half of the buffer */
                 uint64_t n = shm_par_queue_capacity(&buffer->buffer) / 2;
                 if (!shm_par_queue_drop(&buffer->buffer, n)) {
