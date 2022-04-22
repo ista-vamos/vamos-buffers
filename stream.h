@@ -11,6 +11,7 @@ typedef struct _shm_stream {
     const char *name;
     shm_eventid last_event_id;
     size_t event_size;
+    /* callbacks */
     shm_stream_has_event_fn has_event;
     shm_stream_get_next_event_fn get_next_event;
 } shm_stream;
@@ -23,5 +24,12 @@ void shm_stream_init(shm_stream *stream,
 shm_eventid shm_stream_get_next_id(shm_stream *);
 shm_event *shm_stream_get_next_ev(shm_stream *);
 const char *shm_stream_get_name(shm_stream *);
+
+/*
+ * Fill the 'dropped' event for the given stream
+ */
+void shm_stream_get_dropped_event(shm_stream *stream,
+                                  shm_event_dropped *dropped_ev,
+                                  uint64_t n);
 
 #endif // SHAMON_STREAMS_H

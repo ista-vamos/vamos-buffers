@@ -69,8 +69,7 @@ int buffer_manager_thrd(void *data) {
             }
 
             if (buffer->dropped_num > 0) {
-                assert(0 && "Send dropped event");
-                dropped.n = buffer->dropped_num;
+                shm_stream_get_dropped_event(buffer->stream, &dropped, buffer->dropped_num);
                 assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
                 shm_par_queue_push(queue, &dropped, sizeof(dropped));
                 buffer->dropped_num = 0;
@@ -117,10 +116,11 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
             /* is the buffer full from 80 or more percent? */
             if (qsize > (int)(0.8*shm_par_queue_capacity(&buffer->buffer))) {
                 /* drop half of the buffer */
-                dropped.n = shm_par_queue_capacity(&buffer->buffer) / 2;
-                if (!shm_par_queue_drop(&buffer->buffer, dropped.n)) {
+                uint64_t n = shm_par_queue_capacity(&buffer->buffer) / 2;
+                if (!shm_par_queue_drop(&buffer->buffer, n)) {
                     assert(0 && "Failed dropping events");
                 }
+                shm_stream_get_dropped_event(buffer->stream, &dropped, n);
                 assert(shmn->_ev_size >= sizeof(dropped));
                 memcpy(shmn->_ev, &dropped, sizeof(dropped));
                 return shmn->_ev;

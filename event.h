@@ -29,7 +29,7 @@ typedef void (*ev_destroy_fn) (shm_event *src);
 
 /* Must be called before using event API.
  * It is called from shamon_create */
-void initialize_events();
+void initialize_events(void);
 
 //Returns some form of identifier represents a particular name,
 //used for event kinds, field names, etc. (so we don't need to do string
@@ -50,7 +50,7 @@ ev_copy_fn shm_event_copy_fn(shm_event *ev);
 
 // DROP EVENT
 bool shm_event_is_dropped(shm_event *);
-shm_kind shm_get_dropped_kind();
+shm_kind shm_get_dropped_kind(void);
 
 // auxiliary structs
 typedef struct _shm_string_ref {

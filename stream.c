@@ -26,6 +26,16 @@ void shm_stream_init(shm_stream *stream,
         stream->name = name;
 }
 
+// not thread safe!
+void shm_stream_get_dropped_event(shm_stream *stream,
+                                  shm_event_dropped *dropped_ev,
+                                  uint64_t n) {
+    dropped_ev->base.id = shm_stream_get_next_id(stream);
+    dropped_ev->base.kind = shm_get_dropped_kind();
+    dropped_ev->base.stream = stream;
+    dropped_ev->n = n;
+}
+
 // just a comfy fun
 shm_event *shm_stream_get_next_ev(shm_stream *stream) {
         return stream->get_next_event(stream);

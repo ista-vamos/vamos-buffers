@@ -63,6 +63,12 @@ bool shm_event_is_dropped(shm_event *ev) {
     return shm_event_kind(ev) == dropped_kind;
 }
 
+shm_kind shm_get_dropped_kind() {
+    assert(dropped_kind > 0 && "Events not initialized");
+    assert(events_info && "Events not initialized");
+    return dropped_kind;
+}
+
 const char *shm_event_kind_name(shm_kind kind) {
     assert(events_info && "Events not initialized");
     assert(kind <= ev_kinds_num && "Invalid event kind");
