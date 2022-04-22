@@ -76,7 +76,7 @@ int buffer_manager_thrd(void *data) {
                 buffer->dropped_num = 0;
             }
 
-            printf("Buffering event from stream %s\n", stream->name);
+            /* printf("Buffering event from stream %s\n", stream->name); */
             assert(shm_event_copy_fn(ev) == NULL && "Not implemented yet");
             shm_par_queue_push(queue, ev, shm_event_size(ev));
         }

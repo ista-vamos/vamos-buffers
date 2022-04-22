@@ -59,35 +59,34 @@ void initialize_events() {
 bool shm_event_is_dropped(shm_event *ev) {
     assert(dropped_kind > 0 && "Events not initialized");
     assert(events_info && "Events not initialized");
+    assert(shm_event_kind(ev) <= ev_kinds_num && "Invalid event kind");
     return shm_event_kind(ev) == dropped_kind;
 }
 
 const char *shm_event_kind_name(shm_kind kind) {
     assert(events_info && "Events not initialized");
-    if (kind > ev_kinds_num)
-        return NULL;
+    assert(kind <= ev_kinds_num && "Invalid event kind");
     return events_info[kind - 1].name;
 }
 
 ev_copy_fn shm_event_copy_fn(shm_event *ev) {
     assert(events_info && "Events not initialized");
     shm_kind kind = shm_event_kind(ev);
-    if (kind > ev_kinds_num)
-        return NULL;
+    assert(kind <= ev_kinds_num && "Invalid event kind");
     return events_info[kind - 1].ev_copy;
 }
 
 ev_destroy_fn shm_event_destroy_fn(shm_event *ev) {
     assert(events_info && "Events not initialized");
     shm_kind kind = shm_event_kind(ev);
-    assert(kind <= ev_kinds_num);
+    assert(kind <= ev_kinds_num && "Invalid event kind");
     return events_info[kind - 1].ev_destroy;
 }
 
 size_t shm_event_size(shm_event *ev) {
     assert(events_info && "Events not initialized");
     shm_kind kind = shm_event_kind(ev);
-    assert(kind <= ev_kinds_num);
+    assert(kind <= ev_kinds_num && "Invalid event kind");
     return events_info[kind - 1].ev_size;
 };
 

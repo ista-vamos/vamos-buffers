@@ -91,7 +91,6 @@ static bool fds_has_event(shm_stream *stream) {
         size_t num = read_events(fs);
         // num can be 0 if all fds get closed (which
         // is what poll detects)
-        printf("Read %lu events\n", num);
         assert(num == 0 || shm_queue_size(&fs->pending_events) > 0);
     }
 
