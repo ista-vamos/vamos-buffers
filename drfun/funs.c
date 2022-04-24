@@ -1,5 +1,5 @@
 /* **********************************************************
- * Copyright (c) 2021 IST Austria.  All rights reserved.
+ * Copyright (c) 2021-2022 IST Austria.  All rights reserved.
  * **********************************************************/
 
 /*
@@ -86,17 +86,17 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
     events_num = argc - 1;
     events = dr_global_alloc(sizeof(struct call_event_spec)*events_num);
     for (int i = 1; i < argc; ++i) {
-            const char *sig = strrchr(argv[i], ':');
-            if (sig) {
-               ++sig;
-               DR_ASSERT(strlen(sig) <=  sizeof(events[0].signature));
-               strncpy(events[i-1].signature, sig,
-                       sizeof(events[0].signature));
-                events[i-1].name = strndup(argv[i], sig - argv[i] -1);
-            } else {
-                events[i-1].name = strdup(argv[i]);
-                events[i-1].signature[0] = '\0';
-            }
+        const char *sig = strrchr(argv[i], ':');
+        if (sig) {
+           ++sig;
+           DR_ASSERT(strlen(sig) <=  sizeof(events[0].signature));
+           strncpy(events[i-1].signature, sig,
+                   sizeof(events[0].signature));
+            events[i-1].name = strndup(argv[i], sig - argv[i] -1);
+        } else {
+            events[i-1].name = strdup(argv[i]);
+            events[i-1].signature[0] = '\0';
+        }
     }
 
     dr_set_client_name("Track function calls", "");
@@ -128,15 +128,16 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
                            /* flags = */ 0);
         if (ok == DRSYM_ERROR_LINE_NOT_AVAILABLE || ok == DRSYM_SUCCESS) {
             dr_printf("Found %s:%s in %s at %lu\n",
-                  events[i].name,
-                  events[i].signature,
-                  main_module->full_path,
-                  events[i].addr);
+                      events[i].name,
+                      events[i].signature,
+                      main_module->full_path,
+                      events[i].addr);
         } else {
-            dr_fprintf(STDERR, "Cannot find %s:%s in %s\n",
-                   events[i].name,
-                   events[i].signature,
-                   main_module->full_path);
+            dr_fprintf(STDERR,
+                       "Cannot find %s:%s in %s\n",
+                       events[i].name,
+                       events[i].signature,
+                       main_module->full_path);
             DR_ASSERT(0);
         }
     }
