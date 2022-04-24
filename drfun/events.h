@@ -15,13 +15,13 @@ union shamon_operand {
 
 
 struct call_event_spec {
-    const char *file; /* module */
+    const char *file; /* module (UNUSED atm) */
 
     /* we need one of these */
-    const char *name; /* name */
+    char *name; /* name */
     size_t addr;      /* offset in module */
-    /* string describing what arguments to track and
-     * what is their size:
+
+    /* string describing what arguments to track and what is their size:
      * c = (unsigned) char
      * s = (unsigned) short
      * i = (unsigned) int
@@ -32,6 +32,8 @@ struct call_event_spec {
      * _ = skip argument
      * E.g.: "i_c" means track first and third arguments that have 4 bytes
      * and 1 byte size
+     * TODO: add S for string (which will be copied into an another piece
+     * of shared memory)
      * */
     unsigned char signature[16]; /* for now, we allow 16 arguments at most */
 };

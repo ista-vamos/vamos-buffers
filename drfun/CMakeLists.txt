@@ -1,7 +1,8 @@
 project(DrShamon)
 cmake_minimum_required(VERSION 3.0)
 
-add_library(funs SHARED funs.c events.c ../shmbuf/shm.c ../shmbuf/client.c)
+add_library(funs SHARED funs.c events.c
+                        ../shmbuf/buffer.c ../shmbuf/shm.c ../shmbuf/client.c)
 find_package(DynamoRIO)
 if (NOT DynamoRIO_FOUND)
 	  message(FATAL_ERROR "DynamoRIO package required to build")
