@@ -38,6 +38,7 @@ struct call_event_spec {
     unsigned char signature[16]; /* for now, we allow 16 arguments at most */
 };
 
+size_t call_event_op_get_size(char c);
 size_t call_event_spec_get_size(struct call_event_spec *spec);
 
 /*  just an auxiliar struct for now */

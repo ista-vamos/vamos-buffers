@@ -2,10 +2,10 @@ CFLAGS=-fPIC -Wall -Werror -Wextra -g
 
 all: libshamon.so libshamon.a
 
-libshamon.so: shm.o client.o ../parallel_queue.o
+libshamon.so: buffer.o shm.o client.o ../parallel_queue.o
 	$(CC) -shared $^ -o $@
 
-libshamon.a: shm.o client.o ../parallel_queue.o
+libshamon.a: buffer.o shm.o client.o ../parallel_queue.o
 	ar rcs $@ $^
 
 shm.o: shm.c shm.h

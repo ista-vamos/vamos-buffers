@@ -74,6 +74,7 @@ static module_data_t *main_module;
 
 static struct call_event_spec *events;
 static size_t events_num;
+size_t max_elem_size;
 
 DR_EXPORT void
 dr_client_main(client_id_t id, int argc, const char *argv[])
@@ -121,6 +122,7 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
     // TODO: use to instrument only main module: dr_module_set_should_instrument()
     main_module = dr_get_main_module();
     DR_ASSERT(main_module);
+    size_t elem_size;
     for (int i = 0; i < events_num; ++i) {
         drsym_error_t ok = drsym_lookup_symbol(main_module->full_path,
                            events[i].name,
@@ -132,6 +134,10 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
                       events[i].signature,
                       main_module->full_path,
                       events[i].addr);
+            elem_size = call_event_spec_get_size(&events[i]);
+            dr_printf("elem_size: %lu\n", elem_size);
+            if (elem_size > max_elem_size)
+                max_elem_size = elem_size;
         } else {
             dr_fprintf(STDERR,
                        "Cannot find %s:%s in %s\n",
@@ -141,8 +147,10 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
             DR_ASSERT(0);
         }
     }
-    //shm = initialize_shared_buffer(call_event_spec_get_size(&events[0]));
-    //DR_ASSERT(shm);
+    DR_ASSERT(max_elem_size > 0);
+    max_elem_size += sizeof(void *); /* space for fun address */
+    shm = initialize_shared_buffer(max_elem_size);
+    DR_ASSERT(shm);
     drmgr_register_bb_instrumentation_event(NULL, event_app_instruction, 0);
 
     //buffer_wait_for_monitor(shm);
@@ -158,7 +166,7 @@ event_exit(void)
     }
 #endif
     drmgr_exit();
-    //destroy_shared_buffer(shm);
+    destroy_shared_buffer(shm);
     for (int i = 0; i < events_num; ++i)
             free(events[i].name);
     dr_global_free(events, sizeof(struct call_event_spec)*events_num);
@@ -185,13 +193,13 @@ call_get_target(instr_t *instr) {
     return target;
 }
 
-/* RDI, RSI, RDX, RCX, R8, R9  */
+/* RDI, RSI, RDX, RCX, R8, R9
 static inline long int
 call_get_arg(dr_mcontext_t *mc, int i, char o) {
     if (o == 'f') {
         DR_ASSERT(i < 7);
         DR_ASSERT(0 && "Unsupported");
-        /* return mc->simd[i].u64; */
+        // return mc->simd[i].u64;
     }
     DR_ASSERT(i < 6);
     switch(i) {
@@ -203,18 +211,48 @@ call_get_arg(dr_mcontext_t *mc, int i, char o) {
         case 5: return mc->r9;
     }
 }
+*/
+
+static inline void *
+call_get_arg_ptr(dr_mcontext_t *mc, int i, char o) {
+    if (o == 'f') {
+        DR_ASSERT(i < 7);
+        return &mc->simd[i].u64;
+    }
+    DR_ASSERT(i < 6);
+    switch(i) {
+        case 0: return &mc->xdi;
+        case 1: return &mc->xsi;
+        case 2: return &mc->xdx;
+        case 3: return &mc->xcx;
+        case 4: return &mc->r8;
+        case 5: return &mc->r9;
+    }
+}
 
 static void
 at_call_generic(app_pc target_addr, const char *sig)
 {
     dr_mcontext_t mc = { sizeof(mc), DR_MC_INTEGER };
     dr_get_mcontext(dr_get_current_drcontext(), &mc);
+    void *shmaddr = buffer_start_push(shm);
+    DR_ASSERT(shmaddr);
+    shmaddr = buffer_partial_push(shm, shmaddr,
+                                  &target_addr, sizeof(target_addr));
+    DR_ASSERT(shmaddr);
     printf("Fun %p\n", target_addr);
     int i = 0;
     for (const char *o = sig; *o; ++o) {
-        if (*o != '_')
-            printf("arg %d=%ld", i, call_get_arg(&mc, i, *o));
-         ++i;
+        if (*o != '_') {
+            shmaddr = buffer_partial_push(shm, shmaddr,
+                                          call_get_arg_ptr(&mc, i, *o),
+                                          call_event_op_get_size(*o));
+            printf(" arg %d=%ld", i, *(size_t*)call_get_arg_ptr(&mc, i, *o));
+        }
+        ++i;
+    }
+    if (!buffer_finish_push(shm)) {
+        DR_ASSERT(0 && "Buffer push failed");
     }
     putchar('\n');
 }
