@@ -175,16 +175,8 @@ call_get_target(instr_t *instr) {
         }
         target = (app_pc)opnd_get_pc(targetop);
     } else if (opnd_is_instr(targetop)) {
-       //instr_t *tgt = opnd_get_instr(targetop);
-       //target = (app_pc)instr_get_translation(tgt);
         DR_ASSERT(target != 0 &&
                   "call_get_target: unknown target");
-       //if (opnd_is_far_instr(targetop)) {
-       //    /* FIXME: handle far instr */
-       //    DR_ASSERT(false &&
-       //              "call_get_target: far instr "
-       //              "not supported");
-       //}
     } else {
         DR_ASSERT(false && "call_get_target: unknown target");
         target = 0;
