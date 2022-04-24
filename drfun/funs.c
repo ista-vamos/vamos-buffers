@@ -157,7 +157,7 @@ event_exit(void)
     }
 #endif
     drmgr_exit();
-    destroy_shared_buffer(shm);
+    //destroy_shared_buffer(shm);
     for (int i = 0; i < events_num; ++i)
             free(events[i].name);
     dr_global_free(events, sizeof(struct call_event_spec)*events_num);
