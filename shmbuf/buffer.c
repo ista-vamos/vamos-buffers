@@ -13,7 +13,7 @@
 #include "buffer.h"
 
 #define SLEEP_TIME_NS 10000
-#define MEM_SIZE 4096
+#define MEM_SIZE (4096)
 
 struct buffer_info {
     size_t capacity;
@@ -24,6 +24,8 @@ struct buffer_info {
     /* the monitored program exited/destroyed the buffer */
     _Bool destroyed;
     _Bool monitor_attached;
+    /* number of dropped events */
+    size_t dropped;
     /* shm filedescriptor */
     int fd;
 } __attribute__((aligned(8)));
@@ -33,6 +35,9 @@ struct buffer {
     /* pointer to the beginning of data */
     unsigned char data[MEM_SIZE];
 };
+
+#define BUFF_START(b) ((void*)b->data)
+#define BUFF_END(b) ((void*)b->data + MEM_SIZE - 1)
 
 size_t buffer_allocation_size() {
     return sizeof(struct buffer);
@@ -47,7 +52,6 @@ bool buffer_monitor_attached(struct buffer *buff)
 {
     return buff->info.monitor_attached;
 }
-
 
 size_t buffer_capacity(struct buffer *buff)
 {
@@ -95,8 +99,8 @@ struct buffer *initialize_shared_buffer(size_t elem_size)
 
     struct buffer *buff = (struct buffer *)mem;
     memset(buff, 0, sizeof(struct buffer_info));
-    buff->info.capacity = buffer_allocation_size() - sizeof(struct buffer_info);
-    buff->info.capacity -= (buff->info.capacity % elem_size); /* align the size */
+    buff->info.capacity = (BUFF_END(buff) - BUFF_START(buff)) / elem_size;
+    printf("Buffer allocated size = %lu, capacity = %lu\n", buffer_allocation_size(), buff->info.capacity);
     buff->info.elem_size = elem_size;
     buff->info.fd = fd;
 
@@ -164,7 +168,8 @@ void *initialize_shared_control_buffer(size_t size)
     *smem++ = size;
     *smem++ = (size_t) fd;
 
-    return mem;
+    assert(control_buffer_size((void*)smem) == size);
+    return (void*) smem;
 }
 
 void *get_shared_control_buffer()
@@ -294,10 +299,12 @@ void *buffer_start_push(struct buffer *buff) {
 
     /* buffer full */
     if (info->elem_num == info->capacity) {
+        /* ++info->dropped; */
         return NULL;
     }
 
-    /* all ok, copy the data */
+    /* all ok, return the pointer to the data */
+    /* FIXME: do not use multiplication, maintain the pointer to the head of data */
     return buff->data + info->head*info->elem_size;
 }
 
@@ -305,9 +312,12 @@ void *buffer_partial_push(struct buffer *buff, void *prev_push,
                           const void *elem, size_t size) {
     assert(!buff->info.destroyed && "Writing to a destroyed buffer");
     /* buffer full */
-    assert(buff->info.elem_num != buff->info.capacity);
+    assert(buff->info.elem_num < buff->info.capacity);
 
     /* all ok, copy the data */
+    assert(BUFF_START(buff) <= prev_push);
+    assert(prev_push < BUFF_END(buff));
+    assert(prev_push <= BUFF_END(buff) - size);
     memcpy(prev_push, elem, size);
     return prev_push + size;
 }
@@ -349,4 +359,31 @@ bool buffer_pop(struct buffer *buff, void *dst) {
 
     return true;
 }
+
+/* copy k elements out of the buffer */
+bool buffer_pop_k(struct buffer *buff, void *dst, size_t k) {
+    struct buffer_info *info = &buff->info;
+    assert(!info->destroyed && "Reading from a destroyed buffer");
+    if (info->elem_num < k) {
+        return false;
+    }
+
+    unsigned char *pos = buff->data + info->tail*info->elem_size;
+    size_t end = info->tail + k;
+    if (end > info->capacity) {
+        memcpy(dst, pos, (info->capacity - info->tail)*info->elem_size);
+        memcpy(dst + info->elem_size*(info->capacity - info->tail),
+               buff->data, (end - info->capacity)*info->elem_size);
+        info->tail = end - info->capacity;
+    } else {
+        memcpy(dst, pos, k*info->elem_size);
+        info->tail = end;
+    }
+
+    assert(info->elem_num > 0);
+    info->elem_num -= k;
+
+    return true;
+}
+
 

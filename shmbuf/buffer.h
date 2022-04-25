@@ -21,6 +21,7 @@ bool buffer_is_ready(struct buffer *);
 bool buffer_monitor_attached(struct buffer *);
 
 bool buffer_pop(struct buffer *buff, void *dst);
+bool buffer_pop_k(struct buffer *buff, void *dst, size_t k);
 bool buffer_push(struct buffer *buff, const void *elem, size_t size);
 
 size_t buffer_size(struct buffer *buff);
