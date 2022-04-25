@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <sys/file.h>
 #include <sys/mman.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <string.h>
 #include <time.h>
@@ -13,11 +14,16 @@
 #define SHM_NAME_MAXLEN 256
 
 const char *default_key = "/monitor.shamon.1";
+const char *default_ctrl_key = "/monitor.shamon.ctrl.1";
 const char *shm_dir = "/dev/shm/";
 const size_t shm_dirlen = 9;
 
 const char *shamon_shm_default_key() {
     return default_key;
+}
+
+const char *shamon_shm_default_ctrl_key() {
+    return default_ctrl_key;
 }
 
 /* adapted function from musl project, src/mman/shm_open.c
@@ -58,8 +64,8 @@ int shamon_shm_unlink(const char *key) {
     if (key == NULL) {
         key = default_key;
     }
-	char name[SHM_NAME_MAXLEN];
-	if (shm_mapname(key, name) == 0)
-		abort();
-	return unlink(key);
+    char name[SHM_NAME_MAXLEN];
+    if (shm_mapname(key, name) == 0)
+    	abort();
+    return unlink(key);
 }

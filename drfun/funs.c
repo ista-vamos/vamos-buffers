@@ -85,7 +85,7 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
     }
 
     events_num = argc - 1;
-    events = dr_global_alloc(sizeof(struct call_event_spec)*events_num);
+    events = initialize_shared_control_buffer(sizeof(struct call_event_spec)*events_num);
     for (int i = 1; i < argc; ++i) {
         const char *sig = strrchr(argv[i], ':');
         if (sig) {
@@ -93,9 +93,10 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
            DR_ASSERT(strlen(sig) <=  sizeof(events[0].signature));
            strncpy(events[i-1].signature, sig,
                    sizeof(events[0].signature));
-            events[i-1].name = strndup(argv[i], sig - argv[i] -1);
+           strncpy(events[i-1].name, argv[i], sig - argv[i] - 1);
         } else {
-            events[i-1].name = strdup(argv[i]);
+            DR_ASSERT(strlen(argv[i]) < 256 && "Too big function name");
+            strncpy(events[i-1].name, argv[i], 255);
             events[i-1].signature[0] = '\0';
         }
     }
@@ -135,7 +136,6 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
                       main_module->full_path,
                       events[i].addr);
             elem_size = call_event_spec_get_size(&events[i]);
-            dr_printf("elem_size: %lu\n", elem_size);
             if (elem_size > max_elem_size)
                 max_elem_size = elem_size;
         } else {
@@ -153,7 +153,8 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
     DR_ASSERT(shm);
     drmgr_register_bb_instrumentation_event(NULL, event_app_instruction, 0);
 
-    //buffer_wait_for_monitor(shm);
+    dr_printf("Waiting for the monitor to attach\n");
+    buffer_wait_for_monitor(shm);
 }
 
 static void
@@ -167,9 +168,7 @@ event_exit(void)
 #endif
     drmgr_exit();
     destroy_shared_buffer(shm);
-    for (int i = 0; i < events_num; ++i)
-            free(events[i].name);
-    dr_global_free(events, sizeof(struct call_event_spec)*events_num);
+    release_shared_control_buffer(events);
 }
 
 /* adapted from instrcalls.c */
@@ -193,26 +192,6 @@ call_get_target(instr_t *instr) {
     return target;
 }
 
-/* RDI, RSI, RDX, RCX, R8, R9
-static inline long int
-call_get_arg(dr_mcontext_t *mc, int i, char o) {
-    if (o == 'f') {
-        DR_ASSERT(i < 7);
-        DR_ASSERT(0 && "Unsupported");
-        // return mc->simd[i].u64;
-    }
-    DR_ASSERT(i < 6);
-    switch(i) {
-        case 0: return mc->xdi;
-        case 1: return mc->xsi;
-        case 2: return mc->xdx;
-        case 3: return mc->xcx;
-        case 4: return mc->r8;
-        case 5: return mc->r9;
-    }
-}
-*/
-
 static inline void *
 call_get_arg_ptr(dr_mcontext_t *mc, int i, char o) {
     if (o == 'f') {
@@ -231,16 +210,16 @@ call_get_arg_ptr(dr_mcontext_t *mc, int i, char o) {
 }
 
 static void
-at_call_generic(app_pc target_addr, const char *sig)
+at_call_generic(size_t fun_idx, const char *sig)
 {
     dr_mcontext_t mc = { sizeof(mc), DR_MC_INTEGER };
     dr_get_mcontext(dr_get_current_drcontext(), &mc);
     void *shmaddr = buffer_start_push(shm);
     DR_ASSERT(shmaddr);
     shmaddr = buffer_partial_push(shm, shmaddr,
-                                  &target_addr, sizeof(target_addr));
+                                  &fun_idx, sizeof(fun_idx));
     DR_ASSERT(shmaddr);
-    printf("Fun %p\n", target_addr);
+    printf("Fun %lu\n", fun_idx);
     int i = 0;
     for (const char *o = sig; *o; ++o) {
         if (*o != '_') {
@@ -255,15 +234,6 @@ at_call_generic(app_pc target_addr, const char *sig)
         DR_ASSERT(0 && "Buffer push failed");
     }
     putchar('\n');
-}
-
-static void
-insert_call_instrumentation(void *drcontext, instrlist_t *ilist, instr_t *instr,
-                            void *callee, const char *signature)
-{
-    app_pc target = call_get_target(instr);
-    DR_ASSERT(target && "unknown target");
-
 }
 
 static dr_emit_flags_t
@@ -284,14 +254,14 @@ event_app_instruction(void *drcontext, void *tag, instrlist_t *bb, instr_t *inst
         //dr_printf("off: %lu == %lu events[0].addr\n", off, events[0].addr);
         if (off == (~(size_t)0))
             return DR_EMIT_DEFAULT;
-        for (int i = 0; i < events_num; ++i) {
+        for (size_t i = 0; i < events_num; ++i) {
             if (off == events[i].addr) {
                 dr_printf("Found a call of %s\n", events[i].name);
                 dr_insert_clean_call_ex(
                     drcontext, bb, instr, (app_pc)at_call_generic,
                     DR_CLEANCALL_READS_APP_CONTEXT, 2,
                     /* call target is 1st parameter */
-                    OPND_CREATE_INTPTR(target),
+                    OPND_CREATE_INT64(i),
                     /* signature is 2nd parameter */
                     OPND_CREATE_INTPTR(events[i].signature));
             }

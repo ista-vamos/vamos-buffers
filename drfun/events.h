@@ -15,11 +15,8 @@ union shamon_operand {
 
 
 struct call_event_spec {
-    const char *file; /* module (UNUSED atm) */
-
-    /* we need one of these */
-    char *name; /* name */
-    size_t addr;      /* offset in module */
+    char name[256]; /* name */
+    size_t addr;    /* offset in module */
 
     /* string describing what arguments to track and what is their size:
      * c = (unsigned) char
@@ -40,12 +37,6 @@ struct call_event_spec {
 
 size_t call_event_op_get_size(char c);
 size_t call_event_spec_get_size(struct call_event_spec *spec);
-
-/*  just an auxiliar struct for now */
-struct call_event_1i {
-    size_t addr;
-    unsigned int argument;
-};
 
 
 #endif /* DRFUN_EVENTS_H_ */
