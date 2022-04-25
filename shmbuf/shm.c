@@ -67,5 +67,5 @@ int shamon_shm_unlink(const char *key) {
     char name[SHM_NAME_MAXLEN];
     if (shm_mapname(key, name) == 0)
     	abort();
-    return unlink(key);
+    return unlink(name);
 }
