@@ -21,5 +21,6 @@ bool shm_par_queue_drop(shm_par_queue *q, size_t k);
 size_t shm_par_queue_size(shm_par_queue *q);
 size_t shm_par_queue_elem_size(shm_par_queue *q);
 size_t shm_par_queue_capacity(shm_par_queue *q);
+size_t shm_par_queue_free_num(shm_par_queue *q);
 
 #endif /* SHAMON_PARALLEL_QUEUE_H */

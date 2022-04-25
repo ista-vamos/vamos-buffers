@@ -84,6 +84,10 @@ bool shm_par_queue_drop(shm_par_queue *q, size_t k) {
     return true;
 }
 
+size_t shm_par_queue_free_num(shm_par_queue *q) {
+    return q->capacity - q->elem_num;
+}
+
 size_t shm_par_queue_capacity(shm_par_queue *q) {
     return q->capacity;
 }

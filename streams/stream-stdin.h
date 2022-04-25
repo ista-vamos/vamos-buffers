@@ -20,6 +20,7 @@ typedef struct _shm_stream_stdin {
     // ...
     // the pointer to the read lines
     char *line;
+    size_t line_len;
     // the kind that we assign to events. If a stream can have only one
     // kind of events, we can move this to base (derive it
     // from the stream name)
@@ -28,7 +29,8 @@ typedef struct _shm_stream_stdin {
 
 bool stdin_has_event(shm_stream *stream);
 
-shm_event_stdin *stdin_get_next_event(shm_stream *stream);
+size_t stdin_buffer_events(shm_stream *stream,
+                           shm_arbiter_buffer *buffer);
 
 shm_stream *shm_create_stdin_stream();
 

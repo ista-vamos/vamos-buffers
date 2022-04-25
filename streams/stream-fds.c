@@ -6,9 +6,11 @@
 
 #include "stream-fds.h"
 
-static size_t read_events(shm_stream_fds *ss) {
+static size_t read_events(shm_stream_fds *ss,
+                          shm_arbiter_buffer *buffer) {
     size_t read_ev = 0;
     size_t remove_num = 0;
+    shm_event_fd_in ev;
 
     for (unsigned i = 0; i < ss->fds_num; ++i) {
         struct pollfd *pfd = ss->fds + i;
@@ -28,18 +30,14 @@ static size_t read_events(shm_stream_fds *ss) {
                 pfd->revents &= POLLHUP;
             } else {
                 assert(len > 0);
-                shm_event_fd_in *ev = shm_queue_extend(&ss->pending_events);
-                if (ev == NULL) {
-                    // queue is full
-                    assert(false && "Not implemented");
-                }
-                ev->time = clock();
-                ev->base.stream = (shm_stream *) ss;
-                ev->base.kind = ss->ev_kind_in;
-                ev->base.id = shm_stream_get_next_id((shm_stream *)ss);
-                ev->fd = pfd->fd;
-                ev->str_ref.size = len;
-                ev->str_ref.data = str->data;
+                ev.time = clock();
+                ev.base.stream = (shm_stream *) ss;
+                ev.base.kind = ss->ev_kind_in;
+                ev.base.id = shm_stream_get_next_id((shm_stream *)ss);
+                ev.fd = pfd->fd;
+                ev.str_ref.size = len;
+                ev.str_ref.data = str->data;
+                shm_arbiter_buffer_push(buffer, &ev, sizeof(ev));
                 ++read_ev;
             }
         }
@@ -76,41 +74,28 @@ static size_t read_events(shm_stream_fds *ss) {
 }
 
 static bool fds_has_event(shm_stream *stream) {
+    assert(0 && "Not implemented");
+    abort();
+}
+
+static size_t fds_buffer_events(shm_stream *stream,
+                                shm_arbiter_buffer *buffer) {
     shm_stream_fds *fs = (shm_stream_fds *) stream;
 
-    // dispatch pending events if available
-    if (shm_queue_size(&fs->pending_events) > 0)
-        return true;
-
-    // check for new events
     int ret = poll(fs->fds, fs->fds_num, 0);
     if (ret == -1) {
         perror("poll failed");
         assert(0 && "poll returned -1");
     } else if (ret > 0) {
-        size_t num = read_events(fs);
-        // num can be 0 if all fds get closed (which
-        // is what poll detects)
-        assert(num == 0 || shm_queue_size(&fs->pending_events) > 0);
+        return read_events(fs, buffer);
     }
-
-    return shm_queue_size(&fs->pending_events);
-}
-
-static shm_event_fd_in *fds_get_next_event(shm_stream *stream) {
-    shm_stream_fds *ss = (shm_stream_fds *) stream;
-    static shm_event_fd_in ev;
-    if (shm_queue_pop(&ss->pending_events, &ev))
-        return &ev;
-
-    return NULL;
+    return 0;
 }
 
 shm_stream *shm_create_fds_stream() {
     shm_stream_fds *ss = malloc(sizeof *ss);
     shm_stream_init((shm_stream *)ss, sizeof(shm_event_fd_in),
-                    (shm_stream_has_event_fn) fds_has_event,
-                    (shm_stream_get_next_event_fn) fds_get_next_event,
+                     fds_has_event, fds_buffer_events,
                      "fds-stream");
     ss->ev_kind_in = shm_mk_event_kind("fd-in", sizeof(shm_event_fd_in), NULL, NULL);
     ss->fds = NULL;
