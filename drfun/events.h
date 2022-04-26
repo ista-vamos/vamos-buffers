@@ -2,6 +2,7 @@
 #define DRFUN_EVENTS_H_
 
 #include <stddef.h>
+#include <stdint.h>
 
 union shamon_operand {
     unsigned char c;
@@ -33,6 +34,8 @@ struct call_event_spec {
      * of shared memory)
      * */
     unsigned char signature[16]; /* for now, we allow 16 arguments at most */
+    /* the type of event assigned by the monitor */
+    uint64_t kind;
 };
 
 size_t call_event_op_get_size(char c);

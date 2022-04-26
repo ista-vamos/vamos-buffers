@@ -95,7 +95,7 @@ static size_t fds_buffer_events(shm_stream *stream,
 shm_stream *shm_create_fds_stream() {
     shm_stream_fds *ss = malloc(sizeof *ss);
     shm_stream_init((shm_stream *)ss, sizeof(shm_event_fd_in),
-                     fds_has_event, fds_buffer_events,
+                     fds_has_event, fds_buffer_events, NULL,
                      "fds-stream");
     ss->ev_kind_in = shm_mk_event_kind("fd-in", sizeof(shm_event_fd_in), NULL, NULL);
     ss->fds = NULL;

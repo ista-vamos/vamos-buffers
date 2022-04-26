@@ -19,6 +19,7 @@ void destroy_shared_buffer(struct buffer *);
 
 bool buffer_is_ready(struct buffer *);
 bool buffer_monitor_attached(struct buffer *);
+void buffer_set_attached(struct buffer *, bool);
 
 bool buffer_pop(struct buffer *buff, void *dst);
 bool buffer_pop_k(struct buffer *buff, void *dst, size_t k);

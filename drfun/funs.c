@@ -60,6 +60,7 @@
 #    define IF_WINDOWS(x) /* nothing */
 #endif
 
+#include "event.h" /* shm_event_dropped */
 #include "events.h"
 
 static void
@@ -75,6 +76,8 @@ static module_data_t *main_module;
 static struct call_event_spec *events;
 static size_t events_num;
 size_t max_elem_size;
+
+static uint64_t waiting_for_buffer = 0;
 
 DR_EXPORT void
 dr_client_main(client_id_t id, int argc, const char *argv[])
@@ -149,7 +152,7 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
     }
     DR_ASSERT(max_elem_size > 0);
     max_elem_size += sizeof(void *); /* space for fun address */
-    shm = initialize_shared_buffer(max_elem_size);
+    shm = initialize_shared_buffer(max_elem_size > sizeof(shm_event_dropped) ? max_elem_size : sizeof(shm_event_dropped));
     DR_ASSERT(shm);
     drmgr_register_bb_instrumentation_event(NULL, event_app_instruction, 0);
 
@@ -160,6 +163,8 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
 static void
 event_exit(void)
 {
+    dr_printf("Looped in a busy wait for the buffer %lu times\n", waiting_for_buffer);
+
     dr_free_module_data(main_module);
 #ifdef SHOW_SYMBOLS
     if (drsym_exit() != DRSYM_SUCCESS) {
@@ -209,31 +214,35 @@ call_get_arg_ptr(dr_mcontext_t *mc, int i, char o) {
     }
 }
 
+
 static void
 at_call_generic(size_t fun_idx, const char *sig)
 {
     dr_mcontext_t mc = { sizeof(mc), DR_MC_INTEGER };
     dr_get_mcontext(dr_get_current_drcontext(), &mc);
-    void *shmaddr = buffer_start_push(shm);
-    DR_ASSERT(shmaddr);
+    void *shmaddr;
+    while (!(shmaddr = buffer_start_push(shm))) {
+        ++waiting_for_buffer;
+        /* DR_ASSERT(0 && "Buffer full"); */
+    }
     shmaddr = buffer_partial_push(shm, shmaddr,
                                   &fun_idx, sizeof(fun_idx));
-    DR_ASSERT(shmaddr);
-    printf("Fun %lu\n", fun_idx);
+    DR_ASSERT(shmaddr && "Failed partial push");
+    /* printf("Fun %lu\n", fun_idx); */
     int i = 0;
     for (const char *o = sig; *o; ++o) {
         if (*o != '_') {
             shmaddr = buffer_partial_push(shm, shmaddr,
                                           call_get_arg_ptr(&mc, i, *o),
                                           call_event_op_get_size(*o));
-            printf(" arg %d=%ld", i, *(size_t*)call_get_arg_ptr(&mc, i, *o));
+            /* printf(" arg %d=%ld", i, *(size_t*)call_get_arg_ptr(&mc, i, *o)); */
         }
         ++i;
     }
     if (!buffer_finish_push(shm)) {
         DR_ASSERT(0 && "Buffer push failed");
     }
-    putchar('\n');
+    /* putchar('\n'); */
 }
 
 static dr_emit_flags_t

@@ -23,9 +23,9 @@ typedef struct _shm_arbiter_buffer {
 } shm_arbiter_buffer;
 
 void shm_arbiter_buffer_push_k(shm_arbiter_buffer *q, const void *elems, size_t size);
+/*
 bool shm_arbiter_buffer_pop(shm_arbiter_buffer *q, void *buff);
 size_t shm_arbiter_buffer_pop_k(shm_arbiter_buffer *q, void *buff);
-/*
 size_t shm_arbiter_buffer_size(shm_arbiter_buffer *q);
 size_t shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q);
 size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *q);
@@ -51,7 +51,7 @@ static inline bool shm_arbiter_buffer_active(shm_arbiter_buffer *buffer)
 
 static void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
                                     shm_stream *stream) {
-    const size_t capacity = 1024; // FIXME
+    const size_t capacity = 1024*1024*4; // FIXME
 
     buffer->stream = stream;
     assert(capacity >= 3 && "We need at least 3 elements in the buffer");
@@ -61,6 +61,10 @@ static void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
                            sizeof(shm_event_dropped) : stream->event_size);
     buffer->active = false;
     buffer->dropped_num = 0;
+}
+
+size_t shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q) {
+    return shm_par_queue_elem_size(&q->buffer);
 }
 
 void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem, size_t size) {
@@ -90,28 +94,29 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem, size_
 }
 
 /*
- * Push k events that reside in a  memory
+ * Push k events that reside in a continuous memory
  */
 void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
                                  const void *elems,
                                  size_t k) {
+    //printf("Buffering %lu events\n", k);
     assert(shm_arbiter_buffer_active(buffer));
     shm_par_queue *queue = &buffer->buffer;
 
     if (buffer->dropped_num > 0) {
-        if (shm_par_queue_free_num(queue) <= k) {
+        if (shm_par_queue_free_num(queue) < 2) {
+            //printf("[buffer] dropping %lu events (free space: %lu)\n", k, shm_par_queue_free_num(queue));
             buffer->dropped_num += k;
         } else {
+            //printf("[buffer] generating dropped event 'dropped(%lu)'\n", buffer->dropped_num);
             shm_event_dropped dropped;
-            bool ret;
 
             shm_stream_get_dropped_event(buffer->stream, &dropped, buffer->dropped_num);
             assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
-            ret = shm_par_queue_push(queue, &dropped, sizeof(dropped));
-            assert(ret && "BUG: queue has not enough free space");
-            ret = shm_par_queue_push_k(&buffer->buffer, elems, k);
-            assert(ret == 0 && "BUG: queue has not enough free space");
-            buffer->dropped_num = 0;
+            assert(shm_par_queue_free_num(queue) > 1);
+            shm_par_queue_push(queue, &dropped, sizeof(dropped));
+            assert(shm_par_queue_free_num(queue) >= 1);
+            buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k);
         }
     } else {
         buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k);
@@ -176,7 +181,8 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
         if (qsize > 0) {
             assert(shmn->_ev);
             /* is the buffer full from 80 or more percent? */
-            if (qsize > 0.8*shm_par_queue_capacity(&buffer->buffer)) {
+            if (qsize > 0.5*shm_par_queue_capacity(&buffer->buffer)) {
+                puts("Dropping events");
                 /* drop half of the buffer */
                 uint64_t n = shm_par_queue_capacity(&buffer->buffer) / 2;
                 if (!shm_par_queue_drop(&buffer->buffer, n)) {
@@ -189,6 +195,8 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
             }
 
             shm_par_queue_pop(&buffer->buffer, shmn->_ev);
+            if (buffer->stream->publish_event)
+                return buffer->stream->publish_event(buffer->stream, shmn->_ev);
             return shmn->_ev;
         }
     }
@@ -209,8 +217,8 @@ shamon *shamon_create(shamon_process_events_fn process_events,
         shm_vector_init(&shmn->streams, sizeof(shm_stream *));
         shm_vector_init(&shmn->buffers, sizeof(shm_arbiter_buffer));
         shm_vector_init(&shmn->buffer_threads, sizeof(thrd_t));
-        shmn->_ev = NULL;
         shmn->_ev_size = sizeof(shm_event_dropped);
+        shmn->_ev = malloc(shmn->_ev_size);
         shmn->process_events = process_events ? process_events : default_process_events;
         shmn->process_events_data = process_events ? process_events_data : shmn;
 
@@ -238,7 +246,7 @@ void shamon_add_stream(shamon *shmn, shm_stream *stream) {
     shm_vector_push(&shmn->streams, &stream);
     assert((*((shm_stream**)shm_vector_at(&shmn->streams, shm_vector_size(&shmn->streams) - 1)) == stream)
            && "BUG: shm_vector_push");
-    if ((shmn->_ev == NULL) || (stream->event_size > shmn->_ev_size)) {
+    if (stream->event_size > shmn->_ev_size) {
         shmn->_ev = realloc(shmn->_ev, stream->event_size);
         shmn->_ev_size = stream->event_size;
     }

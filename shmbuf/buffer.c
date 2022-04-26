@@ -13,7 +13,7 @@
 #include "buffer.h"
 
 #define SLEEP_TIME_NS 10000
-#define MEM_SIZE (4096)
+#define MEM_SIZE (64*4096)
 
 struct buffer_info {
     size_t capacity;
@@ -130,9 +130,12 @@ struct buffer *get_shared_buffer(const char *key)
     }
 
     struct buffer *buff = (struct buffer *)mem;
-    buff->info.monitor_attached = true;
 
     return buff;
+}
+
+void buffer_set_attached(struct buffer *buff, bool val) {
+    buff->info.monitor_attached = val;
 }
 
 void *initialize_shared_control_buffer(size_t size)
@@ -254,7 +257,6 @@ void destroy_shared_buffer(struct buffer *buff)
 
 void *buffer_read_pointer(struct buffer *buff, size_t *size) {
     struct buffer_info *info = &buff->info;
-    assert(!info->destroyed && "Writing to a destroyed buffer");
 
     if (info->elem_num == 0) {
         *size = 0;
@@ -271,6 +273,7 @@ void *buffer_read_pointer(struct buffer *buff, size_t *size) {
     return pos;
 }
 
+/* can be safely used only by the reader */
 bool buffer_drop_k(struct buffer *buff, size_t size) {
      if (buff->info.elem_num >= size) {
          buff->info.elem_num -= size;

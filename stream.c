@@ -20,11 +20,13 @@ void shm_stream_init(shm_stream *stream,
                      size_t event_size,
                      shm_stream_has_event_fn has_event,
                      shm_stream_buffer_events_fn buffer_events,
+                     shm_stream_publish_event_fn publish_event,
                      const char * const name) {
         stream->id = ++last_stream_id;
         stream->event_size = event_size;
         stream->buffer_events = buffer_events;
         stream->has_event = has_event;
+        stream->publish_event = publish_event;
         stream->last_event_id = 0;
         stream->name = name;
 }

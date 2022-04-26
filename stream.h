@@ -9,11 +9,11 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *q, const void *elem, size_t siz
 void *shm_arbiter_buffer_start_push(shm_arbiter_buffer *q, size_t *size);
 void shm_arbiter_buffer_push_k(shm_arbiter_buffer *q, const void *elems, size_t size);
 void shm_arbiter_buffer_finish_push(shm_arbiter_buffer *q);
+size_t shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q);
 /*
 bool shm_arbiter_buffer_pop(shm_arbiter_buffer *q, void *buff);
 size_t shm_arbiter_buffer_pop_k(shm_arbiter_buffer *q, void *buff);
 size_t shm_arbiter_buffer_size(shm_arbiter_buffer *q);
-size_t shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q);
 size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *q);
 */
 
@@ -21,6 +21,9 @@ typedef bool (*shm_stream_has_event_fn)(struct _shm_stream *);
 //typedef shm_event *(*shm_stream_get_next_event_fn)(struct _shm_stream *);
 typedef size_t (*shm_stream_buffer_events_fn)(struct _shm_stream *,
                                               shm_arbiter_buffer *buffer);
+/* change the event from whatever representation it has internally in the stream
+ * to something that the monitor can understand */
+typedef shm_event *(*shm_stream_publish_event_fn)(struct _shm_stream *, shm_event *ev);
 
 // TODO: make this opaque
 typedef struct _shm_stream {
@@ -31,6 +34,7 @@ typedef struct _shm_stream {
     /* callbacks */
     shm_stream_has_event_fn has_event;
     shm_stream_buffer_events_fn buffer_events;
+    shm_stream_publish_event_fn publish_event;
     /* shm_stream_get_next_event_fn get_next_event; */
 } shm_stream;
 
@@ -38,6 +42,7 @@ void shm_stream_init(shm_stream *stream,
                      size_t event_size,
                      shm_stream_has_event_fn has_event,
                      shm_stream_buffer_events_fn buffer_events,
+                     shm_stream_publish_event_fn publish_event,
                      const char * const name);
 shm_eventid shm_stream_get_next_id(shm_stream *);
 const char *shm_stream_get_name(shm_stream *);

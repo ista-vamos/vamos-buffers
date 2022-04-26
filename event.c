@@ -89,11 +89,14 @@ ev_destroy_fn shm_event_destroy_fn(shm_event *ev) {
     return events_info[kind - 1].ev_destroy;
 }
 
-size_t shm_event_size(shm_event *ev) {
+size_t shm_event_kind_size(shm_kind kind) {
     assert(events_info && "Events not initialized");
-    shm_kind kind = shm_event_kind(ev);
     assert(kind <= ev_kinds_num && "Invalid event kind");
     return events_info[kind - 1].ev_size;
+};
+
+size_t shm_event_size(shm_event *ev) {
+    return shm_event_kind_size(shm_event_kind(ev));
 };
 
 shm_eventid shm_event_id(shm_event *event) {
