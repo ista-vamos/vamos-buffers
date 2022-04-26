@@ -75,6 +75,7 @@ size_t shm_par_queue_push_k(shm_par_queue *q,
         memcpy(pos, elems, q->elem_size*k);
         q->head += k;
         /* queue full, rotate it */
+        assert(q->head <= q->capacity);
         if (q->head == q->capacity) {
             q->head = 0;
         }

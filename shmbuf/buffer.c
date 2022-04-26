@@ -274,9 +274,12 @@ void *buffer_read_pointer(struct buffer *buff, size_t *size) {
 }
 
 /* can be safely used only by the reader */
-bool buffer_drop_k(struct buffer *buff, size_t size) {
-     if (buff->info.elem_num >= size) {
-         buff->info.elem_num -= size;
+bool buffer_drop_k(struct buffer *buff, size_t k) {
+     if (buff->info.elem_num >= k) {
+         buff->info.tail += k;
+         if (buff->info.tail >= buff->info.capacity)
+             buff->info.tail -= buff->info.capacity;
+         buff->info.elem_num -= k;
          return true;
      }
      return false;

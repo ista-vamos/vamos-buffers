@@ -97,8 +97,8 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem, size_
  * Push k events that reside in a continuous memory
  */
 void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
-                                 const void *elems,
-                                 size_t k) {
+                               const void *elems,
+                               size_t k) {
     //printf("Buffering %lu events\n", k);
     assert(shm_arbiter_buffer_active(buffer));
     shm_par_queue *queue = &buffer->buffer;
