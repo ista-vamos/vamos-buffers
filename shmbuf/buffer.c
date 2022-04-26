@@ -252,6 +252,33 @@ void destroy_shared_buffer(struct buffer *buff)
     release_shared_buffer(buff);
 }
 
+void *buffer_read_pointer(struct buffer *buff, size_t *size) {
+    struct buffer_info *info = &buff->info;
+    assert(!info->destroyed && "Writing to a destroyed buffer");
+
+    if (info->elem_num == 0) {
+        *size = 0;
+        return NULL;
+    }
+
+    unsigned char *pos = buff->data + info->tail*info->elem_size;
+    size_t end = info->tail + *size;
+    if (end > info->capacity) {
+        *size -= end - info->capacity;
+        assert(*size < info->elem_num);
+    }
+
+    return pos;
+}
+
+bool buffer_drop_k(struct buffer *buff, size_t size) {
+     if (buff->info.elem_num >= size) {
+         buff->info.elem_num -= size;
+         return true;
+     }
+     return false;
+}
+
 bool buffer_push(struct buffer *buff, const void *elem, size_t size) {
     struct buffer_info *info = &buff->info;
     assert(!info->destroyed && "Writing to a destroyed buffer");

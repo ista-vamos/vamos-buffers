@@ -22,7 +22,7 @@ typedef struct _shm_arbiter_buffer {
     bool active;            // true while the events are being queued
 } shm_arbiter_buffer;
 
-size_t shm_arbiter_buffer_push_k(shm_arbiter_buffer *q, const void *elem, size_t size);
+void shm_arbiter_buffer_push_k(shm_arbiter_buffer *q, const void *elems, size_t size);
 bool shm_arbiter_buffer_pop(shm_arbiter_buffer *q, void *buff);
 size_t shm_arbiter_buffer_pop_k(shm_arbiter_buffer *q, void *buff);
 /*
@@ -90,14 +90,34 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem, size_
 }
 
 /*
- *
-    if (buffer->dropped_num > 0) {
-    }
+ * Push k events that reside in a  memory
+ */
+void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
+                                 const void *elems,
+                                 size_t k) {
+    assert(shm_arbiter_buffer_active(buffer));
+    shm_par_queue *queue = &buffer->buffer;
 
-    // printf("Buffering event from stream %s\n", stream->name);
-    assert(shm_event_copy_fn(ev) == NULL && "Not implemented yet");
-    shm_par_queue_push(queue, ev, shm_event_size(ev));
-            */
+    if (buffer->dropped_num > 0) {
+        if (shm_par_queue_free_num(queue) <= k) {
+            buffer->dropped_num += k;
+        } else {
+            shm_event_dropped dropped;
+            bool ret;
+
+            shm_stream_get_dropped_event(buffer->stream, &dropped, buffer->dropped_num);
+            assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
+            ret = shm_par_queue_push(queue, &dropped, sizeof(dropped));
+            assert(ret && "BUG: queue has not enough free space");
+            ret = shm_par_queue_push_k(&buffer->buffer, elems, k);
+            assert(ret == 0 && "BUG: queue has not enough free space");
+            buffer->dropped_num = 0;
+        }
+    } else {
+        buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k);
+    }
+}
+
 
 #define SLEEP_NS_INIT (50)
 #define SLEEP_THRESHOLD_NS (10000000)

@@ -49,6 +49,43 @@ bool shm_par_queue_push(shm_par_queue *q,
     return true;
 }
 
+/* return how many elements were not pushed */
+size_t shm_par_queue_push_k(shm_par_queue *q,
+                            const void *elems,
+                            size_t k) {
+    /* how many elements can we actually fit in? */
+    size_t freen = q->capacity - q->elem_num;
+    size_t ret = 0;
+    if (freen < k) {
+        ret = k - freen;
+        k = freen;
+    }
+
+    void *pos = q->data + q->head*q->elem_size;
+    size_t end = q->head + k;
+    if (end > q->capacity) {
+        size_t ovfl = end - q->capacity;
+        memcpy(pos, elems, q->elem_size*(k - ovfl));
+        memcpy(q->data,
+               elems + q->elem_size*(k-ovfl),
+               q->elem_size*ovfl);
+        q->head = ovfl;
+    } else {
+        memcpy(pos, elems, q->elem_size*k);
+        q->head += k;
+
+        // queue full, rotate it
+        if (q->head == q->capacity) {
+            q->head = 0;
+        }
+    }
+
+    q->elem_num += k;
+
+    return ret;
+}
+
+
 bool shm_par_queue_pop(shm_par_queue *q, void *buff) {
     if (q->elem_num == 0) {
         return false;

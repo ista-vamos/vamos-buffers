@@ -1,6 +1,6 @@
 CFLAGS=-Wall -Werror -Wextra -g -I..
 
-TESTS=queue-test queue-par-test queue-par-test-2 queue-par-cbmc buffer-test
+TESTS=queue-test queue-par-test queue-par-test-2 queue-par-test-cbmc queue-par-cbmc buffer-test
 all: $(TESTS)
 
 queue-test: queue-test.c ../queue.[ch]
@@ -15,7 +15,11 @@ queue-par-test: queue-par-test.c ../parallel_queue.c
 	$(CC) $(CFLAGS) $^ -lpthread -o $@
 	for i in `seq 1 20`; do ./$@; done
 
-queue-par-test-2: queue-par-cbmc_2.c ../parallel_queue.c
+queue-par-test-2: queue-par-test-2.c ../parallel_queue.c
+	$(CC) $(CFLAGS) $^ -lpthread -o $@
+	./$@
+
+queue-par-test-cbmc: queue-par-cbmc_2.c ../parallel_queue.c
 	$(CC) $(CFLAGS) $^ -lpthread -o $@
 	for i in `seq 1 20`; do ./$@; done
 

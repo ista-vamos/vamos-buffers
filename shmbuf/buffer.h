@@ -24,6 +24,9 @@ bool buffer_pop(struct buffer *buff, void *dst);
 bool buffer_pop_k(struct buffer *buff, void *dst, size_t k);
 bool buffer_push(struct buffer *buff, const void *elem, size_t size);
 
+void *buffer_read_pointer(struct buffer *buff, size_t *size);
+bool buffer_drop_k(struct buffer *buff, size_t size);
+
 size_t buffer_size(struct buffer *buff);
 size_t buffer_capacity(struct buffer *buff);
 size_t buffer_elem_size(struct buffer *buff);

@@ -6,10 +6,12 @@
 typedef struct _shm_arbiter_buffer shm_arbiter_buffer;
 
 void shm_arbiter_buffer_push(shm_arbiter_buffer *q, const void *elem, size_t size);
-size_t shm_arbiter_buffer_push_k(shm_arbiter_buffer *q, const void *elem, size_t size);
+void *shm_arbiter_buffer_start_push(shm_arbiter_buffer *q, size_t *size);
+void shm_arbiter_buffer_push_k(shm_arbiter_buffer *q, const void *elems, size_t size);
+void shm_arbiter_buffer_finish_push(shm_arbiter_buffer *q);
+/*
 bool shm_arbiter_buffer_pop(shm_arbiter_buffer *q, void *buff);
 size_t shm_arbiter_buffer_pop_k(shm_arbiter_buffer *q, void *buff);
-/*
 size_t shm_arbiter_buffer_size(shm_arbiter_buffer *q);
 size_t shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q);
 size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *q);
