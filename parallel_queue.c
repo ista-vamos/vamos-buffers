@@ -14,6 +14,7 @@ void shm_par_queue_init(shm_par_queue *q, size_t capacity, size_t elem_size) {
     q->elem_size = elem_size;
     q->head = q->tail = 0;
     q->data = malloc(capacity * elem_size);
+    assert(q->data && "Allocation failed");
 }
 
 void shm_par_queue_destroy(shm_par_queue *q) {
@@ -71,7 +72,7 @@ size_t shm_par_queue_push_k(shm_par_queue *q,
                q->elem_size*ovfl);
         q->head = ovfl;
     } else {
-        assert(k < q->capacity && "Too many elements to push");
+        assert(k <= q->capacity && "Too many elements to push");
         memcpy(pos, elems, q->elem_size*k);
         q->head += k;
         /* queue full, rotate it */
