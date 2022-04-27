@@ -12,24 +12,7 @@
 #include "vector.h"
 #include "parallel_queue.h"
 #include "utils.h"
-
-
-/* TODO move to its own file */
-typedef struct _shm_arbiter_buffer {
-    shm_stream *stream;     // the source for the buffer
-    shm_par_queue buffer;   // the buffer itself
-    size_t dropped_num;     // the number of dropped events
-    bool active;            // true while the events are being queued
-} shm_arbiter_buffer;
-
-void shm_arbiter_buffer_push_k(shm_arbiter_buffer *q, const void *elems, size_t size);
-/*
-bool shm_arbiter_buffer_pop(shm_arbiter_buffer *q, void *buff);
-size_t shm_arbiter_buffer_pop_k(shm_arbiter_buffer *q, void *buff);
-size_t shm_arbiter_buffer_size(shm_arbiter_buffer *q);
-size_t shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q);
-size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *q);
-*/
+#include "arbiter.h"
 
 typedef struct _shamon {
         shm_vector streams;
@@ -44,92 +27,13 @@ typedef struct _shamon {
         size_t _ev_size;
 } shamon;
 
-static inline bool shm_arbiter_buffer_active(shm_arbiter_buffer *buffer)
-{
-    return buffer->active;
-}
-
-static void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
-                                    shm_stream *stream) {
-    const size_t capacity = 4096; // FIXME
-
-    buffer->stream = stream;
-    assert(capacity >= 3 && "We need at least 3 elements in the buffer");
-    shm_par_queue_init(&buffer->buffer, capacity,
-                       /* the buffer must be able to contain the event 'dropped' */
-                       stream->event_size < sizeof(shm_event_dropped) ?
-                           sizeof(shm_event_dropped) : stream->event_size);
-    buffer->active = false;
-    buffer->dropped_num = 0;
-}
-
-size_t shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q) {
-    return shm_par_queue_elem_size(&q->buffer);
-}
-
-void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem, size_t size) {
-    assert(shm_arbiter_buffer_active(buffer));
-    shm_par_queue *queue = &buffer->buffer;
-
-    if (buffer->dropped_num > 0) {
-        if (shm_par_queue_free_num(queue) < 2) {
-            ++buffer->dropped_num;
-        } else {
-            shm_event_dropped dropped;
-            bool ret;
-
-            shm_stream_get_dropped_event(buffer->stream, &dropped, buffer->dropped_num);
-            assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
-            ret = shm_par_queue_push(queue, &dropped, sizeof(dropped));
-            assert(ret && "BUG: queue has not enough free space");
-            ret = shm_par_queue_push(&buffer->buffer, elem, size);
-            assert(ret && "BUG: queue has not enough free space");
-            buffer->dropped_num = 0;
-        }
-    } else {
-        if (!shm_par_queue_push(&buffer->buffer, elem, size)) {
-            ++buffer->dropped_num;
-        }
-    }
-}
-
-/*
- * Push k events that reside in a continuous memory
- */
-void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
-                               const void *elems,
-                               size_t k) {
-    //printf("Buffering %lu events\n", k);
-    assert(shm_arbiter_buffer_active(buffer));
-    shm_par_queue *queue = &buffer->buffer;
-
-    if (buffer->dropped_num > 0) {
-        if (shm_par_queue_free_num(queue) < 2) {
-            //printf("[buffer] dropping %lu events (free space: %lu)\n", k, shm_par_queue_free_num(queue));
-            buffer->dropped_num += k;
-        } else {
-            //printf("[buffer] generating dropped event 'dropped(%lu)'\n", buffer->dropped_num);
-            shm_event_dropped dropped;
-
-            shm_stream_get_dropped_event(buffer->stream, &dropped, buffer->dropped_num);
-            assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
-            assert(shm_par_queue_free_num(queue) > 1);
-            shm_par_queue_push(queue, &dropped, sizeof(dropped));
-            assert(shm_par_queue_free_num(queue) >= 1);
-            buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k);
-        }
-    } else {
-        buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k);
-    }
-}
-
 
 #define SLEEP_NS_INIT (50)
 #define SLEEP_THRESHOLD_NS (10000000)
 
 int buffer_manager_thrd(void *data) {
     shm_arbiter_buffer *buffer = (shm_arbiter_buffer*) data;
-    shm_stream *stream = buffer->stream;
+    shm_stream *stream = shm_arbiter_buffer_stream(buffer);
 
     // wait for buffer->active
     while (!shm_arbiter_buffer_active(buffer))
@@ -160,6 +64,7 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
     assert(buffers);
     assert(data);
     shamon *shmn = (shamon *)data;
+    shm_stream *stream;
 
     // use static counter to do round robin -- so that some stream
     // does not starve
@@ -175,27 +80,29 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
     while (i < shm_vector_size(buffers)) {
         buffer = ((shm_arbiter_buffer*)shm_vector_at(buffers, i));
         assert(buffer);
+        stream = shm_arbiter_buffer_stream(buffer);
         ++i;
 
-        qsize = shm_par_queue_size(&buffer->buffer);
+        qsize = shm_arbiter_buffer_size(buffer);
         if (qsize > 0) {
             assert(shmn->_ev);
+            uint64_t c = shm_arbiter_buffer_capacity(buffer);
             /* is the buffer full from 80 or more percent? */
-            if (qsize > 0.75*shm_par_queue_capacity(&buffer->buffer)) {
+            if (qsize > 0.75*c) {
                 /* drop half of the buffer */
-                uint64_t n = shm_par_queue_capacity(&buffer->buffer) / 2;
-                if (!shm_par_queue_drop(&buffer->buffer, n)) {
+                if (!shm_arbiter_buffer_drop(buffer, c/2)) {
                     assert(0 && "Failed dropping events");
                 }
-                shm_stream_get_dropped_event(buffer->stream, &dropped, n);
+                shm_stream_get_dropped_event(stream, &dropped, c/2);
                 assert(shmn->_ev_size >= sizeof(dropped));
                 memcpy(shmn->_ev, &dropped, sizeof(dropped));
                 return shmn->_ev;
             }
 
-            shm_par_queue_pop(&buffer->buffer, shmn->_ev);
-            if (buffer->stream->publish_event)
-                return buffer->stream->publish_event(buffer->stream, shmn->_ev);
+            shm_arbiter_buffer_pop(buffer, shmn->_ev);
+            /* TODO: refactor this */
+            if (stream->publish_event)
+                return stream->publish_event(stream, shmn->_ev);
             return shmn->_ev;
         }
     }
@@ -214,7 +121,7 @@ shamon *shamon_create(shamon_process_events_fn process_events,
         assert(shmn);
 
         shm_vector_init(&shmn->streams, sizeof(shm_stream *));
-        shm_vector_init(&shmn->buffers, sizeof(shm_arbiter_buffer));
+        shm_vector_init(&shmn->buffers, shm_arbiter_buffer_sizeof());
         shm_vector_init(&shmn->buffer_threads, sizeof(thrd_t));
         shmn->_ev_size = sizeof(shm_event_dropped);
         shmn->_ev = malloc(shmn->_ev_size);
@@ -228,7 +135,7 @@ void shamon_destroy(shamon *shmn) {
         shm_vector_destroy(&shmn->streams);
         for (size_t i = 0; i < shm_vector_size(&shmn->buffer_threads); ++i) {
             shm_arbiter_buffer *buff = *((shm_arbiter_buffer **)shm_vector_at(&shmn->buffers, i));
-            buff->active = false;
+            shm_arbiter_buffer_set_active(buff, false);
             thrd_join(*(thrd_t*)shm_vector_at(&shmn->buffer_threads, i), NULL);
         }
         shm_vector_destroy(&shmn->buffer_threads);
@@ -256,9 +163,10 @@ void shamon_add_stream(shamon *shmn, shm_stream *stream) {
     thrd_t thread_id;
     thrd_create(&thread_id, buffer_manager_thrd, buffer);
     shm_vector_push(&shmn->buffer_threads, &thread_id);
-    buffer->active = true;
 
     printf("Added a stream id %lu: '%s'\n",
            shm_vector_size(&shmn->streams) - 1,
            stream->name);
+
+    shm_arbiter_buffer_set_active(buffer, true);
 }

@@ -13,7 +13,7 @@
 #include "buffer.h"
 
 #define SLEEP_TIME_NS 10000
-#define MEM_SIZE (64*4096)
+#define MEM_SIZE (128*4096)
 
 struct buffer_info {
     size_t capacity;
