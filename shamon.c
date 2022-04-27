@@ -131,6 +131,10 @@ shamon *shamon_create(shamon_process_events_fn process_events,
         return shmn;
 }
 
+shm_vector *shamon_get_buffers(shamon *shmn) {
+    return &shmn->buffers;
+}
+
 void shamon_destroy(shamon *shmn) {
         shm_vector_destroy(&shmn->streams);
         for (size_t i = 0; i < shm_vector_size(&shmn->buffer_threads); ++i) {

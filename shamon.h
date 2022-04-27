@@ -14,6 +14,7 @@ void shamon_destroy(shamon *);
 
 void shamon_add_stream(shamon *, shm_stream *);
 shm_event *shamon_get_next_ev(shamon *);
+shm_vector *shamon_get_buffers(shamon *);
 
 
 
