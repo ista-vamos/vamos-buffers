@@ -79,6 +79,37 @@ size_t max_elem_size;
 
 static uint64_t waiting_for_buffer = 0;
 
+static void find_functions()
+{
+    main_module = dr_get_main_module();
+    DR_ASSERT(main_module);
+    size_t elem_size;
+    for (int i = 0; i < events_num; ++i) {
+        drsym_error_t ok = drsym_lookup_symbol(main_module->full_path,
+                           events[i].name,
+                           &events[i].addr,
+                           /* flags = */ 0);
+        if (ok == DRSYM_ERROR_LINE_NOT_AVAILABLE || ok == DRSYM_SUCCESS) {
+            dr_printf("Found %s:%s in %s at %lu\n",
+                      events[i].name,
+                      events[i].signature,
+                      main_module->full_path,
+                      events[i].addr);
+            elem_size = call_event_spec_get_size(&events[i]);
+            if (elem_size > max_elem_size)
+                max_elem_size = elem_size;
+        } else {
+            dr_fprintf(STDERR,
+                       "Cannot find %s:%s in %s\n",
+                       events[i].name,
+                       events[i].signature,
+                       main_module->full_path);
+            DR_ASSERT(0);
+        }
+    }
+    DR_ASSERT(max_elem_size > 0);
+}
+
 DR_EXPORT void
 dr_client_main(client_id_t id, int argc, const char *argv[])
 {
@@ -123,34 +154,8 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
     }
     dr_register_exit_event(event_exit);
 
-    // TODO: use to instrument only main module: dr_module_set_should_instrument()
-    main_module = dr_get_main_module();
-    DR_ASSERT(main_module);
-    size_t elem_size;
-    for (int i = 0; i < events_num; ++i) {
-        drsym_error_t ok = drsym_lookup_symbol(main_module->full_path,
-                           events[i].name,
-                           &events[i].addr,
-                           /* flags = */ 0);
-        if (ok == DRSYM_ERROR_LINE_NOT_AVAILABLE || ok == DRSYM_SUCCESS) {
-            dr_printf("Found %s:%s in %s at %lu\n",
-                      events[i].name,
-                      events[i].signature,
-                      main_module->full_path,
-                      events[i].addr);
-            elem_size = call_event_spec_get_size(&events[i]);
-            if (elem_size > max_elem_size)
-                max_elem_size = elem_size;
-        } else {
-            dr_fprintf(STDERR,
-                       "Cannot find %s:%s in %s\n",
-                       events[i].name,
-                       events[i].signature,
-                       main_module->full_path);
-            DR_ASSERT(0);
-        }
-    }
-    DR_ASSERT(max_elem_size > 0);
+    find_functions();
+
     max_elem_size += sizeof(void *); /* space for fun address */
     shm = initialize_shared_buffer(max_elem_size > sizeof(shm_event_dropped) ? max_elem_size : sizeof(shm_event_dropped));
     DR_ASSERT(shm);
