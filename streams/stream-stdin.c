@@ -4,9 +4,9 @@
 #include <time.h>
 
 #include "stream-stdin.h"
+#include "arbiter.h"
 
-bool stdin_has_event(shm_stream *stream) {
-        //return fseek(stdin, 0, SEEK_END), ftell(stdin) > 0;
+bool stdin_is_ready(shm_stream *stream) {
     return true;
 }
 
@@ -35,7 +35,7 @@ size_t stdin_buffer_events(shm_stream *stream,
 shm_stream *shm_create_stdin_stream() {
     shm_stream_stdin *ss = malloc(sizeof *ss);
     shm_stream_init((shm_stream *)ss, sizeof(shm_event_stdin),
-                     stdin_has_event, stdin_buffer_events, NULL,
+                     stdin_buffer_events, NULL, stdin_is_ready,
                      "stdin-stream");
     ss->line = NULL;
     ss->line_len = 0;

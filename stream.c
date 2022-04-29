@@ -18,15 +18,15 @@ static uint64_t last_stream_id = 0;
 
 void shm_stream_init(shm_stream *stream,
                      size_t event_size,
-                     shm_stream_has_event_fn has_event,
                      shm_stream_buffer_events_fn buffer_events,
                      shm_stream_publish_event_fn publish_event,
+                     shm_stream_is_ready_fn is_ready,
                      const char * const name) {
         stream->id = ++last_stream_id;
         stream->event_size = event_size;
         stream->buffer_events = buffer_events;
-        stream->has_event = has_event;
         stream->publish_event = publish_event;
+        stream->is_ready = is_ready;
         stream->last_event_id = 0;
         stream->name = name;
 }
@@ -39,4 +39,8 @@ void shm_stream_get_dropped_event(shm_stream *stream,
     dropped_ev->base.kind = shm_get_dropped_kind();
     dropped_ev->base.stream = stream;
     dropped_ev->n = n;
+}
+
+bool shm_stream_is_ready(shm_stream *s) {
+    return s->is_ready(s);
 }

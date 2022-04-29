@@ -42,7 +42,7 @@ int buffer_manager_thrd(void *data) {
     printf("Running fill & autodrop for stream %s\n", stream->name);
     uint64_t sleep_time = SLEEP_NS_INIT;
     uint64_t n;
-    while (shm_arbiter_buffer_active(buffer)) {
+    while (shm_stream_is_ready(stream)) {
         n = stream->buffer_events(stream, buffer);
         if (n == 0) {
             if (sleep_time < SLEEP_THRESHOLD_NS)
@@ -79,6 +79,8 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
 
     while (i < shm_vector_size(buffers)) {
         buffer = ((shm_arbiter_buffer*)shm_vector_at(buffers, i));
+        if (!shm_arbiter_buffer_active(buffer))
+            continue;
         assert(buffer);
         stream = shm_arbiter_buffer_stream(buffer);
         ++i;
@@ -138,7 +140,8 @@ shm_vector *shamon_get_buffers(shamon *shmn) {
 void shamon_destroy(shamon *shmn) {
         shm_vector_destroy(&shmn->streams);
         for (size_t i = 0; i < shm_vector_size(&shmn->buffer_threads); ++i) {
-            shm_arbiter_buffer *buff = *((shm_arbiter_buffer **)shm_vector_at(&shmn->buffers, i));
+            shm_arbiter_buffer *buff
+                = *((shm_arbiter_buffer **)shm_vector_at(&shmn->buffers, i));
             shm_arbiter_buffer_set_active(buff, false);
             thrd_join(*(thrd_t*)shm_vector_at(&shmn->buffer_threads, i), NULL);
         }
@@ -148,14 +151,31 @@ void shamon_destroy(shamon *shmn) {
         free(shmn);
 }
 
+bool shamon_is_ready(shamon *shmn) {
+    for (size_t i = 0; i < shm_vector_size(&shmn->streams); ++i) {
+        shm_stream *s = *((shm_stream **)shm_vector_at(&shmn->streams, i));
+        if (shm_stream_is_ready(s)) {
+            return true;
+        }/* else {
+            shm_arbiter_buffer *buff
+                = *((shm_arbiter_buffer **)shm_vector_at(&shmn->buffers, i));
+            shm_arbiter_buffer_set_active(buff, false);
+        }
+        */
+    }
+
+    return false;
+}
+
 shm_event *shamon_get_next_ev(shamon *shmn) {
     return shmn->process_events(&shmn->buffers, shmn->process_events_data);
 }
 
 void shamon_add_stream(shamon *shmn, shm_stream *stream) {
     shm_vector_push(&shmn->streams, &stream);
-    assert((*((shm_stream**)shm_vector_at(&shmn->streams, shm_vector_size(&shmn->streams) - 1)) == stream)
-           && "BUG: shm_vector_push");
+    assert((*((shm_stream**)shm_vector_at(&shmn->streams,
+                                          shm_vector_size(&shmn->streams) - 1))
+            == stream) && "BUG: shm_vector_push");
     if (stream->event_size > shmn->_ev_size) {
         shmn->_ev = realloc(shmn->_ev, stream->event_size);
         shmn->_ev_size = stream->event_size;

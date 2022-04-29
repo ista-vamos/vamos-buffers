@@ -5,6 +5,7 @@
 #include <poll.h>
 
 #include "stream-fds.h"
+#include "arbiter.h"
 
 static size_t read_events(shm_stream_fds *ss,
                           shm_arbiter_buffer *buffer) {
@@ -73,11 +74,6 @@ static size_t read_events(shm_stream_fds *ss,
     return read_ev;
 }
 
-static bool fds_has_event(shm_stream *stream) {
-    assert(0 && "Not implemented");
-    abort();
-}
-
 static size_t fds_buffer_events(shm_stream *stream,
                                 shm_arbiter_buffer *buffer) {
     shm_stream_fds *fs = (shm_stream_fds *) stream;
@@ -92,10 +88,15 @@ static size_t fds_buffer_events(shm_stream *stream,
     return 0;
 }
 
+static bool fds_is_ready(shm_stream *stream) {
+    return ((shm_stream_fds *)stream)->fds_num > 0;
+}
+
+
 shm_stream *shm_create_fds_stream() {
     shm_stream_fds *ss = malloc(sizeof *ss);
     shm_stream_init((shm_stream *)ss, sizeof(shm_event_fd_in),
-                     fds_has_event, fds_buffer_events, NULL,
+                     fds_buffer_events, NULL, fds_is_ready,
                      "fds-stream");
     ss->ev_kind_in = shm_mk_event_kind("fd-in", sizeof(shm_event_fd_in), NULL, NULL);
     ss->fds = NULL;

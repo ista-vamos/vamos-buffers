@@ -27,6 +27,8 @@ struct buffer_info {
     /* number of dropped events */
     size_t dropped;
     /* shm filedescriptor */
+    /* TODO -- keep this somewhere else, it is different between
+     * processes */
     int fd;
 } __attribute__((aligned(8)));
 
@@ -100,7 +102,8 @@ struct buffer *initialize_shared_buffer(size_t elem_size)
     struct buffer *buff = (struct buffer *)mem;
     memset(buff, 0, sizeof(struct buffer_info));
     buff->info.capacity = (BUFF_END(buff) - BUFF_START(buff)) / elem_size;
-    printf("Buffer allocated size = %lu, capacity = %lu\n", buffer_allocation_size(), buff->info.capacity);
+    printf("Buffer allocated size = %lu, capacity = %lu\n",
+           buffer_allocation_size(), buff->info.capacity);
     buff->info.elem_size = elem_size;
     buff->info.fd = fd;
 
