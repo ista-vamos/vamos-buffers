@@ -218,9 +218,8 @@ size_t control_buffer_size(void *buffer)
 void release_shared_control_buffer(void *buffer)
 {
     size_t *mem = (size_t *) buffer;
-    int fd = *((int *)mem);
-    mem -= sizeof(size_t);
-    size_t size = *((size_t *)mem);
+    int fd = (int)*(--mem);
+    size_t size = *(--mem);
 
     if (munmap(mem, size) != 0) {
         perror("munmap failure");

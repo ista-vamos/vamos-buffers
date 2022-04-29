@@ -177,7 +177,9 @@ event_exit(void)
     }
 #endif
     drmgr_exit();
+    dr_printf("Releasing shared buffer\n");
     destroy_shared_buffer(shm);
+    dr_printf("Releasing shared control buffer\n");
     release_shared_control_buffer(events);
 }
 
