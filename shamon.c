@@ -90,12 +90,12 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
             assert(shmn->_ev);
             uint64_t c = shm_arbiter_buffer_capacity(buffer);
             /* is the buffer full from 80 or more percent? */
-            if (qsize > 0.75*c) {
+            if (qsize > 0.5*c) {
                 /* drop half of the buffer */
-                if (!shm_arbiter_buffer_drop(buffer, c/2)) {
+                if (!shm_arbiter_buffer_drop(buffer, c/4)) {
                     assert(0 && "Failed dropping events");
                 }
-                shm_stream_get_dropped_event(stream, &dropped, c/2);
+                shm_stream_get_dropped_event(stream, &dropped, c/4);
                 assert(shmn->_ev_size >= sizeof(dropped));
                 memcpy(shmn->_ev, &dropped, sizeof(dropped));
                 return shmn->_ev;

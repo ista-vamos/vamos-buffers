@@ -46,7 +46,7 @@ shm_stream *shm_arbiter_buffer_stream(shm_arbiter_buffer *buffer)
 
 void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
                              shm_stream *stream) {
-    const size_t capacity = 16*4096; // FIXME
+    const size_t capacity = 4*4096; // FIXME
 
     buffer->stream = stream;
     assert(capacity >= 3 && "We need at least 3 elements in the buffer");
