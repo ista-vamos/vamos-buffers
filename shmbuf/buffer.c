@@ -15,6 +15,16 @@
 #define SLEEP_TIME_NS 10000
 #define MEM_SIZE (1024*1024)
 
+#define MAX_AUX_BUF_KEY_SIZE 16
+#define AUX_BUFF_NUM 64
+
+struct aux_buffer_info {
+    char key[MAX_AUX_BUF_KEY_SIZE];
+    _Atomic size_t head;
+    _Atomic size_t size;
+    size_t capacity;
+};
+
 struct buffer_info {
     size_t capacity;
     _Atomic size_t elem_num;
@@ -26,6 +36,9 @@ struct buffer_info {
     _Bool monitor_attached;
     /* number of dropped events */
     size_t dropped;
+    /* shared buffers for passing variable-sized data */
+    struct aux_buffer_info aux_buffers[AUX_BUFF_NUM];
+    size_t cur_aux_buf;
     /* shm filedescriptor */
     /* TODO -- keep this somewhere else, it is different between
      * processes */
