@@ -1,29 +1,25 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <sys/file.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <limits.h>
 #include <string.h>
 #include <time.h>
 
 #include "shm.h"
 #include "buffer.h"
+#include "vector.h"
 
 #define SLEEP_TIME_NS 10000
 #define MEM_SIZE (1024*1024)
 
 #define MAX_AUX_BUF_KEY_SIZE 16
-#define AUX_BUFF_NUM 64
 
-struct aux_buffer_info {
-    char key[MAX_AUX_BUF_KEY_SIZE];
-    _Atomic size_t head;
-    _Atomic size_t size;
-    size_t capacity;
-};
 
 struct buffer_info {
     size_t capacity;
@@ -34,9 +30,6 @@ struct buffer_info {
     /* the monitored program exited/destroyed the buffer */
     _Bool destroyed;
     _Bool monitor_attached;
-    /* shared buffers for passing variable-sized data */
-    struct aux_buffer_info aux_buffers[AUX_BUFF_NUM];
-    size_t cur_aux_buf;
 } __attribute__((aligned(8)));
 
 struct shmbuffer {
@@ -45,15 +38,29 @@ struct shmbuffer {
     unsigned char data[MEM_SIZE];
 };
 
+struct aux_buffer {
+    size_t size;
+    size_t head;
+    size_t idx;
+    unsigned char data[0];
+};
+
 struct buffer {
     struct shmbuffer *shmbuffer;
-    /* shared memory of auxiliary buffers */
-    void *aux_buffers[AUX_BUFF_NUM];
+    /* shared memory of auxiliary buffer */
+    struct aux_buffer *cur_aux_buff;
+    /* the known aux_buffers that might still be needed */
+    shm_vector aux_buffers;
+    size_t aux_buf_idx;
     /* shm filedescriptor */
     int fd;
     /* shm key */
     char *key;
 };
+
+size_t aux_buffer_free_space(struct aux_buffer *buff);
+size_t buffer_push_bytes(struct buffer *buff, const void *data, size_t size);
+uint64_t buffer_push_str(struct buffer *buff, const char *str);
 
 #define BUFF_START(b) ((void*)b->data)
 #define BUFF_END(b) ((void*)b->data + MEM_SIZE - 1)
@@ -120,14 +127,20 @@ struct buffer *initialize_shared_buffer(size_t elem_size)
     assert(buff && "Memory allocation failed");
 
     buff->shmbuffer = (struct shmbuffer *)mem;
-    buff->key = strdup(key);
     memset(buff->shmbuffer, 0, sizeof(struct buffer_info));
-    buff->shmbuffer->info.capacity = (BUFF_END(buff->shmbuffer) - BUFF_START(buff->shmbuffer)) / elem_size;
-    printf("Buffer allocated size = %lu, capacity = %lu\n",
+    buff->shmbuffer->info.capacity
+        = (BUFF_END(buff->shmbuffer) - BUFF_START(buff->shmbuffer)) / elem_size;
+    printf("  .. buffer allocated size = %lu, capacity = %lu\n",
            buffer_allocation_size(), buff->shmbuffer->info.capacity);
     buff->shmbuffer->info.elem_size = elem_size;
+
+    buff->key = strdup(key);
+    shm_vector_init(&buff->aux_buffers, sizeof(struct aux_buffer*));
+    buff->aux_buf_idx = 0;
+    buff->cur_aux_buff = NULL;
     buff->fd = fd;
 
+    puts("Done");
     return buff;
 }
 
@@ -158,6 +171,9 @@ struct buffer *get_shared_buffer(const char *key)
 
     buff->shmbuffer = (struct shmbuffer *)mem;
     buff->key = strdup(key);
+    shm_vector_init(&buff->aux_buffers, sizeof(struct aux_buffer*));
+    buff->aux_buf_idx = 0;
+    buff->cur_aux_buff = NULL;
     buff->fd = fd;
 
     return buff;
@@ -286,6 +302,22 @@ void *buffer_partial_push(struct buffer *buff, void *prev_push,
     return prev_push + size;
 }
 
+void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
+                              const char *str) {
+    assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
+    /* buffer full */
+    assert(buff->shmbuffer->info.elem_num < buff->shmbuffer->info.capacity);
+
+    /* all ok, copy the data */
+    assert(BUFF_START(buff->shmbuffer) <= prev_push);
+    assert(prev_push < BUFF_END(buff->shmbuffer));
+
+    *((uint64_t *)prev_push) = buffer_push_str(buff, str);
+    /*printf("Pushed str: %lu\n", *((uint64_t *)prev_push));*/
+    return prev_push + sizeof(uint64_t);
+}
+
+
 bool buffer_finish_push(struct buffer *buff) {
     struct buffer_info *info = &buff->shmbuffer->info;
     assert(!info->destroyed && "Writing to a destroyed buffer");
@@ -404,7 +436,7 @@ void *get_shared_control_buffer()
         perror("reading size of ctrl buffer");
         return NULL;
     }
-    printf("   ... its size if %lu\n", size);
+    printf("   ... its size is %lu\n", size);
 
     void *mem = mmap(0, size + 2*sizeof(size_t),
                      PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
@@ -446,4 +478,193 @@ void release_shared_control_buffer(void *buffer)
     }
 }
 
+/***** AUX BUFFERS ********/
+size_t aux_buffer_free_space(struct aux_buffer *buff) {
+    return buff->size - buff->head;
+}
 
+static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
+    if (buff->cur_aux_buff) {
+        shm_vector_push(&buff->aux_buffers, &buff->cur_aux_buff);
+    }
+
+    size_t idx = buff->aux_buf_idx++;
+    const size_t pg_size = getpagesize();
+    size = (((size + 3*sizeof(size_t)) / pg_size)+1)*pg_size;
+
+    /* create the key */
+    char key[20];
+    snprintf(key, 19, "/aux.%lu", idx);
+
+    printf("Initializing aux buffer %s\n", key);
+
+    int fd = shamon_shm_open(key, O_RDWR|O_CREAT, S_IRWXU);
+    if(fd < 0) {
+        perror("shm_open");
+        abort();
+    }
+
+    if((ftruncate(fd, size)) == -1) {
+        perror("ftruncate");
+        abort();
+    }
+
+    void *mem = mmap(0, size,
+                     PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+    if (mem == MAP_FAILED) {
+        perror("mmap failure");
+        if (close(fd) == -1) {
+            perror("closing fd after mmap failure");
+        }
+        if (shamon_shm_unlink(key) != 0) {
+            perror("shm_unlink after mmap failure");
+        }
+        abort();
+    }
+
+    struct aux_buffer *ab = (struct aux_buffer*) mem;
+    ab->head = 0;
+    ab->size = size - sizeof(struct aux_buffer);
+    ab->idx = idx;
+
+    buff->cur_aux_buff = ab;
+
+    return ab;
+}
+
+static struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size) {
+    if (!buff->cur_aux_buff || aux_buffer_free_space(buff->cur_aux_buff) < size)
+        return new_aux_buffer(buff, size);
+    return buff->cur_aux_buff;
+}
+
+static struct aux_buffer *reader_get_aux_buffer(struct buffer *buff, size_t idx) {
+    /* cache the last use */
+    if (buff->cur_aux_buff && buff->cur_aux_buff->idx == idx)
+        return buff->cur_aux_buff;
+
+    /* try to find one with the idx */
+    for (size_t i = 0; i < shm_vector_size(&buff->aux_buffers); ++i) {
+         struct aux_buffer *ab
+             = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, i));
+         if (ab->idx == idx) {
+             buff->cur_aux_buff = ab;
+             return ab;
+         }
+    }
+
+    /* create the key */
+    char key[20];
+    snprintf(key, 19, "/aux.%lu", idx);
+
+    //printf("Getting aux buffer %s\n", key);
+
+    int fd = shamon_shm_open(key, O_RDWR, S_IRWXU);
+    if(fd < 0) {
+        perror("shm_open");
+        abort();
+    }
+
+    size_t size;
+    if (read(fd, &size, sizeof(size)) == -1) {
+        perror("reading size of aux buffer");
+        return NULL;
+    }
+    //printf("   ... its size is %lu\n", size);
+
+    void *mem = mmap(0, size + 3*sizeof(size_t),
+                     PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+    if (mem == MAP_FAILED) {
+        perror("mmap failure");
+        if (close(fd) == -1) {
+            perror("closing fd after mmap failure");
+        }
+        if (shamon_shm_unlink(key) != 0) {
+            perror("shm_unlink after mmap failure");
+        }
+        abort();
+    }
+
+    struct aux_buffer *ab = (struct aux_buffer*)mem;
+    assert(ab->idx == idx && "Got wrong buffer");
+    assert(ab->size > 0);
+
+    buff->cur_aux_buff = ab;
+    shm_vector_push(&buff->aux_buffers, &ab);
+    assert(*((struct aux_buffer **)shm_vector_top(&buff->aux_buffers)) == ab);
+
+    return ab;
+}
+
+void aux_buffer_destroy(struct aux_buffer *buffer)
+{
+    char key[20];
+    snprintf(key, 19, "/aux.%lu", buffer->idx);
+
+    assert((buffer->size + sizeof(struct aux_buffer)) % getpagesize() == 0);
+    //int fd = buffer->fd;
+    if (munmap(buffer, buffer->size + sizeof(struct aux_buffer)) != 0) {
+        perror("aux_buffer_destroy: munmap failure");
+    }
+    /* FIXME
+    if (close(fd) == -1) {
+        perror("aux_buffer_destroy: closing fd after mmap failure");
+    }
+    */
+    if (shamon_shm_unlink(key) != 0) {
+        perror("aux_buffer_destroy: shm_unlink failure");
+    }
+}
+
+
+size_t buffer_push_bytes(struct buffer *buff,
+                         const void *data, size_t size)
+{
+    struct aux_buffer *ab = writer_get_aux_buffer(buff, size);
+    assert(ab);
+    size_t off = ab->head;
+    assert(off < (1LU<<32));
+
+    memcpy(ab->data + off, data, size);
+    ab->head += size;
+    return off;
+}
+
+void *buffer_get_str(struct buffer *buff, uint64_t elem)
+{
+    size_t idx = elem >> 32;
+    struct aux_buffer *ab = reader_get_aux_buffer(buff, idx);
+    size_t off = elem & 0xffffffff;
+    return ab->data + off;
+}
+
+uint64_t buffer_push_str(struct buffer *buff, const char *str) {
+    size_t len = strlen(str) + 1;
+    size_t off = buffer_push_bytes(buff, str, len);
+    assert(buff->cur_aux_buff);
+    return (off | (buff->cur_aux_buff->idx << 32));
+}
+
+void buffer_release_str(struct buffer *buff, uint64_t elem) {
+    size_t idx = elem >> 32;
+    if (shm_vector_size(&buff->aux_buffers) > 10) {
+        /* we can discard all buffers that have idx less than this element */
+        shm_vector tmp;
+        shm_vector_init(&tmp, sizeof(struct aux_buffer*));
+        size_t vecsize = shm_vector_size(&buff->aux_buffers);
+
+        for (size_t i = 0; i < vecsize; ++i) {
+             struct aux_buffer *ab
+                 = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, i));
+             if (ab->idx >= idx) {
+                 shm_vector_push(&tmp, &ab);
+                 continue;
+             }
+
+             aux_buffer_destroy(ab);
+        }
+
+        shm_vector_swap(&tmp, &buff->aux_buffers);
+        shm_vector_destroy(&tmp);
+    }
+}

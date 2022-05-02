@@ -2,6 +2,7 @@
 #define SHAMON_SHM_BUFFER_H
 
 #include <stddef.h>
+#include <stdint.h>
 #include <stdbool.h>
 
 struct buffer;
@@ -23,6 +24,9 @@ void buffer_set_attached(struct buffer *, bool);
 bool buffer_pop(struct buffer *buff, void *dst);
 bool buffer_pop_k(struct buffer *buff, void *dst, size_t k);
 bool buffer_push(struct buffer *buff, const void *elem, size_t size);
+void *buffer_get_str(struct buffer *buff, uint64_t elem);
+void buffer_release_str(struct buffer *buff, uint64_t elem);
+
 
 void *buffer_read_pointer(struct buffer *buff, size_t *size);
 bool buffer_drop_k(struct buffer *buff, size_t size);
@@ -36,6 +40,13 @@ size_t control_buffer_size(void *buff);
 void *buffer_start_push(struct buffer *buff);
 void *buffer_partial_push(struct buffer *buff, void *prev_push,
                           const void *elem, size_t size);
+void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
+                              const char *str);
 bool buffer_finish_push(struct buffer *buff);
+
+struct aux_buff_ptr {
+    uint32_t buffer_id;
+    uint32_t offset;
+} __attribute__((packed,aligned(64)));
 
 #endif /* SHAMON_SHM_BUFFER_H */

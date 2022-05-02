@@ -301,26 +301,25 @@ at_call_generic(size_t fun_idx, const char *sig)
         ++waiting_for_buffer;
         /* DR_ASSERT(0 && "Buffer full"); */
     }
+    DR_ASSERT(fun_idx < events_num);
     shmaddr = buffer_partial_push(shm, shmaddr,
                                   &fun_idx, sizeof(fun_idx));
     DR_ASSERT(shmaddr && "Failed partial push");
-    /* printf("Fun %lu\n", fun_idx); */
+    /* printf("Fun %lu -- %s\n", fun_idx, sig); */
     int i = 0;
     for (const char *o = sig; *o; ++o) {
         switch (*o) {
             case '_': break;
             case 'S':
-              assert(0 && "Not implemented yet");
-              /*
               shmaddr = buffer_partial_push_str(shm, shmaddr,
-                                                *(const char **)call_get_arg_ptr(&mc, i, *o)));
-               */
+                                                *(const char **)call_get_arg_ptr(&mc, i, *o));
+              break;
             default:
-            shmaddr = buffer_partial_push(shm, shmaddr,
-                                          call_get_arg_ptr(&mc, i, *o),
-                                          call_event_op_get_size(*o));
-            /* printf(" arg %d=%ld", i, *(size_t*)call_get_arg_ptr(&mc, i, *o)); */
-            break;
+              shmaddr = buffer_partial_push(shm, shmaddr,
+                                            call_get_arg_ptr(&mc, i, *o),
+                                            call_event_op_get_size(*o));
+              /* printf(" arg %d=%ld", i, *(size_t*)call_get_arg_ptr(&mc, i, *o)); */
+              break;
         }
         ++i;
     }

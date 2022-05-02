@@ -33,6 +33,7 @@ void shm_arbiter_buffer_push_k(shm_arbiter_buffer *q, const void *elems, size_t 
 /* cannot be mixed with push/push_k */
 void *shm_arbiter_buffer_start_push(shm_arbiter_buffer *q, size_t *size);
 void shm_arbiter_buffer_finish_push(shm_arbiter_buffer *q);
+void shm_arbiter_buffer_get_str(shm_arbiter_buffer *q, size_t elem);
 
 /* reader's API */
 /* multiple threads can use top and peek if none of them uses drop/pop

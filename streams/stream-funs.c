@@ -64,6 +64,7 @@ size_t funs_buffer_events(shm_stream *stream,
 shm_stream *shm_create_funs_stream(const char *key) {
     shm_stream_funs *ss = malloc(sizeof *ss);
     struct buffer *shmbuffer = get_shared_buffer(key);
+    assert(shmbuffer && "Getting the shm buffer failed");
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
     shm_stream_init((shm_stream *)ss,
@@ -95,6 +96,27 @@ shm_stream *shm_create_funs_stream(const char *key) {
     assert(ss->ev_buff);
 
     return (shm_stream *) ss;
+}
+
+void shm_event_funcall_release(shm_event_funcall *fev) {
+    void *p = fev->args;
+    for (const char *o = fev->signature; *o; ++o) {
+        if (*o == '_') {
+            continue;
+        }
+        if (*o == 'S') {
+            buffer_release_str(((shm_stream_funs*)shm_event_stream((shm_event*)fev))->shmbuffer,
+                               *(uint64_t*)p);
+            p += sizeof(uint64_t);
+            continue;
+        }
+
+        p += call_event_op_get_size(*o);
+    }
+}
+
+const char *shm_stream_funs_get_str(shm_stream_funs *fstream, uint64_t elem) {
+    return buffer_get_str(fstream->shmbuffer, elem);
 }
 
 void shm_destroy_funs_stream(shm_stream_funs *ss) {

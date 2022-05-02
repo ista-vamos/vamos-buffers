@@ -30,5 +30,9 @@ shm_stream *shm_create_funs_stream(const char *key);
 
 struct call_event_spec *shm_funs_stream_get_event_spec(shm_stream_funs *stream, shm_kind kind);
 
+void shm_event_funcall_release(shm_event_funcall *fev);
+
+const char *shm_stream_funs_get_str(shm_stream_funs *fstream, uint64_t elem);
+
 void shm_destroy_funs_stream(shm_stream_funs *ss);
 
