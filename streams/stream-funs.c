@@ -98,6 +98,7 @@ shm_stream *shm_create_funs_stream(const char *key) {
 }
 
 void shm_destroy_funs_stream(shm_stream_funs *ss) {
+    destroy_shared_buffer(ss->shmbuffer);
     free(ss);
 }
 

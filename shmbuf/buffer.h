@@ -12,7 +12,6 @@ void *initialize_shared_control_buffer(size_t size);
 void *get_shared_control_buffer(void);
 
 void release_shared_control_buffer(void *buffer);
-void release_shared_buffer(struct buffer *);
 void destroy_shared_buffer(struct buffer *);
 /* get a local memory to which we can copy the shared buffer */
 //struct buffer *get_local_buffer(struct buffer *shared_buffer);
