@@ -138,3 +138,29 @@ size_t shm_par_queue_size(shm_par_queue *q) {
 size_t shm_par_queue_elem_size(shm_par_queue *q) {
     return q->elem_size;
 }
+
+shm_event *shm_par_queue_top(shm_par_queue *q) {
+    if (q->elem_num > 0)
+        return (shm_event *)(q->data + q->tail*q->elem_size);
+    return (shm_event *)0;
+}
+size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
+                          void **ptr1, size_t *len1,
+                          void **ptr2, size_t *len2) {
+    size_t cur_elem_num = q->elem_num;
+    if (n > cur_elem_num)
+        n = cur_elem_num;
+    size_t end = cur_elem_num + q->tail;
+    if (end > q->capacity) {
+        *ptr1 = q->data + q->tail*q->elem_size;
+        *len1 = q->capacity - q->tail;
+        *ptr2 = q->data;
+        *len2 = end - q->capacity;
+    } else {
+        *ptr1 = q->data + q->tail*q->elem_size;
+        *len1 = n;
+        *len2 = 0;
+    }
+    assert(*len1 + *len2 == n);
+    return  n;
+}

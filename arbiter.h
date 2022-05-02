@@ -14,8 +14,8 @@ void *shm_arbiter_buffer_start_push(shm_arbiter_buffer *q, size_t *size);
 void shm_arbiter_buffer_push_k(shm_arbiter_buffer *q, const void *elems, size_t size);
 void shm_arbiter_buffer_finish_push(shm_arbiter_buffer *q);
 
-shm_event *shm_arbiter_buffer_peek(shm_arbiter_buffer *buffer);
-void shm_arbiter_buffer_peek_n(shm_arbiter_buffer *buffer, size_t n,
+shm_event *shm_arbiter_buffer_top(shm_arbiter_buffer *buffer);
+size_t shm_arbiter_buffer_peek(shm_arbiter_buffer *buffer, size_t n,
                                void **data1, size_t *size1,
                                void **data2, size_t *size2);
 

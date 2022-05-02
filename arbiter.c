@@ -122,3 +122,13 @@ void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
 bool shm_arbiter_buffer_pop(shm_arbiter_buffer *buffer, void *elem) {
     return shm_par_queue_pop(&buffer->buffer, elem);
 }
+
+shm_event *shm_arbiter_buffer_top(shm_arbiter_buffer *buffer) {
+    return shm_par_queue_top(&buffer->buffer);
+}
+
+size_t shm_arbiter_buffer_peek(shm_arbiter_buffer *buffer, size_t n,
+                               void **data1, size_t *size1,
+                               void **data2, size_t *size2) {
+    return shm_par_queue_peek(&buffer->buffer, n, data1, size1, data2, size2);
+}
