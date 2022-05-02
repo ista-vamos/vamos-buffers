@@ -149,6 +149,8 @@ void shamon_destroy(shamon *shmn) {
         shm_vector_destroy(&shmn->buffers);
         free(shmn->_ev);
         free(shmn);
+
+        deinitialize_events();
 }
 
 bool shamon_is_ready(shamon *shmn) {

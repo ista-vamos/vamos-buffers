@@ -30,6 +30,8 @@ typedef void (*ev_destroy_fn) (shm_event *src);
 /* Must be called before using event API.
  * It is called from shamon_create */
 void initialize_events(void);
+/* called from shamon_destroy */
+void deinitialize_events(void);
 
 //Returns some form of identifier represents a particular name,
 //used for event kinds, field names, etc. (so we don't need to do string

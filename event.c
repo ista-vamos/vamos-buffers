@@ -30,8 +30,8 @@ shm_kind shm_mk_event_kind(const char* name,
                            ev_destroy_fn destroy_fn) {
     size_t idx = ev_kinds_num++;
     if (ev_kinds_num_allocated < ev_kinds_num) {
-        ev_kinds_num += 10;
-        events_info = realloc(events_info, sizeof(struct _ev_kind_rec) * ev_kinds_num);
+        ev_kinds_num_allocated += 10;
+        events_info = realloc(events_info, sizeof(struct _ev_kind_rec) * ev_kinds_num_allocated);
         assert(events_info && "Allocation failed");
     }
 
@@ -54,6 +54,14 @@ void initialize_events() {
 
     assert(dropped_kind > 0 && "Events not initialized");
     assert(events_info && "Events not initialized");
+}
+
+void deinitialize_events() {
+    for (size_t i = 0; i < ev_kinds_num; ++i) {
+        free(events_info[i].name);
+    }
+    free(events_info);
+
 }
 
 bool shm_event_is_dropped(shm_event *ev) {
