@@ -12,6 +12,8 @@ union shamon_operand {
     float f;
     double d;
     void *p;
+    /* string is a 32bit id of shared memory block and 32bit offset */
+    uint64_t S;
 };
 
 
@@ -27,11 +29,10 @@ struct call_event_spec {
      * f = float
      * d = double
      * p = pointer
+     * S = string (0-terminated array of chars)
      * _ = skip argument
      * E.g.: "i_c" means track first and third arguments that have 4 bytes
      * and 1 byte size
-     * TODO: add S for string (which will be copied into an another piece
-     * of shared memory)
      * */
     unsigned char signature[16]; /* for now, we allow 16 arguments at most */
     /* the type of event assigned by the monitor */

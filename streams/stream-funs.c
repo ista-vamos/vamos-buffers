@@ -50,7 +50,7 @@ size_t funs_buffer_events(shm_stream *stream,
         elems = buffer_read_pointer(ss->shmbuffer, &size);
         assert(size > 0 && "Buffer memref failed");
         shm_arbiter_buffer_push_k(buffer, elems, size);
-        printf("Buffered %lu events\n", size);
+        /* printf("Buffered %lu events\n", size); */
         total += size;
         if (!buffer_drop_k(ss->shmbuffer, size)) {
             assert(0 && "Buffer drop failed");

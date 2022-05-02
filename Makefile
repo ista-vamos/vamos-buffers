@@ -1,4 +1,4 @@
-CFLAGS=-fPIC -Wall -Werror -Wextra -g
+CFLAGS=-fPIC -Wall -Werror -Wextra -Wpadding -g
 CPPFLAGS=-D_POSIX_C_SOURCE200809L
 
 all: shamon.a shmbuf drfun drsyscalls experiments

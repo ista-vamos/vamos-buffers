@@ -12,6 +12,7 @@ call_event_op_get_size(char c) {
         case 'f': return sizeof(float);
         case 'd': return sizeof(double);
         case 'p': return sizeof(void *);
+        case 'S': return sizeof(uint64_t);
         case '_': return 0;
         default: assert(0 && "Invalid op type"); abort();
     };

@@ -39,6 +39,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <assert.h>
 #include <sys/mman.h>
 #include <sys/file.h>
 
@@ -191,7 +192,7 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
         if (sig) {
            ++sig;
            DR_ASSERT(strlen(sig) <=  sizeof(events[0].signature));
-           strncpy(events[i-1].signature, sig,
+           strncpy((char *) events[i-1].signature, sig,
                    sizeof(events[0].signature));
            strncpy(events[i-1].name, argv[i], sig - argv[i] - 1);
         } else {
@@ -306,11 +307,20 @@ at_call_generic(size_t fun_idx, const char *sig)
     /* printf("Fun %lu\n", fun_idx); */
     int i = 0;
     for (const char *o = sig; *o; ++o) {
-        if (*o != '_') {
+        switch (*o) {
+            case '_': break;
+            case 'S':
+              assert(0 && "Not implemented yet");
+              /*
+              shmaddr = buffer_partial_push_str(shm, shmaddr,
+                                                *(const char **)call_get_arg_ptr(&mc, i, *o)));
+               */
+            default:
             shmaddr = buffer_partial_push(shm, shmaddr,
                                           call_get_arg_ptr(&mc, i, *o),
                                           call_event_op_get_size(*o));
             /* printf(" arg %d=%ld", i, *(size_t*)call_get_arg_ptr(&mc, i, *o)); */
+            break;
         }
         ++i;
     }
