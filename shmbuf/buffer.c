@@ -58,9 +58,10 @@ struct buffer {
     char *key;
 };
 
-size_t aux_buffer_free_space(struct aux_buffer *buff);
-size_t buffer_push_bytes(struct buffer *buff, const void *data, size_t size);
-uint64_t buffer_push_str(struct buffer *buff, const char *str);
+static size_t aux_buffer_free_space(struct aux_buffer *buff);
+static void aux_buffer_destroy(struct aux_buffer *buffer);
+static size_t buffer_push_bytes(struct buffer *buff, const void *data, size_t size);
+static uint64_t buffer_push_str(struct buffer *buff, const char *str);
 
 #define BUFF_START(b) ((void*)b->data)
 #define BUFF_END(b) ((void*)b->data + MEM_SIZE - 1)
@@ -188,15 +189,15 @@ void destroy_shared_buffer(struct buffer *buff)
     buff->shmbuffer->info.destroyed = 1;
 
     if (munmap(buff->shmbuffer, buffer_allocation_size()) != 0) {
-        perror("munmap failure");
+        perror("destroy_shared_buffer: munmap failure");
     }
     if (close(buff->fd) == -1) {
-        perror("closing fd after mmap failure");
+        perror("destroy_shared_buffer: failed closing mmap fd");
     }
-    /* FIXME: pass the key */
     if (shamon_shm_unlink(buff->key) != 0) {
-        perror("shm_unlink failure");
+        perror("destroy_shared_buffer: shm_unlink failure");
     }
+
     free(buff->key);
     free(buff);
 }
@@ -474,7 +475,7 @@ void release_shared_control_buffer(void *buffer)
         perror("closing fd after mmap failure");
     }
     if (shamon_shm_unlink(shamon_shm_default_ctrl_key()) != 0) {
-        perror("shm_unlink failure");
+        perror("release_shared_control_buffer: shm_unlink failure");
     }
 }
 

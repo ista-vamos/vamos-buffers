@@ -58,6 +58,10 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
     buffer->dropped_num = 0;
 }
 
+void shm_arbiter_buffer_destroy(shm_arbiter_buffer *buffer) {
+    shm_par_queue_destroy(&buffer->buffer);
+}
+
 size_t shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q) {
     return shm_par_queue_elem_size(&q->buffer);
 }
