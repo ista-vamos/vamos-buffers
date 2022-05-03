@@ -138,19 +138,20 @@ shm_vector *shamon_get_buffers(shamon *shmn) {
 }
 
 void shamon_destroy(shamon *shmn) {
-        shm_vector_destroy(&shmn->streams);
-        for (size_t i = 0; i < shm_vector_size(&shmn->buffer_threads); ++i) {
-            shm_arbiter_buffer *buff
-                = *((shm_arbiter_buffer **)shm_vector_at(&shmn->buffers, i));
-            shm_arbiter_buffer_set_active(buff, false);
-            thrd_join(*(thrd_t*)shm_vector_at(&shmn->buffer_threads, i), NULL);
-        }
-        shm_vector_destroy(&shmn->buffer_threads);
-        shm_vector_destroy(&shmn->buffers);
-        free(shmn->_ev);
-        free(shmn);
+    shm_vector_destroy(&shmn->streams);
+    for (size_t i = 0; i < shm_vector_size(&shmn->buffer_threads); ++i) {
+        shm_arbiter_buffer *buff
+            = *((shm_arbiter_buffer **)shm_vector_at(&shmn->buffers, i));
+        shm_arbiter_buffer_set_active(buff, false);
+        thrd_join(*(thrd_t*)shm_vector_at(&shmn->buffer_threads, i), NULL);
+        //shm_arbiter_buffer_destroy(buff);
+    }
+    shm_vector_destroy(&shmn->buffer_threads);
+    shm_vector_destroy(&shmn->buffers);
+    free(shmn->_ev);
+    free(shmn);
 
-        deinitialize_events();
+    deinitialize_events();
 }
 
 bool shamon_is_ready(shamon *shmn) {

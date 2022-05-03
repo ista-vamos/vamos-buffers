@@ -120,7 +120,7 @@ const char *shm_stream_funs_get_str(shm_stream_funs *fstream, uint64_t elem) {
 }
 
 void shm_destroy_funs_stream(shm_stream_funs *ss) {
-    destroy_shared_buffer(ss->shmbuffer);
+    release_shared_buffer(ss->shmbuffer);
     free(ss);
 }
 

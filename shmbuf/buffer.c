@@ -59,6 +59,7 @@ struct buffer {
 };
 
 static size_t aux_buffer_free_space(struct aux_buffer *buff);
+static void aux_buffer_release(struct aux_buffer *buffer);
 static void aux_buffer_destroy(struct aux_buffer *buffer);
 static size_t buffer_push_bytes(struct buffer *buff, const void *data, size_t size);
 static uint64_t buffer_push_str(struct buffer *buff, const char *str);
@@ -184,9 +185,38 @@ void buffer_set_attached(struct buffer *buff, bool val) {
     buff->shmbuffer->info.monitor_attached = val;
 }
 
+/* for readers */
+void release_shared_buffer(struct buffer *buff)
+{
+    if (munmap(buff->shmbuffer, buffer_allocation_size()) != 0) {
+        perror("release_shared_buffer: munmap failure");
+    }
+    if (close(buff->fd) == -1) {
+        perror("release_shared_buffer: failed closing mmap fd");
+    }
+    free(buff->key);
+    size_t vecsize = shm_vector_size(&buff->aux_buffers);
+
+    for (size_t i = 0; i < vecsize; ++i) {
+         struct aux_buffer *ab
+             = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, i));
+         aux_buffer_release(ab);
+    }
+
+    free(buff);
+}
+
+/* for writers */
 void destroy_shared_buffer(struct buffer *buff)
 {
     buff->shmbuffer->info.destroyed = 1;
+
+    size_t vecsize = shm_vector_size(&buff->aux_buffers);
+    for (size_t i = 0; i < vecsize; ++i) {
+         struct aux_buffer *ab
+             = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, i));
+         aux_buffer_destroy(ab);
+    }
 
     if (munmap(buff->shmbuffer, buffer_allocation_size()) != 0) {
         perror("destroy_shared_buffer: munmap failure");
@@ -597,11 +627,8 @@ static struct aux_buffer *reader_get_aux_buffer(struct buffer *buff, size_t idx)
     return ab;
 }
 
-void aux_buffer_destroy(struct aux_buffer *buffer)
+void aux_buffer_release(struct aux_buffer *buffer)
 {
-    char key[20];
-    snprintf(key, 19, "/aux.%lu", buffer->idx);
-
     assert((buffer->size + sizeof(struct aux_buffer)) % getpagesize() == 0);
     //int fd = buffer->fd;
     if (munmap(buffer, buffer->size + sizeof(struct aux_buffer)) != 0) {
@@ -612,6 +639,14 @@ void aux_buffer_destroy(struct aux_buffer *buffer)
         perror("aux_buffer_destroy: closing fd after mmap failure");
     }
     */
+}
+
+void aux_buffer_destroy(struct aux_buffer *buffer) {
+    char key[20];
+    snprintf(key, 19, "/aux.%lu", buffer->idx);
+
+    aux_buffer_release(buffer);
+
     if (shamon_shm_unlink(key) != 0) {
         perror("aux_buffer_destroy: shm_unlink failure");
     }
