@@ -27,6 +27,24 @@ void shm_vector_swap(shm_vector *vec, shm_vector *with) {
     with->alloc_size = asize;
 }
 
+void shm_vector_resize(shm_vector *vec, size_t size) {
+    if (vec->size >= size)
+        return;
+    if (size >= vec->alloc_size) {
+        // TODO: exp. growth?
+        vec->alloc_size = size;
+        assert(0 < vec->element_size);
+        vec->data = realloc(vec->data,
+                            vec->alloc_size * vec->element_size);
+        assert(vec->data != NULL && "Memory re-allocation failed");
+    }
+
+    void *addr = ((unsigned char *)vec->data) + vec->size*vec->element_size;
+    memset(addr, 0, size - vec->size);
+    vec->size = size;
+}
+
+
 void *shm_vector_extend(shm_vector *vec) {
     if (vec->size >= vec->alloc_size) {
         // TODO: exp. growth?

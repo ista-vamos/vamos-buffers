@@ -20,5 +20,6 @@ size_t shm_vector_elem_size(shm_vector *vec);
 void *shm_vector_at(shm_vector *vec, size_t idx);
 void *shm_vector_top(shm_vector *vec);
 void shm_vector_swap(shm_vector *vec, shm_vector *with);
+void shm_vector_resize(shm_vector *vec, size_t size);
 
 #endif /* SHAMON_VECTOR_H_ */
