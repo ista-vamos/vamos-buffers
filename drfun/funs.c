@@ -72,7 +72,6 @@ event_app_instruction(void *drcontext, void *tag, instrlist_t *bb, instr_t *inst
                       bool for_trace, bool translating, void *user_data);
 
 static struct buffer *shm;
-static module_data_t *main_module;
 
 static struct call_event_spec *events;
 static size_t events_num;
@@ -222,9 +221,6 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
     dr_register_exit_event(event_exit);
     drmgr_register_module_load_event(find_functions);
 
-    main_module = dr_get_main_module();
-    DR_ASSERT(main_module);
-
     max_elem_size += sizeof(void *); /* space for fun address */
     shm = initialize_shared_buffer(max_elem_size > sizeof(shm_event_dropped) ? max_elem_size : sizeof(shm_event_dropped));
     DR_ASSERT(shm);
@@ -239,7 +235,6 @@ event_exit(void)
 {
     dr_printf("Looped in a busy wait for the buffer %lu times\n", waiting_for_buffer);
 
-    dr_free_module_data(main_module);
 #ifdef SHOW_SYMBOLS
     if (drsym_exit() != DRSYM_SUCCESS) {
         dr_log(NULL, DR_LOG_ALL, 1, "WARNING: error cleaning up symbol library\n");
@@ -335,11 +330,6 @@ event_app_instruction(void *drcontext, void *tag, instrlist_t *bb, instr_t *inst
 {
     if (instr_is_meta(instr) || translating)
         return DR_EMIT_DEFAULT;
-
-    /* instrument only calls/returns from the main binary
-    if (!dr_module_contains_addr(main_module, instr_get_app_pc(instr)))
-        return DR_EMIT_DEFAULT;
-        */
 
     if (instr_is_call_direct(instr)) {
          app_pc target = call_get_target(instr);
