@@ -31,7 +31,7 @@ typedef struct _shamon {
 #define SLEEP_NS_INIT (50)
 #define SLEEP_THRESHOLD_NS (10000000)
 
-int buffer_manager_thrd(void *data) {
+static int buffer_manager_thrd(void *data) {
     shm_arbiter_buffer *buffer = (shm_arbiter_buffer*) data;
     shm_stream *stream = shm_arbiter_buffer_stream(buffer);
 

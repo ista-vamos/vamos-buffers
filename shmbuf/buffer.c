@@ -215,7 +215,8 @@ void destroy_shared_buffer(struct buffer *buff)
     for (size_t i = 0; i < vecsize; ++i) {
          struct aux_buffer *ab
              = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, i));
-         aux_buffer_destroy(ab);
+         //aux_buffer_destroy(ab);
+         aux_buffer_release(ab);
     }
 
     if (munmap(buff->shmbuffer, buffer_allocation_size()) != 0) {
