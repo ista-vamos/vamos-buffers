@@ -26,14 +26,16 @@ shm_stream * shm_arbiter_buffer_stream(shm_arbiter_buffer *buffer);
 bool shm_arbiter_buffer_active(shm_arbiter_buffer *buffer);
 size_t shm_arbiter_buffer_size(shm_arbiter_buffer *buffer);
 size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *buffer);
+size_t shm_arbiter_buffer_free_space(shm_arbiter_buffer *buffer);
 size_t shm_arbiter_buffer_sizeof(void);
 
 /* writer's API */
 void shm_arbiter_buffer_push(shm_arbiter_buffer *q, const void *elem, size_t size);
 void shm_arbiter_buffer_push_k(shm_arbiter_buffer *q, const void *elems, size_t size);
 /* cannot be mixed with push/push_k */
-void *shm_arbiter_buffer_start_push(shm_arbiter_buffer *q, size_t *size);
-void shm_arbiter_buffer_finish_push(shm_arbiter_buffer *q);
+
+void *shm_arbiter_buffer_write_ptr(shm_arbiter_buffer *q);
+void shm_arbiter_buffer_write_finish(shm_arbiter_buffer *q);
 void shm_arbiter_buffer_get_str(shm_arbiter_buffer *q, size_t elem);
 
 /* reader's API */
@@ -46,5 +48,7 @@ size_t shm_arbiter_buffer_peek(shm_arbiter_buffer *buffer, size_t n,
 bool shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t n);
 bool shm_arbiter_buffer_pop(shm_arbiter_buffer *q, void *buff);
 
+void *stream_fetch(shm_stream *stream,
+                   shm_arbiter_buffer *buffer);
 
 #endif /* SHAMON_ARBITER_H_ */

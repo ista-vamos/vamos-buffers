@@ -25,6 +25,7 @@ typedef struct _shm_stream_stdin {
     // kind of events, we can move this to base (derive it
     // from the stream name)
     shm_kind ev_kind;
+    shm_eventid last_event_id;
 } shm_stream_stdin;
 
 bool stdin_has_event(shm_stream *stream);

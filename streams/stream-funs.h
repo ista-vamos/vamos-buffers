@@ -8,7 +8,7 @@
 typedef struct _shm_event_funcall {
 	shm_event base;
     /* the event arguments */
-    const char *signature;
+    char signature[8];
     unsigned char args[0];
 } shm_event_funcall;
 

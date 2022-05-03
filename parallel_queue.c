@@ -50,6 +50,35 @@ bool shm_par_queue_push(shm_par_queue *q,
     return true;
 }
 
+void *shm_par_queue_write_ptr(shm_par_queue *q) {
+    /* queue is full */
+    if (q->elem_num == q->capacity) {
+        return NULL;
+    }
+#ifndef NDEBUG
+    q->partial_head = q->head;
+#endif
+
+    // all ok, copy the data
+    return q->data + q->head*q->elem_size;
+}
+
+bool shm_par_queue_write_finish(shm_par_queue *q) {
+    assert(q->partial_head == q->head
+           && "Inconsistent head, was push() called?");
+    ++q->head;
+
+    // queue full, rotate it
+    if (q->head == q->capacity) {
+        q->head = 0;
+    }
+
+    // the increment must come after everything is done
+    ++q->elem_num;
+
+    return true;
+}
+
 /* return how many elements were not pushed */
 size_t shm_par_queue_push_k(shm_par_queue *q,
                             const void *elems,

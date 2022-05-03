@@ -245,7 +245,7 @@ void *buffer_read_pointer(struct buffer *buff, size_t *size) {
     size_t end = info->tail + *size;
     if (end > info->capacity) {
         *size -= end - info->capacity;
-        assert(*size < info->elem_num);
+        assert(*size <= info->elem_num);
     }
 
     return pos;

@@ -62,6 +62,7 @@
 #endif
 
 #include "event.h" /* shm_event_dropped */
+#include "stream-funs.h"
 #include "events.h"
 
 static void
@@ -75,7 +76,7 @@ static struct buffer *shm;
 
 static struct call_event_spec *events;
 static size_t events_num;
-size_t max_elem_size;
+size_t max_event_size = sizeof(shm_event_dropped);
 
 static uint64_t waiting_for_buffer = 0;
 
@@ -154,7 +155,6 @@ find_functions(void *drcontext, const module_data_t *mod, bool loaded)
     dr_symbol_export_iterator_stop(it);
     */
 
-    size_t elem_size;
     size_t off;
     for (int i = 0; i < events_num; ++i) {
         drsym_error_t ok = drsym_lookup_symbol(mod->full_path,
@@ -163,17 +163,18 @@ find_functions(void *drcontext, const module_data_t *mod, bool loaded)
                            /* flags = */ DRSYM_DEMANGLE);
         if (ok == DRSYM_ERROR_LINE_NOT_AVAILABLE || ok == DRSYM_SUCCESS) {
             events[i].addr = (size_t)mod->start + off;
-            dr_printf("Found %s:%s in %s at 0x%x\n",
+            events[i].size = call_event_spec_get_size(&events[i]) + sizeof(shm_event_funcall);
+            if (events[i].size > max_event_size)
+                max_event_size = events[i].size;
+            dr_printf("Found %s:%s in %s at 0x%x (size %lu)\n",
                       events[i].name,
                       events[i].signature,
                       mod->full_path,
-                      events[i].addr);
-            elem_size = call_event_spec_get_size(&events[i]);
-            if (elem_size > max_elem_size)
-                max_elem_size = elem_size;
+                      events[i].addr,
+                      events[i].size);
         }
     }
-    DR_ASSERT(max_elem_size > 0);
+    DR_ASSERT(max_event_size > 0);
 }
 
 DR_EXPORT void
@@ -221,13 +222,7 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
     dr_register_exit_event(event_exit);
     drmgr_register_module_load_event(find_functions);
 
-    max_elem_size += sizeof(void *); /* space for fun address */
-    shm = initialize_shared_buffer(max_elem_size > sizeof(shm_event_dropped) ? max_elem_size : sizeof(shm_event_dropped));
-    DR_ASSERT(shm);
     drmgr_register_bb_instrumentation_event(NULL, event_app_instruction, 0);
-
-    dr_printf("Waiting for the monitor to attach\n");
-    buffer_wait_for_monitor(shm);
 }
 
 static void
@@ -285,10 +280,18 @@ call_get_arg_ptr(dr_mcontext_t *mc, int i, char o) {
     }
 }
 
+static size_t last_event_id = 0;
 
 static void
 at_call_generic(size_t fun_idx, const char *sig)
 {
+    if (!shm) {
+        shm = initialize_shared_buffer(max_event_size);
+        DR_ASSERT(shm);
+        dr_printf("Waiting for the monitor to attach\n");
+        buffer_wait_for_monitor(shm);
+    }
+
     dr_mcontext_t mc = { sizeof(mc), DR_MC_INTEGER };
     dr_get_mcontext(dr_get_current_drcontext(), &mc);
     void *shmaddr;
@@ -297,8 +300,11 @@ at_call_generic(size_t fun_idx, const char *sig)
         /* DR_ASSERT(0 && "Buffer full"); */
     }
     DR_ASSERT(fun_idx < events_num);
-    shmaddr = buffer_partial_push(shm, shmaddr,
-                                  &fun_idx, sizeof(fun_idx));
+    shm_event_funcall *ev = (shm_event_funcall*)shmaddr;
+    ev->base.kind = events[fun_idx].kind;
+    ev->base.id = ++last_event_id;
+    memcpy(ev->signature, events[fun_idx].signature, sizeof(ev->signature));
+    shmaddr = ev->args;
     DR_ASSERT(shmaddr && "Failed partial push");
     /* printf("Fun %lu -- %s\n", fun_idx, sig); */
     int i = 0;

@@ -67,7 +67,7 @@ static client_id_t my_id;
 static struct buffer *shm;
 static struct call_event_spec *events;
 static size_t events_num;
-size_t max_elem_size;
+size_t max_event_size;
 
 static uint64_t waiting_for_buffer = 0;
 
@@ -108,8 +108,8 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
         }
     }
 
-    max_elem_size += sizeof(void *); /* space for fun address */
-    shm = initialize_shared_buffer(max_elem_size > sizeof(shm_event_dropped) ? max_elem_size : sizeof(shm_event_dropped));
+    max_event_size += sizeof(void *); /* space for fun address */
+    shm = initialize_shared_buffer(max_event_size > sizeof(shm_event_dropped) ? max_event_size : sizeof(shm_event_dropped));
     DR_ASSERT(shm);
 
     dr_register_exit_event(event_exit);

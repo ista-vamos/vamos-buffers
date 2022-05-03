@@ -31,30 +31,39 @@ typedef struct _shamon {
 #define SLEEP_NS_INIT (50)
 #define SLEEP_THRESHOLD_NS (10000000)
 
-static int buffer_manager_thrd(void *data) {
+static int default_buffer_manager_thrd(void *data) {
     shm_arbiter_buffer *buffer = (shm_arbiter_buffer*) data;
     shm_stream *stream = shm_arbiter_buffer_stream(buffer);
+    register shm_stream_alter_fn alter = stream->alter;
+    register shm_stream_filter_fn filter = stream->filter;
 
     // wait for buffer->active
     while (!shm_arbiter_buffer_active(buffer))
         ;
 
-    printf("Running fill & autodrop for stream %s\n", stream->name);
-    uint64_t sleep_time = SLEEP_NS_INIT;
-    uint64_t n;
+    printf("Running fetch & autodrop for stream %s\n", stream->name);
+
+    void *ev, *out;
     while (shm_stream_is_ready(stream)) {
-        n = stream->buffer_events(stream, buffer);
-        if (n == 0) {
-            if (sleep_time < SLEEP_THRESHOLD_NS)
-                sleep_time *= 10;
-            sleep_ns(sleep_time);
-        } else {
-            sleep_time = SLEEP_NS_INIT;
+        ev = stream_fetch(stream, buffer);
+        if (!ev) {
+            continue;
         }
+        if (filter && !filter(stream, ev)) {
+            shm_stream_consume(stream, 1);
+            continue;
+        }
+
+        out = shm_arbiter_buffer_write_ptr(buffer);
+        assert(out && "No space in the buffer");
+        alter(stream, ev, out);
+        shm_arbiter_buffer_write_finish(buffer);
+        shm_stream_consume(stream, 1);
     }
 
     // TODO: we should check if the stream is finished and remove it
     // in that case
+    printf("BMM for stream %lu (%s) exits\n", stream->id, stream->name);
     thrd_exit(EXIT_SUCCESS);
 }
 
@@ -92,19 +101,18 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
             /* is the buffer full from 80 or more percent? */
             if (qsize > 0.5*c) {
                 /* drop half of the buffer */
+                shm_eventid id = shm_event_id(shm_arbiter_buffer_top(buffer));
                 if (!shm_arbiter_buffer_drop(buffer, c/4)) {
                     assert(0 && "Failed dropping events");
                 }
-                shm_stream_get_dropped_event(stream, &dropped, c/4);
+                shm_stream_get_dropped_event(stream, &dropped, id, c/4);
                 assert(shmn->_ev_size >= sizeof(dropped));
                 memcpy(shmn->_ev, &dropped, sizeof(dropped));
                 return shmn->_ev;
             }
 
+            /* TODO: ideally, we do not copy the event here */
             shm_arbiter_buffer_pop(buffer, shmn->_ev);
-            /* TODO: refactor this */
-            if (stream->publish_event)
-                return stream->publish_event(stream, shmn->_ev);
             return shmn->_ev;
         }
     }
@@ -113,7 +121,6 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
     // in that case
     return NULL;
 }
-
 
 shamon *shamon_create(shamon_process_events_fn process_events,
                       void *process_events_data) {
@@ -188,7 +195,7 @@ void shamon_add_stream(shamon *shmn, shm_stream *stream) {
     shm_arbiter_buffer_init(buffer, stream);
 
     thrd_t thread_id;
-    thrd_create(&thread_id, buffer_manager_thrd, buffer);
+    thrd_create(&thread_id, default_buffer_manager_thrd, buffer);
     shm_vector_push(&shmn->buffer_threads, &thread_id);
 
     printf("Added a stream id %lu: '%s'\n",

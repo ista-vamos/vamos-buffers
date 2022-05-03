@@ -34,9 +34,11 @@ struct call_event_spec {
      * E.g.: "i_c" means track first and third arguments that have 4 bytes
      * and 1 byte size
      * */
-    unsigned char signature[16]; /* for now, we allow 16 arguments at most */
+    unsigned char signature[8]; /* for now, we allow 8 arguments at most */
     /* the type of event assigned by the monitor */
     uint64_t kind;
+    /* size in the buffer */
+    size_t size;
 };
 
 size_t call_event_op_get_size(char c);

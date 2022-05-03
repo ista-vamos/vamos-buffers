@@ -12,6 +12,10 @@ typedef struct _shm_par_queue {
     _Atomic size_t elem_num;
     size_t elem_size;
     size_t head, tail;
+#ifndef NDEBUG
+    /* for checking the consistency of partial writes */
+    size_t partial_head;
+#endif
     unsigned char *data;
 } shm_par_queue;
 
@@ -29,5 +33,8 @@ shm_event *shm_par_queue_top(shm_par_queue *q);
 size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
                           void **ptr1, size_t *len1,
                           void **ptr2, size_t *len2);
+
+void *shm_par_queue_write_ptr(shm_par_queue *q);
+bool shm_par_queue_write_finish(shm_par_queue *q);
 
 #endif /* SHAMON_PARALLEL_QUEUE_H */

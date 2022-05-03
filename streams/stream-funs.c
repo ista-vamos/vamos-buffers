@@ -15,50 +15,10 @@ bool funs_is_ready(shm_stream *stream) {
     return buffer_is_ready(b) || buffer_size(b) > 0;
 }
 
-shm_event *funs_publish_event(shm_stream *stream,
-                              shm_event *ev) {
-    shm_stream_funs *fstream = (shm_stream_funs *)stream;
-    uint64_t *p = (uint64_t *) ev;
-    shm_event_funcall *fev = fstream->ev_buff;
-    assert(*p < fstream->spec_count && "Invalid idx");
-    struct call_event_spec *spec = &fstream->events[*p];
-    fev->base.id = shm_stream_get_next_id(stream);
-    fev->base.kind = spec->kind;
-    //fev->base.stream = stream;
-    fev->signature = (const char *)spec->signature;
-
-    ++p;
-    memcpy(fev->args, p, call_event_spec_get_size(spec));
-    return (shm_event *)fev;
-}
-
-size_t funs_buffer_events(shm_stream *stream,
-                          shm_arbiter_buffer *buffer) {
-    shm_stream_funs *ss = (shm_stream_funs *) stream;
-    assert(shm_arbiter_buffer_elem_size(buffer) == buffer_elem_size(ss->shmbuffer));
-    /* Allow program to continue. Set it here, so that the program starts running only
-     * when we start buffering events */
-    /* TODO: add a new callback that will be called once before starting the main loop
-     * where we can do exactly this "signaling" */
-    buffer_set_attached(ss->shmbuffer, true);
-
-    void *elems;
-    size_t total = 0;
-    size_t size = buffer_size(ss->shmbuffer);
-
-    while (size > 0) {
-        elems = buffer_read_pointer(ss->shmbuffer, &size);
-        assert(size > 0 && "Buffer memref failed");
-        shm_arbiter_buffer_push_k(buffer, elems, size);
-        /* printf("Buffered %lu events\n", size); */
-        total += size;
-        if (!buffer_drop_k(ss->shmbuffer, size)) {
-            assert(0 && "Buffer drop failed");
-        }
-        size = buffer_size(ss->shmbuffer);
-    }
-
-    return total;
+void funs_alter(shm_stream *stream,
+                shm_event *in,
+                shm_event *out) {
+    memcpy(out, in, stream->event_size);
 }
 
 shm_stream *shm_create_funs_stream(const char *key) {
@@ -68,10 +28,11 @@ shm_stream *shm_create_funs_stream(const char *key) {
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
     shm_stream_init((shm_stream *)ss,
+                    shmbuffer,
                     elem_size,
-                    funs_buffer_events,
-                    funs_publish_event,
                     funs_is_ready,
+                    NULL,
+                    funs_alter,
                     "funs-stream");
     ss->shmbuffer = shmbuffer;
     ss->events = get_shared_control_buffer();
@@ -80,22 +41,27 @@ shm_stream *shm_create_funs_stream(const char *key) {
     size_t ev_size, max_size = 0;
 
     for (size_t i = 0; i < evs_num; ++i) {
+        assert(sizeof(shm_event_funcall) + call_event_spec_get_size(&ss->events[i])
+                <= ss->events[i].size);
         ss->events[i].kind = shm_mk_event_kind(ss->events[i].name,
                                                (shm_stream *) ss,
-                                               sizeof(shm_event_funcall) + call_event_spec_get_size(&ss->events[i]),
+                                               /*sizeof(shm_event_funcall) + call_event_spec_get_size(&ss->events[i]),*/
+                                               ss->events[i].size,
                                                NULL, NULL);
         ev_size = shm_event_kind_size(ss->events[i].kind);
         if (ev_size > max_size)
             max_size = ev_size;
 
-        printf("[stream-funs] fun: '%s:%s', kind: '%lu'\n",
-               ss->events[i].name, ss->events[i].signature, ss->events[i].kind);
+        printf("[stream-funs] fun: '%s:%s', kind: '%lu', size: '%lu'\n",
+               ss->events[i].name, ss->events[i].signature,
+               ss->events[i].kind, ss->events[i].size);
     }
 
     ss->spec_count = evs_num;
     ss->ev_buff = malloc(max_size);
     assert(ss->ev_buff);
 
+    buffer_set_attached(ss->shmbuffer, true);
     return (shm_stream *) ss;
 }
 

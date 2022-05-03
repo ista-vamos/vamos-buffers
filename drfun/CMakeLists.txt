@@ -26,5 +26,6 @@ configure_DynamoRIO_client(calls)
 
 SET (CMAKE_VERBOSE_MAKEFILE 1)
 include_directories("${CMAKE_SOURCE_DIR}/../shmbuf")
+include_directories("${CMAKE_SOURCE_DIR}/../streams")
 include_directories("${CMAKE_SOURCE_DIR}/..")
 
