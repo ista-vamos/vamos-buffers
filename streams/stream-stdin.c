@@ -21,7 +21,7 @@ size_t stdin_buffer_events(shm_stream *stream,
         return 0;
 
     ev.time = clock();
-    ev.base.stream = stream;
+    //ev.base.stream = stream;
     ev.base.kind = ss->ev_kind;
     ev.base.id = shm_stream_get_next_id(stream);
     ev.fd = fileno(stdin);
@@ -39,7 +39,7 @@ shm_stream *shm_create_stdin_stream() {
                      "stdin-stream");
     ss->line = NULL;
     ss->line_len = 0;
-    ss->ev_kind = shm_mk_event_kind("stdin", sizeof(shm_event_stdin), NULL, NULL);
+    ss->ev_kind = shm_mk_event_kind("stdin", (shm_stream*)ss, sizeof(shm_event_stdin), NULL, NULL);
     return (shm_stream *) ss;
 }
 

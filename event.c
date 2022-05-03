@@ -12,6 +12,7 @@
 struct _ev_kind_rec {
     char *name;
     size_t ev_size;
+    shm_stream *stream;
     /* copying and destroying the event
        (important if the event carries some
        dynamically allocated memory */
@@ -25,6 +26,7 @@ static size_t ev_kinds_num_allocated = 0;
 static shm_kind dropped_kind;
 
 shm_kind shm_mk_event_kind(const char* name,
+                           shm_stream *stream,
                            size_t event_size,
                            ev_copy_fn copy_fn,
                            ev_destroy_fn destroy_fn) {
@@ -35,8 +37,8 @@ shm_kind shm_mk_event_kind(const char* name,
         assert(events_info && "Allocation failed");
     }
 
-    // FIXME: we leak these right now, create a destructor or use atexit?
     events_info[idx].name = strdup(name);
+    events_info[idx].stream = stream;
     events_info[idx].ev_size = event_size;
     events_info[idx].ev_copy = copy_fn;
     events_info[idx].ev_destroy = destroy_fn;
@@ -49,6 +51,7 @@ void initialize_events() {
         return;  /* events are initialized */
 
     dropped_kind = shm_mk_event_kind("dropped",
+                                     NULL,
                                      sizeof(shm_event_dropped),
                                      NULL, NULL);
 
@@ -115,6 +118,9 @@ shm_kind shm_event_kind(shm_event *event) {
     return event->kind;
 };
 
-shm_stream *shm_event_stream(shm_event *event) {
-    return event->stream;
+shm_stream *shm_event_stream(shm_event *ev) {
+    assert(events_info && "Events not initialized");
+    shm_kind kind = shm_event_kind(ev);
+    assert(kind <= ev_kinds_num && "Invalid event kind");
+    return events_info[kind - 1].stream;
 }

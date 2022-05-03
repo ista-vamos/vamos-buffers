@@ -16,12 +16,12 @@ typedef struct _shm_stream shm_stream;
 typedef struct _shm_event {
     shm_kind kind;
     shm_eventid id;
-    struct _shm_stream *stream;
 } shm_event;
 
 typedef struct _shm_event_dropped {
     shm_event base;
-    uint64_t n;     // how many events were dropped
+    shm_stream *stream;  /* on what stream */
+    uint64_t n;          /* how many events were dropped */
 } shm_event_dropped;
 
 typedef void (*ev_copy_fn) (shm_event *src, shm_event *dst);
@@ -37,6 +37,7 @@ void deinitialize_events(void);
 //used for event kinds, field names, etc. (so we don't need to do string
 //comparisons everywhere)
 shm_kind shm_mk_event_kind(const char* name,
+                           shm_stream *stream,
                            size_t event_size,
                            ev_copy_fn copy_fn,
                            ev_destroy_fn destroy_fn);

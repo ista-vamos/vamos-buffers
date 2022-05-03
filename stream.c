@@ -37,7 +37,7 @@ void shm_stream_get_dropped_event(shm_stream *stream,
                                   uint64_t n) {
     dropped_ev->base.id = shm_stream_get_next_id(stream);
     dropped_ev->base.kind = shm_get_dropped_kind();
-    dropped_ev->base.stream = stream;
+    dropped_ev->stream = stream;
     dropped_ev->n = n;
 }
 

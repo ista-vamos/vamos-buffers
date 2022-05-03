@@ -32,7 +32,7 @@ static size_t read_events(shm_stream_fds *ss,
             } else {
                 assert(len > 0);
                 ev.time = clock();
-                ev.base.stream = (shm_stream *) ss;
+                //ev.base.stream = (shm_stream *) ss;
                 ev.base.kind = ss->ev_kind_in;
                 ev.base.id = shm_stream_get_next_id((shm_stream *)ss);
                 ev.fd = pfd->fd;
@@ -98,7 +98,9 @@ shm_stream *shm_create_fds_stream() {
     shm_stream_init((shm_stream *)ss, sizeof(shm_event_fd_in),
                      fds_buffer_events, NULL, fds_is_ready,
                      "fds-stream");
-    ss->ev_kind_in = shm_mk_event_kind("fd-in", sizeof(shm_event_fd_in), NULL, NULL);
+    ss->ev_kind_in = shm_mk_event_kind("fd-in", (shm_stream*)ss,
+                                       sizeof(shm_event_fd_in),
+                                       NULL, NULL);
     ss->fds = NULL;
     ss->fds_size = 0;
     ss->fds_num = 0;

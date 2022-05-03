@@ -24,7 +24,7 @@ shm_event *funs_publish_event(shm_stream *stream,
     struct call_event_spec *spec = &fstream->events[*p];
     fev->base.id = shm_stream_get_next_id(stream);
     fev->base.kind = spec->kind;
-    fev->base.stream = stream;
+    //fev->base.stream = stream;
     fev->signature = (const char *)spec->signature;
 
     ++p;
@@ -81,6 +81,7 @@ shm_stream *shm_create_funs_stream(const char *key) {
 
     for (size_t i = 0; i < evs_num; ++i) {
         ss->events[i].kind = shm_mk_event_kind(ss->events[i].name,
+                                               (shm_stream *) ss,
                                                sizeof(shm_event_funcall) + call_event_spec_get_size(&ss->events[i]),
                                                NULL, NULL);
         ev_size = shm_event_kind_size(ss->events[i].kind);
