@@ -194,8 +194,9 @@ void *stream_fetch(shm_stream *stream,
         if (shm_arbiter_buffer_free_space(buffer) > 1) {
             shm_stream_get_dropped_event(stream, &dropped_ev,
                                          buffer->dropped_id, buffer->dropped_num);
-            shm_arbiter_buffer_push(buffer, &dropped_ev, sizeof(dropped_ev));
+            shm_par_queue_push(&buffer->buffer, &dropped_ev, sizeof(dropped_ev));
             buffer->dropped_num = 0;
+            assert(shm_arbiter_buffer_free_space(buffer) > 0);
             return ev;
         }
 
