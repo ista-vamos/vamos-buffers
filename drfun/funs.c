@@ -285,13 +285,6 @@ static size_t last_event_id = 0;
 static void
 at_call_generic(size_t fun_idx, const char *sig)
 {
-    if (!shm) {
-        shm = initialize_shared_buffer(max_event_size);
-        DR_ASSERT(shm);
-        dr_printf("Waiting for the monitor to attach\n");
-        buffer_wait_for_monitor(shm);
-    }
-
     dr_mcontext_t mc = { sizeof(mc), DR_MC_INTEGER };
     dr_get_mcontext(dr_get_current_drcontext(), &mc);
     void *shmaddr;
@@ -334,6 +327,14 @@ static dr_emit_flags_t
 event_app_instruction(void *drcontext, void *tag, instrlist_t *bb, instr_t *instr,
                       bool for_trace, bool translating, void *user_data)
 {
+    /* FIXME: isn't there a better place to put this callback? */
+    if (!shm) {
+        shm = initialize_shared_buffer(max_event_size);
+        DR_ASSERT(shm);
+        dr_printf("Waiting for the monitor to attach\n");
+        buffer_wait_for_monitor(shm);
+    }
+
     if (instr_is_meta(instr) || translating)
         return DR_EMIT_DEFAULT;
 
