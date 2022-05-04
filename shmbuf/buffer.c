@@ -42,6 +42,8 @@ struct aux_buffer {
     size_t size;
     size_t head;
     size_t idx;
+    size_t use_id;
+    bool reusable;
     unsigned char data[0];
 };
 
@@ -52,6 +54,7 @@ struct buffer {
     /* the known aux_buffers that might still be needed */
     shm_vector aux_buffers;
     size_t aux_buf_idx;
+    size_t aux_buf_total_num;
     /* shm filedescriptor */
     int fd;
     /* shm key */
@@ -60,8 +63,8 @@ struct buffer {
 
 static size_t aux_buffer_free_space(struct aux_buffer *buff);
 static void aux_buffer_release(struct aux_buffer *buffer);
-static void aux_buffer_destroy(struct aux_buffer *buffer);
-static size_t buffer_push_bytes(struct buffer *buff, const void *data, size_t size);
+//static void aux_buffer_destroy(struct aux_buffer *buffer);
+static size_t buffer_push_strn(struct buffer *buff, const void *data, size_t size);
 static uint64_t buffer_push_str(struct buffer *buff, const char *str);
 
 #define BUFF_START(b) ((void*)b->data)
@@ -215,6 +218,7 @@ void destroy_shared_buffer(struct buffer *buff)
     for (size_t i = 0; i < vecsize; ++i) {
          struct aux_buffer *ab
              = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, i));
+         // we must first wait until the monitor finishes
          //aux_buffer_destroy(ab);
          aux_buffer_release(ab);
     }
@@ -516,13 +520,9 @@ size_t aux_buffer_free_space(struct aux_buffer *buff) {
 }
 
 static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
-    if (buff->cur_aux_buff) {
-        shm_vector_push(&buff->aux_buffers, &buff->cur_aux_buff);
-    }
-
     size_t idx = buff->aux_buf_idx++;
     const size_t pg_size = getpagesize();
-    size = (((size + 3*sizeof(size_t)) / pg_size)+1)*pg_size;
+    size = (((size + sizeof(struct aux_buffer)) / pg_size)+9)*pg_size;
 
     /* create the key */
     char key[20];
@@ -558,15 +558,39 @@ static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
     ab->head = 0;
     ab->size = size - sizeof(struct aux_buffer);
     ab->idx = idx;
+    ab->use_id = buff->aux_buf_total_num++;
+    ab->reusable = false;
 
+    shm_vector_push(&buff->aux_buffers, &ab);
+    assert(*((struct aux_buffer **)shm_vector_top(&buff->aux_buffers)) == ab);
     buff->cur_aux_buff = ab;
 
     return ab;
 }
 
 static struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size) {
-    if (!buff->cur_aux_buff || aux_buffer_free_space(buff->cur_aux_buff) < size)
-        return new_aux_buffer(buff, size);
+    if (!buff->cur_aux_buff || aux_buffer_free_space(buff->cur_aux_buff) < size) {
+        /* try to find a free buffer */
+        struct aux_buffer *ab;
+        for (size_t i = 0; i < shm_vector_size(&buff->aux_buffers); ++i) {
+             ab = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, i));
+             printf("ab %lu: reusable: %d, use_id: %lu, size: %lu, head: %lu\n",
+                    ab->idx, ab->reusable, ab->use_id, ab->size, ab->head);
+             if (ab->reusable && ab->size >= size) {
+                 ab->head = 0;
+                 printf("REUSING %lu\n", ab->idx);
+                 ab->use_id = buff->aux_buf_total_num++;
+                 ab->reusable = false;
+                 buff->cur_aux_buff = ab;
+                 return ab;
+             }
+        }
+        ab = new_aux_buffer(buff, size);
+        ab->reusable = false;
+        return ab;
+    }
+
+    /* use the current buffer */
     return buff->cur_aux_buff;
 }
 
@@ -642,6 +666,7 @@ void aux_buffer_release(struct aux_buffer *buffer)
     */
 }
 
+/*
 void aux_buffer_destroy(struct aux_buffer *buffer) {
     char key[20];
     snprintf(key, 19, "/aux.%lu", buffer->idx);
@@ -652,10 +677,11 @@ void aux_buffer_destroy(struct aux_buffer *buffer) {
         perror("aux_buffer_destroy: shm_unlink failure");
     }
 }
+*/
 
 
-size_t buffer_push_bytes(struct buffer *buff,
-                         const void *data, size_t size)
+size_t buffer_push_strn(struct buffer *buff,
+                        const void *data, size_t size)
 {
     struct aux_buffer *ab = writer_get_aux_buffer(buff, size);
     assert(ab);
@@ -677,31 +703,27 @@ void *buffer_get_str(struct buffer *buff, uint64_t elem)
 
 uint64_t buffer_push_str(struct buffer *buff, const char *str) {
     size_t len = strlen(str) + 1;
-    size_t off = buffer_push_bytes(buff, str, len);
+    size_t off = buffer_push_strn(buff, str, len);
     assert(buff->cur_aux_buff);
     return (off | (buff->cur_aux_buff->idx << 32));
 }
 
 void buffer_release_str(struct buffer *buff, uint64_t elem) {
     size_t idx = elem >> 32;
-    if (shm_vector_size(&buff->aux_buffers) > 10) {
-        /* we can discard all buffers that have idx less than this element */
-        shm_vector tmp;
-        shm_vector_init(&tmp, sizeof(struct aux_buffer*));
-        size_t vecsize = shm_vector_size(&buff->aux_buffers);
+    struct aux_buffer *idxbuf
+        = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, idx));
+    assert(idxbuf);
+    assert(idxbuf->idx == idx);
+    size_t use_id = idxbuf->use_id;
 
-        for (size_t i = 0; i < vecsize; ++i) {
-             struct aux_buffer *ab
-                 = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, i));
-             if (ab->idx >= idx) {
-                 shm_vector_push(&tmp, &ab);
-                 continue;
-             }
-
-             aux_buffer_destroy(ab);
-        }
-
-        shm_vector_swap(&tmp, &buff->aux_buffers);
-        shm_vector_destroy(&tmp);
+    /* FIXME: do not loop, use ids */
+    size_t vecsize = shm_vector_size(&buff->aux_buffers);
+    for (size_t i = 0; i < vecsize; ++i) {
+         struct aux_buffer *ab
+             = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, i));
+         if (ab->use_id < use_id) {
+             ab->reusable = true;
+             break;
+         }
     }
 }
