@@ -142,6 +142,7 @@ struct buffer *initialize_shared_buffer(size_t elem_size)
     buff->key = strdup(key);
     shm_vector_init(&buff->aux_buffers, sizeof(struct aux_buffer*));
     buff->aux_buf_idx = 0;
+    buff->aux_buf_total_num = 0;
     buff->cur_aux_buff = NULL;
     buff->fd = fd;
 
