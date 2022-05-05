@@ -124,7 +124,7 @@ size_t shm_par_queue_push_k(shm_par_queue *q,
      * The increment must come after everything is done.
        The release order makes sure that the written element
        is visible to other threads by now. */
-    atomic_fetch_sub_explicit(&q->elem_num, k,
+    atomic_fetch_add_explicit(&q->elem_num, k,
                               memory_order_release);
 
     return ret;
