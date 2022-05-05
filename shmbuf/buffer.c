@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -23,7 +24,7 @@
 
 struct buffer_info {
     size_t capacity;
-    _Atomic size_t elem_num;
+    size_t elem_num;
     size_t elem_size;
     size_t head;
     size_t tail;
@@ -263,7 +264,10 @@ bool buffer_drop_k(struct buffer *buff, size_t k) {
          info->tail += k;
          if (info->tail >= info->capacity)
              info->tail -= info->capacity;
-         info->elem_num -= k;
+         /* Do info->elem_num -= k atomically. */
+         atomic_fetch_sub_explicit(&info->elem_num, k,
+                                   memory_order_relaxed);
+
          return true;
      }
      return false;
@@ -288,8 +292,12 @@ bool buffer_push(struct buffer *buff, const void *elem, size_t size) {
         info->head = 0;
     }
 
-    // the increment must come after everything is done
-    ++info->elem_num;
+    /* Do ++info->elem_num atomically. */
+    /* The increment must come after everything is done.
+       The release order makes sure that the written element
+       is visible to other threads by now. */
+    atomic_fetch_add_explicit(&info->elem_num, 1,
+                              memory_order_release);
 
     return true;
 }
@@ -368,8 +376,12 @@ bool buffer_finish_push(struct buffer *buff) {
         info->head = 0;
     }
 
-    // the increment must come after everything is done
-    ++info->elem_num;
+    /* Do ++info->elem_num atomically. */
+    /* The increment must come after everything is done.
+       The release order makes sure that the written element
+       is visible to other threads by now. */
+    atomic_fetch_add_explicit(&info->elem_num, 1,
+                              memory_order_release);
 
     return true;
 }
@@ -388,7 +400,9 @@ bool buffer_pop(struct buffer *buff, void *dst) {
         info->tail = 0;
 
     assert(info->elem_num > 0);
-    --info->elem_num;
+    /* Do  --info->elem_num atomically */
+    atomic_fetch_sub_explicit(&info->elem_num, 1,
+                              memory_order_relaxed);
 
     return true;
 }
@@ -414,7 +428,13 @@ bool buffer_pop_k(struct buffer *buff, void *dst, size_t k) {
     }
 
     assert(info->elem_num > 0);
-    info->elem_num -= k;
+    /* Do info->elem_num -= k atomically.
+     * The decrement must come after everything is done.
+       The order may be 'relaxed' as we have only one reader
+       and thus the writes to shared variables will be
+       up to date for this thread. */
+    atomic_fetch_sub_explicit(&info->elem_num, k,
+                              memory_order_relaxed);
 
     return true;
 }
