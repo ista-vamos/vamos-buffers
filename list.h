@@ -22,8 +22,10 @@ void shm_list_destroy(shm_list *list, shm_list_elem_destroy_fn destroy);
 
 size_t shm_list_prepend(shm_list *list, void *elem);
 size_t shm_list_append(shm_list *list, void *elem);
+size_t shm_list_append_elem(shm_list *list, shm_list_elem *elem);
 size_t shm_list_insert_after(shm_list *list, shm_list_elem *elem, void *data);
 size_t shm_list_insert_before(shm_list *list, shm_list_elem *elem, void *data);
+size_t shm_list_insert_elem_after(shm_list *list, shm_list_elem *elem, shm_list_elem *new);
 size_t shm_list_remove(shm_list *list, shm_list_elem *elem);
 size_t shm_list_size(shm_list *list);
 

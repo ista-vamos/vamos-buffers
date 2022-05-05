@@ -5,7 +5,7 @@ SET (CMAKE_VERBOSE_MAKEFILE 1)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -flto")
 
 add_library(funs SHARED funs.c events.c
-                        ../vector.c)
+                        ../list.c)
 target_link_libraries(funs "${CMAKE_SOURCE_DIR}/../shmbuf/libshmbuf.a")
 
 find_package(DynamoRIO)

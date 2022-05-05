@@ -14,6 +14,7 @@
 
 #include "shm.h"
 #include "buffer.h"
+#include "list.h"
 #include "vector-macro.h"
 
 #define SLEEP_TIME_NS 10000
@@ -43,7 +44,6 @@ struct aux_buffer {
     size_t size;
     size_t head;
     size_t idx;
-    size_t use_id;
     bool reusable;
     unsigned char data[0];
 };
@@ -56,7 +56,7 @@ struct buffer {
     /* the known aux_buffers that might still be needed */
     VEC(aux_buffers, struct aux_buffer *);
     size_t aux_buf_idx;
-    size_t aux_buf_total_num;
+    shm_list aux_buffers_age;
     /* shm filedescriptor */
     int fd;
     /* shm key */
@@ -143,8 +143,8 @@ struct buffer *initialize_shared_buffer(size_t elem_size)
 
     buff->key = strdup(key);
     VEC_INIT(buff->aux_buffers);
+    shm_list_init(&buff->aux_buffers_age);
     buff->aux_buf_idx = 0;
-    buff->aux_buf_total_num = 0;
     buff->cur_aux_buff = NULL;
     buff->fd = fd;
 
@@ -580,11 +580,12 @@ static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
     ab->head = 0;
     ab->size = size - sizeof(struct aux_buffer);
     ab->idx = idx;
-    ab->use_id = buff->aux_buf_total_num++;
     ab->reusable = false;
 
     VEC_PUSH(buff->aux_buffers, &ab);
     assert(VEC_TOP(buff->aux_buffers) == ab);
+    shm_list_append(&buff->aux_buffers_age, ab);
+    assert(shm_list_last(&buff->aux_buffers_age)->data == ab);
     buff->cur_aux_buff = ab;
 
     return ab;
@@ -594,25 +595,26 @@ static struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size
     if (!buff->cur_aux_buff || aux_buffer_free_space(buff->cur_aux_buff) < size) {
         /* try to find a free buffer */
         struct aux_buffer *ab;
-        for (size_t i = 0; i < VEC_SIZE(buff->aux_buffers); ++i) {
-             ab = buff->aux_buffers[i];
-             // printf("ab %lu: reusable: %d, use_id: %lu, size: %lu, head: %lu\n",
-             //         ab->idx, ab->reusable, ab->use_id, ab->size, ab->head);
-             if (ab->reusable && ab->size >= size) {
-                 ab->head = 0;
-                 // printf("REUSING %lu\n", ab->idx);
-                 ab->use_id = buff->aux_buf_total_num++;
-                 ab->reusable = false;
-                 buff->cur_aux_buff = ab;
-                 return ab;
-             }
+        shm_list_elem *cur = shm_list_first(&buff->aux_buffers_age);
+        while (cur) {
+            ab = (struct aux_buffer *) cur->data;
+            if (ab->reusable && ab->size >= size) {
+                assert(shm_list_last(&buff->aux_buffers_age)->data == buff->cur_aux_buff);
+                shm_list_remove(&buff->aux_buffers_age, cur);
+                shm_list_append_elem(&buff->aux_buffers_age, cur);
+                buff->cur_aux_buff = ab;
+                return ab;
+            }
+            cur = cur->next;
         }
+
         ab = new_aux_buffer(buff, size);
-        ab->reusable = false;
         return ab;
     }
 
     /* use the current buffer */
+    /* it must always be the last in the aux_buffers_age */
+    assert(shm_list_last(&buff->aux_buffers_age)->data == buff->cur_aux_buff);
     return buff->cur_aux_buff;
 }
 
@@ -706,6 +708,9 @@ size_t buffer_push_strn(struct buffer *buff,
 {
     struct aux_buffer *ab = writer_get_aux_buffer(buff, size);
     assert(ab);
+    assert(ab == buff->cur_aux_buff);
+    assert(shm_list_last(&buff->aux_buffers_age)->data == buff->cur_aux_buff);
+
     size_t off = ab->head;
     assert(off < (1LU<<32));
 
@@ -727,22 +732,4 @@ uint64_t buffer_push_str(struct buffer *buff, const char *str) {
     size_t off = buffer_push_strn(buff, str, len);
     assert(buff->cur_aux_buff);
     return (off | (buff->cur_aux_buff->idx << 32));
-}
-
-void buffer_release_str(struct buffer *buff, uint64_t elem) {
-    size_t idx = elem >> 32;
-    struct aux_buffer *idxbuf = buff->aux_buffers[idx];
-    assert(idxbuf);
-    assert(idxbuf->idx == idx);
-    size_t use_id = idxbuf->use_id;
-
-    /* FIXME: do not loop, use ids */
-    size_t vecsize = VEC_SIZE(buff->aux_buffers);
-    for (size_t i = 0; i < vecsize; ++i) {
-         struct aux_buffer *ab = buff->aux_buffers[i];
-         if (ab->use_id < use_id) {
-             ab->reusable = true;
-             break;
-         }
-    }
 }
