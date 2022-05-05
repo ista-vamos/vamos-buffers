@@ -596,11 +596,11 @@ static struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size
         struct aux_buffer *ab;
         for (size_t i = 0; i < VEC_SIZE(buff->aux_buffers); ++i) {
              ab = buff->aux_buffers[i];
-             printf("ab %lu: reusable: %d, use_id: %lu, size: %lu, head: %lu\n",
-                    ab->idx, ab->reusable, ab->use_id, ab->size, ab->head);
+             // printf("ab %lu: reusable: %d, use_id: %lu, size: %lu, head: %lu\n",
+             //         ab->idx, ab->reusable, ab->use_id, ab->size, ab->head);
              if (ab->reusable && ab->size >= size) {
                  ab->head = 0;
-                 printf("REUSING %lu\n", ab->idx);
+                 // printf("REUSING %lu\n", ab->idx);
                  ab->use_id = buff->aux_buf_total_num++;
                  ab->reusable = false;
                  buff->cur_aux_buff = ab;
