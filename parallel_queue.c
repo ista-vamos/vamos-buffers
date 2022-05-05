@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 #include <string.h>
 #include <assert.h>
 #include "parallel_queue.h"
@@ -44,8 +45,12 @@ bool shm_par_queue_push(shm_par_queue *q,
     assert(q->elem_size >= size && "Size does not fit the slot");
     memcpy(pos, elem, size);
 
-    // the increment must come after everything is done
-    ++q->elem_num;
+    /* Do ++info->elem_num atomically. */
+    /* The increment must come after everything is done.
+       The release order makes sure that the written element
+       is visible to other threads by now. */
+    atomic_fetch_add_explicit(&q->elem_num, 1,
+                              memory_order_release);
 
     return true;
 }
@@ -73,8 +78,12 @@ bool shm_par_queue_write_finish(shm_par_queue *q) {
         q->head = 0;
     }
 
-    // the increment must come after everything is done
-    ++q->elem_num;
+    /* Do ++info->elem_num atomically. */
+    /* The increment must come after everything is done.
+       The release order makes sure that the written element
+       is visible to other threads by now. */
+    atomic_fetch_add_explicit(&q->elem_num, 1,
+                              memory_order_release);
 
     return true;
 }
@@ -111,7 +120,12 @@ size_t shm_par_queue_push_k(shm_par_queue *q,
         }
     }
 
-    q->elem_num += k;
+    /* Do info->elem_num += k atomically.
+     * The increment must come after everything is done.
+       The release order makes sure that the written element
+       is visible to other threads by now. */
+    atomic_fetch_sub_explicit(&q->elem_num, k,
+                              memory_order_release);
 
     return ret;
 }
@@ -129,7 +143,9 @@ bool shm_par_queue_pop(shm_par_queue *q, void *buff) {
         q->tail = 0;
 
     assert(q->elem_num > 0);
-    --q->elem_num;
+    /* Do  --info->elem_num atomically */
+    atomic_fetch_sub_explicit(&q->elem_num, 1,
+                              memory_order_relaxed);
 
     return true;
 }
@@ -147,7 +163,9 @@ bool shm_par_queue_drop(shm_par_queue *q, size_t k) {
         q->tail -= q->capacity;
 
     assert(q->elem_num >= k);
-    q->elem_num -= k;
+    /* Do info->elem_num -= k atomically. */
+    atomic_fetch_sub_explicit(&q->elem_num, k,
+                              memory_order_relaxed);
 
     return true;
 }
