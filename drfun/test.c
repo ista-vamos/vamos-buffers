@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int foo(int x, const char *s, int z) {
+int foo(int x, const char *s, int z) __attribute__((noinline));
+int foo(volatile int x, const char *s, int z) {
 	return x + 1;
 }
 
@@ -15,7 +16,7 @@ const char *strs[] = {
 int main(int argc, const char *argv[]) {
     int N = atoi(argv[1]);
     for (int i = 0; i < N; ++i) {
-	int a = foo(i % 500000 ? i+1 : i, strs[i % 4], -i);
+	int a = foo(i, strs[i % 4], -i);
     }
     return 0;
 }

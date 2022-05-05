@@ -43,6 +43,8 @@
 #include <sys/mman.h>
 #include <sys/file.h>
 
+// #include <immintrin.h> /* _mm_pause */
+
 #include "dr_api.h"
 #include "dr_defines.h"
 #include "drmgr.h"
@@ -290,6 +292,7 @@ at_call_generic(size_t fun_idx, const char *sig)
     void *shmaddr;
     while (!(shmaddr = buffer_start_push(shm))) {
         ++waiting_for_buffer;
+        /* _mm_pause(); */
         /* DR_ASSERT(0 && "Buffer full"); */
     }
     DR_ASSERT(fun_idx < events_num);

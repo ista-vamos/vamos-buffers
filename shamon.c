@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <stdatomic.h>
 
+#include <immintrin.h> /* _mm_pause */
+
 #include "shamon.h"
 #include "stream.h"
 #include "vector.h"
@@ -40,7 +42,7 @@ static int default_buffer_manager_thrd(void *data) {
 
     // wait for buffer->active
     while (!shm_arbiter_buffer_active(buffer))
-        ;
+        _mm_pause();
 
     printf("Running fetch & autodrop for stream %s\n", stream->name);
 

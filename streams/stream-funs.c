@@ -41,8 +41,8 @@ shm_stream *shm_create_funs_stream(const char *key) {
     size_t ev_size, max_size = 0;
 
     for (size_t i = 0; i < evs_num; ++i) {
-        assert(sizeof(shm_event_funcall) + call_event_spec_get_size(&ss->events[i])
-                <= ss->events[i].size);
+        assert(ss->events[i].size == 0 ||
+               sizeof(shm_event_funcall) + call_event_spec_get_size(&ss->events[i]) <= ss->events[i].size);
         ss->events[i].kind = shm_mk_event_kind(ss->events[i].name,
                                                (shm_stream *) ss,
                                                /*sizeof(shm_event_funcall) + call_event_spec_get_size(&ss->events[i]),*/
