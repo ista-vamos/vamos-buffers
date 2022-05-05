@@ -122,5 +122,7 @@ shm_stream *shm_event_stream(shm_event *ev) {
     assert(events_info && "Events not initialized");
     shm_kind kind = shm_event_kind(ev);
     assert(kind <= ev_kinds_num && "Invalid event kind");
+    if (kind == dropped_kind)
+        return ((shm_event_dropped*)ev)->stream;
     return events_info[kind - 1].stream;
 }
