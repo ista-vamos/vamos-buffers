@@ -60,9 +60,8 @@ shm_stream *shm_arbiter_buffer_stream(shm_arbiter_buffer *buffer)
 }
 
 void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
-                             shm_stream *stream) {
-    const size_t capacity = 4*4096; // FIXME
-
+                             shm_stream *stream,
+                             size_t capacity) {
     buffer->stream = stream;
     assert(capacity >= 3 && "We need at least 3 elements in the buffer");
     shm_par_queue_init(&buffer->buffer, capacity,
@@ -71,6 +70,14 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
                            sizeof(shm_event_dropped) : stream->event_size);
     buffer->active = false;
     buffer->dropped_num = 0;
+}
+
+shm_arbiter_buffer *
+shm_arbiter_buffer_create(shm_stream *stream,
+                          size_t capacity) {
+    shm_arbiter_buffer *arbb = malloc(sizeof(*arbb));
+    shm_arbiter_buffer_init(arbb, stream, capacity);
+    return arbb;
 }
 
 void shm_arbiter_buffer_destroy(shm_arbiter_buffer *buffer) {
