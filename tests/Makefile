@@ -1,9 +1,13 @@
 CFLAGS=-Wall -Werror -Wextra -g -I..
 
-TESTS=queue-test queue-par-test queue-par-test-2 queue-par-test-cbmc queue-par-cbmc buffer-test
+TESTS=list-test queue-test queue-par-test queue-par-test-2 queue-par-test-cbmc queue-par-cbmc buffer-test
 all: $(TESTS)
 
 queue-test: queue-test.c ../queue.[ch]
+	$(CC) $(CFLAGS) $^ -o $@
+	./$@
+
+list-test: list-test.c ../list.[ch]
 	$(CC) $(CFLAGS) $^ -o $@
 	./$@
 
