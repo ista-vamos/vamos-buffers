@@ -14,6 +14,8 @@
     VEC_ALLOC_SIZE(vec) = 0; \
     } while(0)
 
+#define VEC_DESTROY(vec) do { free((vec)); } while(0)
+
 #define VEC_AT(vec, idx) (*((vec)+idx))
 
 #define VEC_EXTEND(vec, outptr) do {                                      \

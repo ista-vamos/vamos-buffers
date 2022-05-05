@@ -201,12 +201,13 @@ void release_shared_buffer(struct buffer *buff)
         perror("release_shared_buffer: failed closing mmap fd");
     }
     free(buff->key);
-    size_t vecsize = VEC_SIZE(buff->aux_buffers);
 
+    size_t vecsize = VEC_SIZE(buff->aux_buffers);
     for (size_t i = 0; i < vecsize; ++i) {
          struct aux_buffer *ab = buff->aux_buffers[i];
          aux_buffer_release(ab);
     }
+    VEC_DESTROY(buff->aux_buffers);
 
     free(buff);
 }
@@ -223,6 +224,7 @@ void destroy_shared_buffer(struct buffer *buff)
          //aux_buffer_destroy(ab);
          aux_buffer_release(ab);
     }
+    VEC_DESTROY(buff->aux_buffers);
 
     if (munmap(buff->shmbuffer, buffer_allocation_size()) != 0) {
         perror("destroy_shared_buffer: munmap failure");
