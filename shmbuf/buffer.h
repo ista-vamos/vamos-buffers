@@ -39,6 +39,7 @@ size_t buffer_elem_size(struct buffer *buff);
 size_t control_buffer_size(void *buff);
 
 void *buffer_start_push(struct buffer *buff);
+
 void *buffer_partial_push(struct buffer *buff, void *prev_push,
                           const void *elem, size_t size);
 void *buffer_partial_push_str(struct buffer *buff, void *prev_push,

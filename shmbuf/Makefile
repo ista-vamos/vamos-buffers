@@ -1,4 +1,4 @@
-CFLAGS=-fPIC -Wall -Werror -Wextra -g -O2
+CFLAGS=-fPIC -Wall -Werror -Wextra -g -O2 -flto
 CPPFLAGS=-I..
 
 all: libshmbuf.so libshmbuf.a
