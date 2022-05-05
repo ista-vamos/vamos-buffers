@@ -14,7 +14,7 @@
 
 #include "shm.h"
 #include "buffer.h"
-#include "vector.h"
+#include "vector-macro.h"
 
 #define SLEEP_TIME_NS 10000
 #define MEM_SIZE (1024*1024)
@@ -48,12 +48,13 @@ struct aux_buffer {
     unsigned char data[0];
 };
 
+
 struct buffer {
     struct shmbuffer *shmbuffer;
     /* shared memory of auxiliary buffer */
     struct aux_buffer *cur_aux_buff;
     /* the known aux_buffers that might still be needed */
-    shm_vector aux_buffers;
+    VEC(aux_buffers, struct aux_buffer *);
     size_t aux_buf_idx;
     size_t aux_buf_total_num;
     /* shm filedescriptor */
@@ -141,7 +142,7 @@ struct buffer *initialize_shared_buffer(size_t elem_size)
     buff->shmbuffer->info.elem_size = elem_size;
 
     buff->key = strdup(key);
-    shm_vector_init(&buff->aux_buffers, sizeof(struct aux_buffer*));
+    VEC_INIT(buff->aux_buffers);
     buff->aux_buf_idx = 0;
     buff->aux_buf_total_num = 0;
     buff->cur_aux_buff = NULL;
@@ -178,7 +179,7 @@ struct buffer *get_shared_buffer(const char *key)
 
     buff->shmbuffer = (struct shmbuffer *)mem;
     buff->key = strdup(key);
-    shm_vector_init(&buff->aux_buffers, sizeof(struct aux_buffer*));
+    VEC_INIT(buff->aux_buffers);
     buff->aux_buf_idx = 0;
     buff->cur_aux_buff = NULL;
     buff->fd = fd;
@@ -200,11 +201,10 @@ void release_shared_buffer(struct buffer *buff)
         perror("release_shared_buffer: failed closing mmap fd");
     }
     free(buff->key);
-    size_t vecsize = shm_vector_size(&buff->aux_buffers);
+    size_t vecsize = VEC_SIZE(buff->aux_buffers);
 
     for (size_t i = 0; i < vecsize; ++i) {
-         struct aux_buffer *ab
-             = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, i));
+         struct aux_buffer *ab = buff->aux_buffers[i];
          aux_buffer_release(ab);
     }
 
@@ -216,10 +216,9 @@ void destroy_shared_buffer(struct buffer *buff)
 {
     buff->shmbuffer->info.destroyed = 1;
 
-    size_t vecsize = shm_vector_size(&buff->aux_buffers);
+    size_t vecsize = VEC_SIZE(buff->aux_buffers);
     for (size_t i = 0; i < vecsize; ++i) {
-         struct aux_buffer *ab
-             = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, i));
+         struct aux_buffer *ab = buff->aux_buffers[i];
          // we must first wait until the monitor finishes
          //aux_buffer_destroy(ab);
          aux_buffer_release(ab);
@@ -582,8 +581,8 @@ static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
     ab->use_id = buff->aux_buf_total_num++;
     ab->reusable = false;
 
-    shm_vector_push(&buff->aux_buffers, &ab);
-    assert(*((struct aux_buffer **)shm_vector_top(&buff->aux_buffers)) == ab);
+    VEC_PUSH(buff->aux_buffers, &ab);
+    assert(VEC_TOP(buff->aux_buffers) == ab);
     buff->cur_aux_buff = ab;
 
     return ab;
@@ -593,8 +592,8 @@ static struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size
     if (!buff->cur_aux_buff || aux_buffer_free_space(buff->cur_aux_buff) < size) {
         /* try to find a free buffer */
         struct aux_buffer *ab;
-        for (size_t i = 0; i < shm_vector_size(&buff->aux_buffers); ++i) {
-             ab = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, i));
+        for (size_t i = 0; i < VEC_SIZE(buff->aux_buffers); ++i) {
+             ab = buff->aux_buffers[i];
              printf("ab %lu: reusable: %d, use_id: %lu, size: %lu, head: %lu\n",
                     ab->idx, ab->reusable, ab->use_id, ab->size, ab->head);
              if (ab->reusable && ab->size >= size) {
@@ -621,9 +620,8 @@ static struct aux_buffer *reader_get_aux_buffer(struct buffer *buff, size_t idx)
         return buff->cur_aux_buff;
 
     /* try to find one with the idx */
-    for (size_t i = 0; i < shm_vector_size(&buff->aux_buffers); ++i) {
-         struct aux_buffer *ab
-             = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, i));
+    for (size_t i = 0; i < VEC_SIZE(buff->aux_buffers); ++i) {
+         struct aux_buffer *ab = buff->aux_buffers[i];
          if (ab->idx == idx) {
              buff->cur_aux_buff = ab;
              return ab;
@@ -667,8 +665,8 @@ static struct aux_buffer *reader_get_aux_buffer(struct buffer *buff, size_t idx)
     assert(ab->size > 0);
 
     buff->cur_aux_buff = ab;
-    shm_vector_push(&buff->aux_buffers, &ab);
-    assert(*((struct aux_buffer **)shm_vector_top(&buff->aux_buffers)) == ab);
+    VEC_PUSH(buff->aux_buffers, &ab);
+    assert(VEC_TOP(buff->aux_buffers) == ab);
 
     return ab;
 }
@@ -731,17 +729,15 @@ uint64_t buffer_push_str(struct buffer *buff, const char *str) {
 
 void buffer_release_str(struct buffer *buff, uint64_t elem) {
     size_t idx = elem >> 32;
-    struct aux_buffer *idxbuf
-        = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, idx));
+    struct aux_buffer *idxbuf = buff->aux_buffers[idx];
     assert(idxbuf);
     assert(idxbuf->idx == idx);
     size_t use_id = idxbuf->use_id;
 
     /* FIXME: do not loop, use ids */
-    size_t vecsize = shm_vector_size(&buff->aux_buffers);
+    size_t vecsize = VEC_SIZE(buff->aux_buffers);
     for (size_t i = 0; i < vecsize; ++i) {
-         struct aux_buffer *ab
-             = *((struct aux_buffer **)shm_vector_at(&buff->aux_buffers, i));
+         struct aux_buffer *ab = buff->aux_buffers[i];
          if (ab->use_id < use_id) {
              ab->reusable = true;
              break;
