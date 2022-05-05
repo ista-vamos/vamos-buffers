@@ -182,7 +182,7 @@ shm_event *shamon_get_next_ev(shamon *shmn) {
     return shmn->process_events(&shmn->buffers, shmn->process_events_data);
 }
 
-void shamon_add_stream(shamon *shmn, shm_stream *stream) {
+void shamon_add_stream(shamon *shmn, shm_stream *stream, size_t buffer_capacity) {
     VEC_PUSH(shmn->streams, &stream);
     assert(shmn->streams[VEC_SIZE(shmn->streams) - 1] == stream
             && "BUG: shm_vector_push");
@@ -192,7 +192,7 @@ void shamon_add_stream(shamon *shmn, shm_stream *stream) {
     }
 
     shm_arbiter_buffer *buffer = shm_vector_extend(&shmn->buffers);
-    shm_arbiter_buffer_init(buffer, stream);
+    shm_arbiter_buffer_init(buffer, stream, buffer_capacity);
 
     thrd_t thread_id;
     thrd_create(&thread_id, default_buffer_manager_thrd, buffer);
