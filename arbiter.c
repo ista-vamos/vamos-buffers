@@ -5,7 +5,6 @@
 #include "arbiter.h"
 #include "parallel_queue.h"
 
-/* TODO move to its own file */
 typedef struct _shm_arbiter_buffer {
     shm_stream *stream;     // the source for the buffer
     shm_par_queue buffer;   // the buffer itself
