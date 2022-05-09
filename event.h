@@ -41,7 +41,7 @@ const char *shm_event_kind_name(shm_kind kind);
 shm_eventid shm_event_id(shm_event *event);
 size_t shm_event_size(shm_event *event);
 shm_kind shm_event_kind(shm_event *event);
-size_t shm_event_kind_size(shm_kind kind);
+size_t shm_event_size_for_kind(shm_kind kind);
 shm_stream *shm_event_stream(shm_event *event);
 
 // DROP EVENT

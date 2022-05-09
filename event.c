@@ -72,14 +72,14 @@ const char *shm_event_kind_name(shm_kind kind) {
     return events_info[kind - 1].name;
 }
 
-size_t shm_event_kind_size(shm_kind kind) {
+size_t shm_event_size_for_kind(shm_kind kind) {
     assert(events_info && "Events not initialized");
     assert(kind <= ev_kinds_num && "Invalid event kind");
     return events_info[kind - 1].ev_size;
 };
 
 size_t shm_event_size(shm_event *ev) {
-    return shm_event_kind_size(shm_event_kind(ev));
+    return shm_event_size_for_kind(shm_event_kind(ev));
 };
 
 shm_eventid shm_event_id(shm_event *event) {
