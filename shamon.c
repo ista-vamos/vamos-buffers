@@ -194,7 +194,9 @@ void shamon_add_stream(shamon *shmn, shm_stream *stream, size_t buffer_capacity)
     }
 
     shm_arbiter_buffer *buffer = shm_vector_extend(&shmn->buffers);
-    shm_arbiter_buffer_init(buffer, stream, buffer_capacity);
+    /* 0 as the output event size means same as the stream */
+    shm_arbiter_buffer_init(buffer, stream,
+                            /* output event size = */ 0, buffer_capacity);
 
     thrd_t thread_id;
     thrd_create(&thread_id, default_buffer_manager_thrd, buffer);

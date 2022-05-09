@@ -61,23 +61,20 @@ shm_stream *shm_arbiter_buffer_stream(shm_arbiter_buffer *buffer)
 
 void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
                              shm_stream *stream,
+                             size_t out_event_size,
                              size_t capacity) {
-    buffer->stream = stream;
     assert(capacity >= 3 && "We need at least 3 elements in the buffer");
+    size_t event_size = out_event_size > stream->event_size ? out_event_size : stream->event_size;
+    /* the buffer must be able to contain the event 'dropped' */
+    if (event_size < sizeof(shm_event_dropped))
+        event_size = sizeof(shm_event_dropped);
+
     shm_par_queue_init(&buffer->buffer, capacity,
-                       /* the buffer must be able to contain the event 'dropped' */
-                       stream->event_size < sizeof(shm_event_dropped) ?
-                           sizeof(shm_event_dropped) : stream->event_size);
+                       event_size);
+
+    buffer->stream = stream;
     buffer->active = false;
     buffer->dropped_num = 0;
-}
-
-shm_arbiter_buffer *
-shm_arbiter_buffer_create(shm_stream *stream,
-                          size_t capacity) {
-    shm_arbiter_buffer *arbb = malloc(sizeof(*arbb));
-    shm_arbiter_buffer_init(arbb, stream, capacity);
-    return arbb;
 }
 
 void shm_arbiter_buffer_destroy(shm_arbiter_buffer *buffer) {
