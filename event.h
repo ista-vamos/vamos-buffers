@@ -24,9 +24,6 @@ typedef struct _shm_event_dropped {
     uint64_t n;          /* how many events were dropped */
 } shm_event_dropped;
 
-typedef void (*ev_copy_fn) (shm_event *src, shm_event *dst);
-typedef void (*ev_destroy_fn) (shm_event *src);
-
 /* Must be called before using event API.
  * It is called from shamon_create */
 void initialize_events(void);
@@ -38,9 +35,7 @@ void deinitialize_events(void);
 //comparisons everywhere)
 shm_kind shm_mk_event_kind(const char* name,
                            shm_stream *stream,
-                           size_t event_size,
-                           ev_copy_fn copy_fn,
-                           ev_destroy_fn destroy_fn);
+                           size_t event_size);
 const char *shm_event_kind_name(shm_kind kind);
 
 //EVENTS
@@ -49,8 +44,6 @@ size_t shm_event_size(shm_event *event);
 shm_kind shm_event_kind(shm_event *event);
 size_t shm_event_kind_size(shm_kind kind);
 shm_stream *shm_event_stream(shm_event *event);
-ev_destroy_fn shm_event_destroy_fn(shm_event *ev);
-ev_copy_fn shm_event_copy_fn(shm_event *ev);
 
 // DROP EVENT
 bool shm_event_is_dropped(shm_event *);
