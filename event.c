@@ -12,7 +12,6 @@
 struct _ev_kind_rec {
     char *name;
     size_t ev_size;
-    shm_stream *stream;
 };
 
 static struct _ev_kind_rec *events_info = NULL;
@@ -21,7 +20,6 @@ static size_t ev_kinds_num_allocated = 0;
 static shm_kind dropped_kind;
 
 shm_kind shm_mk_event_kind(const char* name,
-                           shm_stream *stream,
                            size_t event_size) {
     size_t idx = ev_kinds_num++;
     if (ev_kinds_num_allocated < ev_kinds_num) {
@@ -31,7 +29,6 @@ shm_kind shm_mk_event_kind(const char* name,
     }
 
     events_info[idx].name = strdup(name);
-    events_info[idx].stream = stream;
     events_info[idx].ev_size = event_size;
     assert(events_info[idx].name);
     return idx + 1;
@@ -42,7 +39,6 @@ void initialize_events() {
         return;  /* events are initialized */
 
     dropped_kind = shm_mk_event_kind("dropped",
-                                     NULL,
                                      sizeof(shm_event_dropped));
 
     assert(dropped_kind > 0 && "Events not initialized");
@@ -93,12 +89,3 @@ shm_eventid shm_event_id(shm_event *event) {
 shm_kind shm_event_kind(shm_event *event) {
     return event->kind;
 };
-
-shm_stream *shm_event_stream(shm_event *ev) {
-    assert(events_info && "Events not initialized");
-    shm_kind kind = shm_event_kind(ev);
-    assert(kind <= ev_kinds_num && "Invalid event kind");
-    if (kind == dropped_kind)
-        return ((shm_event_dropped*)ev)->stream;
-    return events_info[kind - 1].stream;
-}
