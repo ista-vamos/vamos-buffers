@@ -150,12 +150,9 @@ bool shm_par_queue_pop(shm_par_queue *q, void *buff) {
     return true;
 }
 
-bool shm_par_queue_drop(shm_par_queue *q, size_t k) {
-    if (k > q->capacity)
-        k = q->capacity;
-
+size_t shm_par_queue_drop(shm_par_queue *q, size_t k) {
     if (q->elem_num < k) {
-        return false;
+        k = q->elem_num;
     }
 
     q->tail += k;
@@ -167,7 +164,7 @@ bool shm_par_queue_drop(shm_par_queue *q, size_t k) {
     atomic_fetch_sub_explicit(&q->elem_num, k,
                               memory_order_relaxed);
 
-    return true;
+    return k;
 }
 
 size_t shm_par_queue_free_num(shm_par_queue *q) {

@@ -41,7 +41,7 @@ size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *buffer) {
     return shm_par_queue_capacity(&buffer->buffer);
 }
 
-bool shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t k) {
+size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t k) {
     return shm_par_queue_drop(&buffer->buffer, k);
 }
 

@@ -46,7 +46,7 @@ shm_event *shm_arbiter_buffer_top(shm_arbiter_buffer *buffer);
 size_t shm_arbiter_buffer_peek(shm_arbiter_buffer *buffer, size_t n,
                                void **data1, size_t *size1,
                                void **data2, size_t *size2);
-bool shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t n);
+size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t n);
 bool shm_arbiter_buffer_pop(shm_arbiter_buffer *q, void *buff);
 
 void *stream_fetch(shm_stream *stream,
