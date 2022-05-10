@@ -41,6 +41,18 @@ const char *get_next_param(const char *params, char out[256]) {
     }
 }
 
+struct stream_rec {
+    const char *name;
+    const char *descr;
+};
+
+static
+struct stream_rec avail_streams[] = {
+  {"calls", "connect to dynamorio libfuns.so and track calls of a function"},
+  {"files", "open given files and read from them (the files can be pipes)"},
+  {NULL, NULL} /* to mark the end */
+};
+
 shm_stream *shm_stream_create(const char *name,
                               const char *signature,
                               int argc,
@@ -103,6 +115,13 @@ shm_stream *shm_stream_create(const char *name,
         return shm_create_stdin_stream();
     }
 #endif
+    fprintf(stderr, "Unknown stream. Available streams:\n");
+    struct stream_rec *it = &avail_streams[0];
+    while (it->name != NULL) {
+        fprintf(stderr, "  %-16s\t:%s\n", it->name, it->descr);
+        ++it;
+    }
+    abort();
     return NULL;
 }
 
