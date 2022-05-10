@@ -41,12 +41,10 @@ target_link_libraries(shamon PRIVATE
 
 add_subdirectory(streams)
 add_subdirectory(shmbuf)
+add_subdirectory(tests)
 
 if (DYNAMORIO_SOURCES)
        add_subdirectory(drfun)
        #add_subdirectory(drsyscalls)
 endif()
-# include_directories("${CMAKE_SOURCE_DIR}/shmbuf")
-# include_directories("${CMAKE_SOURCE_DIR}/streams")
-# include_directories("${CMAKE_SOURCE_DIR}/..")
 
