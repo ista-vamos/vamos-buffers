@@ -63,23 +63,6 @@ shm_stream *shm_create_funs_stream(const char *key) {
     return (shm_stream *) ss;
 }
 
-void shm_event_funcall_release(shm_event_funcall *fev) {
-    unsigned char *p = fev->args;
-    for (const char *o = fev->signature; *o; ++o) {
-        if (*o == '_') {
-            continue;
-        }
-        if (*o == 'S') {
-            buffer_release_str(((shm_stream_funs*)shm_event_stream((shm_event*)fev))->shmbuffer,
-                               *(uint64_t*)p);
-            p += sizeof(uint64_t);
-            continue;
-        }
-
-        p += call_event_op_get_size(*o);
-    }
-}
-
 const char *shm_stream_funs_get_str(shm_stream_funs *fstream, uint64_t elem) {
     return buffer_get_str(fstream->shmbuffer, elem);
 }

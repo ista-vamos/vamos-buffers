@@ -37,7 +37,6 @@ const char *shm_stream_get_name(shm_stream *);
 
 void *shm_stream_read_events(shm_stream *, size_t *);
 bool shm_stream_consume(shm_stream *stream, size_t num);
-void shm_buffer_release_str(shm_stream *stream, uint64_t elem);
 const char *shm_stream_get_str(shm_stream *stream, uint64_t elem);
 
 /*

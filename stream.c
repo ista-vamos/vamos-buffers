@@ -54,12 +54,6 @@ bool shm_stream_consume(shm_stream *stream, size_t num) {
     return buffer_drop_k(stream->incoming_events, num);
 }
 
-
-void shm_buffer_release_str(shm_stream *stream,
-                            uint64_t elem) {
-    buffer_release_str(stream->incoming_events, elem);
-}
-
 const char *shm_stream_get_str(shm_stream *stream, uint64_t elem) {
     return buffer_get_str(stream->incoming_events, elem);
 }

@@ -33,7 +33,7 @@ add_library(shamon-vector OBJECT vector.c)
 add_library(shamon-queue OBJECT queue.c)
 add_library(shamon-parallel-queue OBJECT parallel_queue.c)
 
-add_library(shamon STATIC arbiter.c event.c stream.c)
+add_library(shamon STATIC shamon.c arbiter.c event.c stream.c)
 target_link_libraries(shamon PRIVATE
                       shamon-utils
                       shamon-vector shamon-list

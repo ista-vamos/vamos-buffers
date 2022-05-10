@@ -65,7 +65,9 @@ shm_stream *shm_stream_create(const char *name,
         }
         return s;
 
-    } else if (strncmp(name, "files", 5) == 0) {
+    }
+#if 0
+    else if (strncmp(name, "files", 5) == 0) {
         const char *params = get_arg("files:", 6, argc, argv);
         if (!params) {
             fprintf(stderr, "error: stream 'files' takes as parameters files to open\n");
@@ -99,7 +101,7 @@ shm_stream *shm_stream_create(const char *name,
         }
         return shm_create_stdin_stream();
     }
-
+#endif
     return NULL;
 }
 
