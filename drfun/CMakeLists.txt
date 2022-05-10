@@ -1,5 +1,6 @@
-add_library(funs SHARED funs.c events.c)
-target_link_libraries(funs shamon-shmbuf shamon-list)
+add_library(funs-lib STATIC events.c)
+add_library(funs SHARED funs.c)
+target_link_libraries(funs funs-lib shamon-shmbuf shamon-list)
 target_compile_options(funs PUBLIC -Wno-pedantic -Wno-missing-field-initializers)
 
 use_DynamoRIO_extension(funs drmgr)

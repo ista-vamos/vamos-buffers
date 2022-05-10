@@ -26,18 +26,17 @@ if (DYNAMORIO_SOURCES)
         endif(NOT DynamoRIO_FOUND)
 endif()
 
-add_library(shamon-utils STATIC utils.c)
-target_compile_definitions(shamon-utils PUBLIC -D_POSIX_C_SOURCE=200809L)
 add_library(shamon-list OBJECT list.c)
 add_library(shamon-vector OBJECT vector.c)
 add_library(shamon-queue OBJECT queue.c)
-add_library(shamon-parallel-queue OBJECT parallel_queue.c)
 
-add_library(shamon STATIC shamon.c arbiter.c event.c stream.c)
-target_link_libraries(shamon PRIVATE
-                      shamon-utils
-                      shamon-vector shamon-list
-                      shamon-parallel-queue)
+add_library(shamon-utils STATIC utils.c)
+target_compile_definitions(shamon-utils PUBLIC -D_POSIX_C_SOURCE=200809L)
+add_library(shamon-parallel-queue STATIC parallel_queue.c)
+add_library(shamon-arbiter STATIC shamon.c arbiter.c event.c stream.c)
+target_compile_definitions(shamon-arbiter PUBLIC -D_POSIX_C_SOURCE=200809L)
+
+add_library(shamon STATIC shamon.c)
 
 add_subdirectory(streams)
 add_subdirectory(shmbuf)
