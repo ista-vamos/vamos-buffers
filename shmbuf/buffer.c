@@ -152,6 +152,35 @@ struct buffer *initialize_shared_buffer(size_t elem_size)
     return buff;
 }
 
+struct buffer *initialize_local_buffer(size_t elem_size)
+{
+    printf("Initializing _local_ buffer with elem size '%lu'\n", elem_size);
+
+    void *mem = malloc(buffer_allocation_size());
+    assert(mem && "Memory allocation failed");
+    struct buffer *buff = malloc(sizeof(struct buffer));
+    assert(buff && "Memory allocation failed");
+
+    buff->shmbuffer = (struct shmbuffer *)mem;
+    memset(buff->shmbuffer, 0, sizeof(struct buffer_info));
+    buff->shmbuffer->info.capacity
+        = (BUFF_END(buff->shmbuffer) - BUFF_START(buff->shmbuffer)) / elem_size;
+    printf("  .. buffer allocated size = %lu, capacity = %lu\n",
+           buffer_allocation_size(), buff->shmbuffer->info.capacity);
+    buff->shmbuffer->info.elem_size = elem_size;
+    buff->shmbuffer->info.last_processed_id = 0;
+
+    /* local buffers do not support aux buffers */
+
+    puts("Done");
+    return buff;
+}
+
+void free_local_buffer(struct buffer *buff) {
+    free(buff->shmbuffer);
+    free(buff);
+}
+
 struct buffer *get_shared_buffer(const char *key)
 {
     printf("Getting shared buffer '%s'\n", key);
