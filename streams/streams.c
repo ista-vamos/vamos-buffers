@@ -7,7 +7,8 @@
 #include "stream-stdin.h"
 #include "stream-fds.h"
 
-static const char *get_arg(const char *name, size_t len, int argc, const char *argv[]) {
+static const char *get_arg(const char *name, size_t len,
+                           int argc, char *argv[]) {
         for (int i = 0; i < argc; ++i) {
             if (strncmp(argv[i], name, len) == 0) {
                 return argv[i];
@@ -43,7 +44,7 @@ const char *get_next_param(const char *params, char out[256]) {
 shm_stream *shm_stream_create(const char *name,
                               const char *signature,
                               int argc,
-                              const char *argv[]) {
+                              char *argv[]) {
     (void)signature;
     if (strncmp(name, "calls", 5) == 0) {
         const char *params = get_arg("calls:", 6, argc, argv);
