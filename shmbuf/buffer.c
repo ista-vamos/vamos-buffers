@@ -519,7 +519,7 @@ void *get_shared_control_buffer()
     }
 
     size_t size;
-    if (read(fd, &size, sizeof(size)) == -1) {
+    if (pread(fd, &size, sizeof(size), 0) == -1) {
         perror("reading size of ctrl buffer");
         return NULL;
     }
