@@ -208,3 +208,16 @@ size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
     assert(*len1 + *len2 == n);
     return  n;
 }
+
+shm_event *shm_par_queue_peek_at(shm_par_queue *q, size_t k) {
+    size_t cur_elem_num = q->elem_num;
+    if (k >= cur_elem_num)
+        return NULL;
+
+    size_t end = k + q->tail;
+    if (end > q->capacity) {
+        return (shm_event*)(q->data + (end - q->capacity)*q->elem_size);
+    }
+
+    return (shm_event*)(q->data + (q->tail + k)*q->elem_size);
+}

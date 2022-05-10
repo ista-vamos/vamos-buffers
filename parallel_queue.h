@@ -34,6 +34,8 @@ shm_event *shm_par_queue_top(shm_par_queue *q);
 size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
                           void **ptr1, size_t *len1,
                           void **ptr2, size_t *len2);
+/* peek at a given element. k = 0 is the first elem (top), k = 1 the second, ... */
+shm_event *shm_par_queue_peek_at(shm_par_queue *q, size_t k);
 
 void *shm_par_queue_write_ptr(shm_par_queue *q);
 bool shm_par_queue_write_finish(shm_par_queue *q);
