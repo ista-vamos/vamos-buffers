@@ -32,7 +32,7 @@ shm_kind shm_mk_event_kind(const char* name,
     events_info[idx].ev_size = event_size;
     assert(events_info[idx].name);
     return idx + 1;
-};
+}
 
 void initialize_events() {
     if (events_info)
@@ -76,11 +76,11 @@ size_t shm_event_size_for_kind(shm_kind kind) {
     assert(events_info && "Events not initialized");
     assert(kind <= ev_kinds_num && "Invalid event kind");
     return events_info[kind - 1].ev_size;
-};
+}
 
 size_t shm_event_size(shm_event *ev) {
     return shm_event_size_for_kind(shm_event_kind(ev));
-};
+}
 
 shm_eventid shm_event_id(shm_event *event) {
     return event->id;
@@ -88,4 +88,4 @@ shm_eventid shm_event_id(shm_event *event) {
 
 shm_kind shm_event_kind(shm_event *event) {
     return event->kind;
-};
+}

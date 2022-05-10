@@ -128,10 +128,11 @@ print_address(file_t f, app_pc addr, const char *prefix)
 }
 */
 
-
 static void
-find_functions(void *drcontext, const module_data_t *mod, bool loaded)
+find_functions(void *drcontext, const module_data_t *mod, char loaded)
 {
+    (void)drcontext;
+    (void)loaded;
     /*
     size_t modoffs;
     drsym_error_t sym_res = drsym_lookup_symbol(
@@ -158,7 +159,7 @@ find_functions(void *drcontext, const module_data_t *mod, bool loaded)
     */
 
     size_t off;
-    for (int i = 0; i < events_num; ++i) {
+    for (size_t i = 0; i < events_num; ++i) {
         drsym_error_t ok = drsym_lookup_symbol(mod->full_path,
                            events[i].name,
                            &off,
@@ -182,6 +183,7 @@ find_functions(void *drcontext, const module_data_t *mod, bool loaded)
 DR_EXPORT void
 dr_client_main(client_id_t id, int argc, const char *argv[])
 {
+    (void)id;
     if (argc < 2) {
         dr_fprintf(STDERR, "Need arguments 'fun1:[sig]' 'fun2:[sig]' ...\n");
         DR_ASSERT(0);
@@ -224,7 +226,9 @@ dr_client_main(client_id_t id, int argc, const char *argv[])
     dr_register_exit_event(event_exit);
     drmgr_register_module_load_event(find_functions);
 
-    drmgr_register_bb_instrumentation_event(NULL, event_app_instruction, 0);
+    drmgr_register_bb_instrumentation_event(NULL,
+                                (void*) event_app_instruction,
+                                0);
 }
 
 static void
@@ -280,6 +284,8 @@ call_get_arg_ptr(dr_mcontext_t *mc, int i, char o) {
         case 4: return &mc->r8;
         case 5: return &mc->r9;
     }
+    DR_ASSERT(0 && "Not implemented");
+    return NULL;
 }
 
 static size_t last_event_id = 0;
@@ -330,6 +336,9 @@ static dr_emit_flags_t
 event_app_instruction(void *drcontext, void *tag, instrlist_t *bb, instr_t *instr,
                       bool for_trace, bool translating, void *user_data)
 {
+    (void)tag;
+    (void)for_trace;
+    (void)user_data;
     /* FIXME: isn't there a better place to put this callback? */
     if (!shm) {
         shm = initialize_shared_buffer(max_event_size);

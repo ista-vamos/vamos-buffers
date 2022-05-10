@@ -106,7 +106,7 @@ size_t shm_par_queue_push_k(shm_par_queue *q,
         size_t ovfl = end - q->capacity;
         memcpy(pos, elems, q->elem_size*(k - ovfl));
         memcpy(q->data,
-               elems + q->elem_size*(k-ovfl),
+               (unsigned char *)elems + q->elem_size*(k-ovfl),
                q->elem_size*ovfl);
         q->head = ovfl;
     } else {

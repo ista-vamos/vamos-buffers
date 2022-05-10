@@ -44,6 +44,7 @@ shm_stream *shm_stream_create(const char *name,
                               const char *signature,
                               int argc,
                               const char *argv[]) {
+    (void)signature;
     if (strncmp(name, "calls", 5) == 0) {
         const char *params = get_arg("calls:", 6, argc, argv);
         if (!params) {
@@ -99,5 +100,6 @@ shm_stream *shm_stream_create(const char *name,
         return shm_create_stdin_stream();
     }
 
+    return NULL;
 }
 

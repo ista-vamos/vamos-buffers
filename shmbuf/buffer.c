@@ -45,7 +45,7 @@ struct aux_buffer {
     size_t head;
     size_t idx;
     bool reusable;
-    unsigned char data[0];
+    unsigned char data[];
 };
 
 
@@ -69,8 +69,8 @@ static void aux_buffer_release(struct aux_buffer *buffer);
 static size_t buffer_push_strn(struct buffer *buff, const void *data, size_t size);
 static uint64_t buffer_push_str(struct buffer *buff, const char *str);
 
-#define BUFF_START(b) ((void*)b->data)
-#define BUFF_END(b) ((void*)b->data + MEM_SIZE - 1)
+#define BUFF_START(b) ((unsigned char*)b->data)
+#define BUFF_END(b) ((unsigned char*)b->data + MEM_SIZE - 1)
 
 size_t buffer_allocation_size() {
     return sizeof(struct shmbuffer);
@@ -168,7 +168,7 @@ struct buffer *initialize_local_buffer(size_t elem_size)
     printf("  .. buffer allocated size = %lu, capacity = %lu\n",
            buffer_allocation_size(), buff->shmbuffer->info.capacity);
     buff->shmbuffer->info.elem_size = elem_size;
-    buff->shmbuffer->info.last_processed_id = 0;
+    /* buff->shmbuffer->info.last_processed_id = 0; */
 
     /* local buffers do not support aux buffers */
 
@@ -370,11 +370,11 @@ void *buffer_partial_push(struct buffer *buff, void *prev_push,
     assert(buff->shmbuffer->info.elem_num < buff->shmbuffer->info.capacity);
 
     /* all ok, copy the data */
-    assert(BUFF_START(buff->shmbuffer) <= prev_push);
-    assert(prev_push < BUFF_END(buff->shmbuffer));
-    assert(prev_push <= BUFF_END(buff->shmbuffer) - size);
+    assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
+    assert((unsigned char *)prev_push < BUFF_END(buff->shmbuffer));
+    assert((unsigned char *)prev_push <= BUFF_END(buff->shmbuffer) - size);
     memcpy(prev_push, elem, size);
-    return prev_push + size;
+    return (unsigned char *)prev_push + size;
 }
 
 void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
@@ -384,12 +384,12 @@ void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
     assert(buff->shmbuffer->info.elem_num < buff->shmbuffer->info.capacity);
 
     /* all ok, copy the data */
-    assert(BUFF_START(buff->shmbuffer) <= prev_push);
-    assert(prev_push < BUFF_END(buff->shmbuffer));
+    assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
+    assert((unsigned char *)prev_push < BUFF_END(buff->shmbuffer));
 
     *((uint64_t *)prev_push) = buffer_push_str(buff, str);
     /*printf("Pushed str: %lu\n", *((uint64_t *)prev_push));*/
-    return prev_push + sizeof(uint64_t);
+    return (unsigned char *)prev_push + sizeof(uint64_t);
 }
 
 
@@ -449,7 +449,7 @@ bool buffer_pop_k(struct buffer *buff, void *dst, size_t k) {
     size_t end = info->tail + k;
     if (end > info->capacity) {
         memcpy(dst, pos, (info->capacity - info->tail)*info->elem_size);
-        memcpy(dst + info->elem_size*(info->capacity - info->tail),
+        memcpy((unsigned char *)dst + info->elem_size*(info->capacity - info->tail),
                buff->shmbuffer->data, (end - info->capacity)*info->elem_size);
         info->tail = end - info->capacity;
     } else {
@@ -539,7 +539,7 @@ void *get_shared_control_buffer()
     }
 
     /* FIXME: we leak fd */
-    return mem + 2*sizeof(size_t);
+    return (unsigned char *)mem + 2*sizeof(size_t);
 }
 
 size_t control_buffer_size(void *buffer)
@@ -572,7 +572,7 @@ size_t aux_buffer_free_space(struct aux_buffer *buff) {
 
 static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
     size_t idx = buff->aux_buf_idx++;
-    const size_t pg_size = getpagesize();
+    const size_t pg_size = sysconf(_SC_PAGESIZE);
     size = (((size + sizeof(struct aux_buffer)) / pg_size)+9)*pg_size;
 
     /* create the key */
@@ -706,7 +706,7 @@ static struct aux_buffer *reader_get_aux_buffer(struct buffer *buff, size_t idx)
 
 void aux_buffer_release(struct aux_buffer *buffer)
 {
-    assert((buffer->size + sizeof(struct aux_buffer)) % getpagesize() == 0);
+    assert((buffer->size + sizeof(struct aux_buffer)) % sysconf(_SC_PAGESIZE) == 0);
     //int fd = buffer->fd;
     if (munmap(buffer, buffer->size + sizeof(struct aux_buffer)) != 0) {
         perror("aux_buffer_destroy: munmap failure");

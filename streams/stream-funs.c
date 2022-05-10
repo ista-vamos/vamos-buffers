@@ -64,7 +64,7 @@ shm_stream *shm_create_funs_stream(const char *key) {
 }
 
 void shm_event_funcall_release(shm_event_funcall *fev) {
-    void *p = fev->args;
+    unsigned char *p = fev->args;
     for (const char *o = fev->signature; *o; ++o) {
         if (*o == '_') {
             continue;

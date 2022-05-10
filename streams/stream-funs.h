@@ -9,7 +9,7 @@ typedef struct _shm_event_funcall {
 	shm_event base;
     /* the event arguments */
     char signature[8];
-    unsigned char args[0];
+    unsigned char args[];
 } shm_event_funcall;
 
 typedef struct _shm_stream_funs {
