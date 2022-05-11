@@ -77,6 +77,19 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
     buffer->dropped_num = 0;
 }
 
+shm_arbiter_buffer *shm_arbiter_buffer_create(shm_stream *stream,
+                                              size_t out_event_size,
+                                              size_t capacity) {
+    shm_arbiter_buffer *b = malloc(shm_arbiter_buffer_sizeof());
+    assert(b && "Malloc failed");
+    shm_arbiter_buffer_init(b, stream, out_event_size, capacity);
+    return b;
+}
+void shm_arbiter_buffer_free(shm_arbiter_buffer *buffer) {
+    shm_arbiter_buffer_destroy(buffer);
+    free(buffer);
+}
+
 void shm_arbiter_buffer_destroy(shm_arbiter_buffer *buffer) {
     shm_par_queue_destroy(&buffer->buffer);
 }

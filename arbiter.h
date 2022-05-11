@@ -20,6 +20,10 @@ typedef struct _shm_event shm_event;
 
 void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
                              size_t out_event_size, size_t capacity);
+shm_arbiter_buffer *shm_arbiter_buffer_create(shm_stream *stream,
+                                              size_t out_event_size,
+                                              size_t capacity);
+void shm_arbiter_buffer_free(shm_arbiter_buffer *buffer);
 void shm_arbiter_buffer_destroy(shm_arbiter_buffer *buffer);
 void shm_arbiter_buffer_set_active(shm_arbiter_buffer *buffer, bool val);
 size_t shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q);
