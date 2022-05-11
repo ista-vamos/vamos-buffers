@@ -4,8 +4,7 @@
 #include <assert.h>
 
 #include "stream-funs.h"
-#include "stream-stdin.h"
-#include "stream-fds.h"
+#include "stream-regex.h"
 
 /*
 static const char *get_arg(const char *name, size_t len,
@@ -71,15 +70,16 @@ static
 struct stream_rec avail_streams[] = {
   {"calls", "connect to dynamorio libfuns.so and track calls of a function"},
   {"files", "open given files and read from them (the files can be pipes)"},
+  {"regex", "read stdin and parse it using regexes"},
   {NULL, NULL} /* to mark the end */
 };
 
+struct source_control;
+
 shm_stream *shm_stream_create(const char *stream_name,
-                              const char *signature,
+                              struct source_control **control,
                               int argc,
                               char *argv[]) {
-    (void)signature;
-
     const char *params = get_params(stream_name, argc, argv);
     if (!params) {
         fprintf(stderr, "error: did not find spec for stream '%s'\n", stream_name);
@@ -111,7 +111,19 @@ shm_stream *shm_stream_create(const char *stream_name,
             return NULL;
         }
 
-        return shm_create_funs_stream(key);
+        return shm_create_funs_stream(key, control);
+    } else if (strncmp(source, "regex", 5) == 0) {
+        if (!next || *next == 0) {
+            fprintf(stderr, "error: source 'regex' needs the key to SHM as parameter\n");
+            return NULL;
+        }
+        char key[256];
+        next = get_next_part(next, key, ';');
+        if (next) {
+            fprintf(stderr, "warning: source 'regex' ignoring further parameter (FOR NOW)\n");
+        }
+
+        return shm_create_sregex_stream(key, control);
     }
 #if 0
     else if (strncmp(name, "files", 5) == 0) {

@@ -5,14 +5,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+struct source_control;
 struct buffer;
 
 struct buffer *get_shared_buffer(const char *key);
-struct buffer *initialize_shared_buffer(size_t elem_size);
-void *initialize_shared_control_buffer(size_t size);
-void *get_shared_control_buffer(void);
+struct buffer *initialize_shared_buffer(const char *key,
+                                        size_t elem_size,
+                                        struct source_control *control);
+void *initialize_shared_control_buffer(const char *buff_key, size_t size);
+void *get_shared_control_buffer(const char *buff_key);
 
-void release_shared_control_buffer(void *buffer);
+void release_shared_control_buffer(const char *buffkey, void *buffer);
 void release_shared_buffer(struct buffer *);
 void destroy_shared_buffer(struct buffer *);
 
@@ -45,6 +48,8 @@ void *buffer_partial_push(struct buffer *buff, void *prev_push,
                           const void *elem, size_t size);
 void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
                               const char *str);
+void *buffer_partial_push_str_n(struct buffer *buff, void *prev_push,
+                                const char *str, size_t len);
 bool buffer_finish_push(struct buffer *buff);
 
 struct aux_buff_ptr {

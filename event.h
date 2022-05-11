@@ -34,7 +34,8 @@ void deinitialize_events(void);
 //used for event kinds, field names, etc. (so we don't need to do string
 //comparisons everywhere)
 shm_kind shm_mk_event_kind(const char* name,
-                           size_t event_size);
+                           size_t event_size,
+                           const char *signature);
 const char *shm_event_kind_name(shm_kind kind);
 
 //EVENTS
@@ -43,6 +44,7 @@ size_t shm_event_size(shm_event *event);
 shm_kind shm_event_kind(shm_event *event);
 size_t shm_event_size_for_kind(shm_kind kind);
 shm_stream *shm_event_stream(shm_event *event);
+const char *shm_event_signature(shm_event *event);
 
 // DROP EVENT
 bool shm_event_is_dropped(shm_event *);

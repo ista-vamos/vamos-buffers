@@ -4,7 +4,7 @@
 
 int main(void) {
     size_t i;
-    struct buffer *b = initialize_shared_buffer(sizeof(size_t));
+    struct buffer *b = initialize_shared_buffer("/testkey", sizeof(size_t), NULL);
     assert(b);
     assert(buffer_size(b) == 0);
     for (i = 1; i < 101; ++i) {

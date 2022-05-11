@@ -12,6 +12,8 @@
 struct _ev_kind_rec {
     char *name;
     size_t ev_size;
+    /* description of the parameters */
+    unsigned char signature[32];
 };
 
 static struct _ev_kind_rec *events_info = NULL;
@@ -20,7 +22,8 @@ static size_t ev_kinds_num_allocated = 0;
 static shm_kind dropped_kind;
 
 shm_kind shm_mk_event_kind(const char* name,
-                           size_t event_size) {
+                           size_t event_size,
+                           const char *signature) {
     size_t idx = ev_kinds_num++;
     if (ev_kinds_num_allocated < ev_kinds_num) {
         ev_kinds_num_allocated += 10;
@@ -30,6 +33,10 @@ shm_kind shm_mk_event_kind(const char* name,
 
     events_info[idx].name = strdup(name);
     events_info[idx].ev_size = event_size;
+
+    assert(strlen(signature) <= sizeof(events_info[idx].signature));
+    strncpy((char *)events_info[idx].signature,
+            signature, sizeof(events_info[idx].signature));
     assert(events_info[idx].name);
     return idx + 1;
 }
@@ -39,7 +46,8 @@ void initialize_events() {
         return;  /* events are initialized */
 
     dropped_kind = shm_mk_event_kind("dropped",
-                                     sizeof(shm_event_dropped));
+                                     sizeof(shm_event_dropped),
+                                     "pd");
 
     assert(dropped_kind > 0 && "Events not initialized");
     assert(events_info && "Events not initialized");
@@ -88,4 +96,11 @@ shm_eventid shm_event_id(shm_event *event) {
 
 shm_kind shm_event_kind(shm_event *event) {
     return event->kind;
+}
+
+const char *shm_event_signature(shm_event *event) {
+    assert(events_info && "Events not initialized");
+    shm_kind kind = shm_event_kind(event);
+    assert(kind <= ev_kinds_num && "Invalid event kind");
+    return (const char *)events_info[kind - 1].signature;
 }

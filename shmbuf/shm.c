@@ -11,20 +11,9 @@
 
 #include "shm.h"
 
-#define SHM_NAME_MAXLEN 256
 
-const char *default_key = "/monitor.shamon.1";
-const char *default_ctrl_key = "/monitor.shamon.ctrl.1";
 const char *shm_dir = "/dev/shm/";
 const size_t shm_dirlen = 9;
-
-const char *shamon_shm_default_key() {
-    return default_key;
-}
-
-const char *shamon_shm_default_ctrl_key() {
-    return default_ctrl_key;
-}
 
 /* adapted function from musl project, src/mman/shm_open.c
  * and from libc sysdeps/posix/shm-directory.h */
@@ -38,7 +27,7 @@ char *shm_mapname(const char *name, char *buf)
 	/* Validate the filename.  */
 	if (namelen == 1 || namelen >= SHM_NAME_MAXLEN ||
 	    strchr(name, '/') != NULL) {
-		assert(0 && "valid shm name");
+        assert(0 && "invalid shm name");
 		return 0;
 	}
 	if (SHM_NAME_MAXLEN <= shm_dirlen + namelen) {
@@ -52,6 +41,16 @@ char *shm_mapname(const char *name, char *buf)
 	return buf;
 }
 
+char *shamon_map_ctrl_key(const char *buffkey, char key[SHM_NAME_MAXLEN])
+{
+    size_t tmplen = strlen(buffkey);
+    assert(tmplen < SHM_NAME_MAXLEN - 6);
+    strncpy(key, buffkey, tmplen);
+    strncpy(key + tmplen, ".ctrl", 6);
+
+    return key;
+}
+
 int shamon_shm_open(const char *key, int flags, mode_t mode)
 {
 	char name[SHM_NAME_MAXLEN];
@@ -61,9 +60,6 @@ int shamon_shm_open(const char *key, int flags, mode_t mode)
 }
 
 int shamon_shm_unlink(const char *key) {
-    if (key == NULL) {
-        key = default_key;
-    }
     printf("UNLINK: %s\n", key);
     char name[SHM_NAME_MAXLEN];
     if (shm_mapname(key, name) == 0)

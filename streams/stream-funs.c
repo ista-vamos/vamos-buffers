@@ -22,7 +22,8 @@ void funs_alter(shm_stream *stream,
     memcpy(out, in, stream->event_size);
 }
 
-shm_stream *shm_create_funs_stream(const char *key) {
+shm_stream *shm_create_funs_stream(const char *key,
+                                   struct source_control **control) {
     shm_stream_funs *ss = malloc(sizeof *ss);
     struct buffer *shmbuffer = get_shared_buffer(key);
     assert(shmbuffer && "Getting the shm buffer failed");
@@ -36,9 +37,11 @@ shm_stream *shm_create_funs_stream(const char *key) {
                     funs_alter,
                     "funs-stream");
     ss->shmbuffer = shmbuffer;
-    ss->events = get_shared_control_buffer();
+    *control = get_shared_control_buffer(key);
+    ss->base.control = *control;
+    ss->events = ss->base.control->events;
     assert(ss->events);
-    size_t evs_num = (control_buffer_size(ss->events)/sizeof(struct call_event_spec));
+    size_t evs_num = ((ss->base.control->size - sizeof(struct source_control))/sizeof(struct event_record));
     size_t ev_size, max_size = 0;
 
     for (size_t i = 0; i < evs_num; ++i) {
@@ -47,8 +50,8 @@ shm_stream *shm_create_funs_stream(const char *key) {
                       signature_get_size((unsigned char *)ss->events[i].signature))
                <= ss->events[i].size);
         ss->events[i].kind = shm_mk_event_kind(ss->events[i].name,
-                                               /*sizeof(shm_event_funcall) + call_event_spec_get_size(&ss->events[i]),*/
-                                               ss->events[i].size);
+                                               ss->events[i].size,
+                                               (const char *)ss->events[i].signature);
         ev_size = shm_event_size_for_kind(ss->events[i].kind);
         if (ev_size > max_size)
             max_size = ev_size;
@@ -75,7 +78,7 @@ void shm_destroy_funs_stream(shm_stream_funs *ss) {
     free(ss);
 }
 
-struct call_event_spec *shm_funs_stream_get_event_spec(shm_stream_funs *stream, shm_kind kind) {
+struct event_record *shm_funs_stream_get_event_spec(shm_stream_funs *stream, shm_kind kind) {
     for (size_t i = 0; i < stream->spec_count; ++i)
         if (stream->events[i].kind == kind)
             return stream->events + i;

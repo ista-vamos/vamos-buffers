@@ -15,13 +15,13 @@
 #include "shm.h"
 #include "buffer.h"
 #include "list.h"
+#include "source.h"
 #include "vector-macro.h"
 
 #define SLEEP_TIME_NS 10000
 #define MEM_SIZE (1024*1024)
 
 #define MAX_AUX_BUF_KEY_SIZE 16
-
 
 struct buffer_info {
     size_t capacity;
@@ -51,6 +51,7 @@ struct aux_buffer {
 
 struct buffer {
     struct shmbuffer *shmbuffer;
+    struct source_control *control;
     /* shared memory of auxiliary buffer */
     struct aux_buffer *cur_aux_buff;
     /* the known aux_buffers that might still be needed */
@@ -66,8 +67,9 @@ struct buffer {
 static size_t aux_buffer_free_space(struct aux_buffer *buff);
 static void aux_buffer_release(struct aux_buffer *buffer);
 //static void aux_buffer_destroy(struct aux_buffer *buffer);
-static size_t buffer_push_strn(struct buffer *buff, const void *data, size_t size);
+static size_t _buffer_push_strn(struct buffer *buff, const void *data, size_t size);
 static uint64_t buffer_push_str(struct buffer *buff, const char *str);
+static uint64_t buffer_push_strn(struct buffer *buff, const char *str, size_t len);
 
 #define BUFF_START(b) ((unsigned char*)b->data)
 #define BUFF_END(b) ((unsigned char*)b->data + MEM_SIZE - 1)
@@ -101,10 +103,11 @@ size_t buffer_elem_size(struct buffer *buff)
     return buff->shmbuffer->info.elem_size;
 }
 
-struct buffer *initialize_shared_buffer(size_t elem_size)
+struct buffer *initialize_shared_buffer(const char *key,
+                                        size_t elem_size,
+                                        struct source_control *control)
 {
     assert(elem_size > 0 && "Element size is 0");
-    const char *key = shamon_shm_default_key();
     printf("Initializing buffer '%s' with elem size '%lu'\n", key, elem_size);
     int fd = shamon_shm_open(key, O_RDWR|O_CREAT, S_IRWXU);
     if(fd < 0) {
@@ -147,6 +150,7 @@ struct buffer *initialize_shared_buffer(size_t elem_size)
     buff->aux_buf_idx = 0;
     buff->cur_aux_buff = NULL;
     buff->fd = fd;
+    buff->control = control;
 
     puts("Done");
     return buff;
@@ -392,6 +396,20 @@ void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
     return (unsigned char *)prev_push + sizeof(uint64_t);
 }
 
+void *buffer_partial_push_str_n(struct buffer *buff, void *prev_push,
+                                const char *str, size_t len) {
+    assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
+    /* buffer full */
+    assert(buff->shmbuffer->info.elem_num < buff->shmbuffer->info.capacity);
+
+    /* all ok, copy the data */
+    assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
+    assert((unsigned char *)prev_push < BUFF_END(buff->shmbuffer));
+
+    *((uint64_t *)prev_push) = buffer_push_strn(buff, str, len);
+    /*printf("Pushed str: %lu\n", *((uint64_t *)prev_push));*/
+    return (unsigned char *)prev_push + sizeof(uint64_t);
+}
 
 bool buffer_finish_push(struct buffer *buff) {
     struct buffer_info *info = &buff->shmbuffer->info;
@@ -471,9 +489,11 @@ bool buffer_pop_k(struct buffer *buff, void *dst, size_t k) {
 
 /*** CONTROL BUFFER ****/
 
-void *initialize_shared_control_buffer(size_t size)
+void *initialize_shared_control_buffer(const char *buff_key, size_t size)
 {
-    const char *key = shamon_shm_default_ctrl_key();
+    char key[SHM_NAME_MAXLEN];
+    shamon_map_ctrl_key(buff_key, key);
+
     printf("Initializing control buffer '%s' of size '%lu'\n", key, size);
     int fd = shamon_shm_open(key, O_RDWR|O_CREAT, S_IRWXU);
     if(fd < 0) {
@@ -508,9 +528,11 @@ void *initialize_shared_control_buffer(size_t size)
     return (void*) smem;
 }
 
-void *get_shared_control_buffer()
+void *get_shared_control_buffer(const char *buff_key)
 {
-    const char *key = shamon_shm_default_ctrl_key();
+    char key[SHM_NAME_MAXLEN];
+    shamon_map_ctrl_key(buff_key, key);
+
     printf("Getting control buffer '%s'\n", key);
     int fd = shamon_shm_open(key, O_RDWR|O_CREAT, S_IRWXU);
     if(fd < 0) {
@@ -548,7 +570,7 @@ size_t control_buffer_size(void *buffer)
     return *(mem - 2);
 }
 
-void release_shared_control_buffer(void *buffer)
+void release_shared_control_buffer(const char *buffkey, void *buffer)
 {
     size_t *mem = (size_t *) buffer;
     int fd = (int)*(--mem);
@@ -560,7 +582,9 @@ void release_shared_control_buffer(void *buffer)
     if (close(fd) == -1) {
         perror("closing fd after mmap failure");
     }
-    if (shamon_shm_unlink(shamon_shm_default_ctrl_key()) != 0) {
+    char key[SHM_NAME_MAXLEN];
+    shamon_map_ctrl_key(buffkey, key);
+    if (shamon_shm_unlink(key) != 0) {
         perror("release_shared_control_buffer: shm_unlink failure");
     }
 }
@@ -732,7 +756,7 @@ void aux_buffer_destroy(struct aux_buffer *buffer) {
 */
 
 
-size_t buffer_push_strn(struct buffer *buff,
+size_t _buffer_push_strn(struct buffer *buff,
                         const void *data, size_t size)
 {
     struct aux_buffer *ab = writer_get_aux_buffer(buff, size);
@@ -759,6 +783,12 @@ void *buffer_get_str(struct buffer *buff, uint64_t elem)
 uint64_t buffer_push_str(struct buffer *buff, const char *str) {
     size_t len = strlen(str) + 1;
     size_t off = buffer_push_strn(buff, str, len);
+    assert(buff->cur_aux_buff);
+    return (off | (buff->cur_aux_buff->idx << 32));
+}
+
+uint64_t buffer_push_strn(struct buffer *buff, const char *str, size_t len) {
+    size_t off = _buffer_push_strn(buff, str, len);
     assert(buff->cur_aux_buff);
     return (off | (buff->cur_aux_buff->idx << 32));
 }

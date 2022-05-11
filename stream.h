@@ -2,6 +2,7 @@
 #define SHAMON_STREAMS_H
 
 #include "event.h"
+#include "source.h"
 
 typedef struct _shm_arbiter_buffer shm_arbiter_buffer;
 
@@ -18,6 +19,7 @@ typedef struct _shm_stream {
     const char *name;
     size_t event_size;
     struct buffer *incoming_events;
+    struct source_control *control;
     /* callbacks */
     shm_stream_is_ready_fn is_ready;
     shm_stream_filter_fn filter;
