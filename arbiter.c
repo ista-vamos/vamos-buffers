@@ -171,12 +171,14 @@ void *stream_fetch(shm_stream *stream,
                    shm_arbiter_buffer *buffer) {
     static shm_event_dropped dropped_ev;
 
-    /* wait for the event */
-    /* FIXME: if there is no filtering, we can push multiple events forward */
+    /* TODO: if there is no filtering and modifications, we can push multiple events forward.
+             if there are filtering and modifications, we could have an additional thread
+             to handle the load of data if we copy them in chunks */
     size_t num = 1;
     size_t sleep_time = SLEEP_TIME_NS_INIT;
     void *ev;
     do {
+        /* wait for the event */
         ev = shm_stream_read_events(stream, &num);
         if (ev) {
             sleep_time = SLEEP_TIME_NS_INIT;
