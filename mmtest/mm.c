@@ -382,8 +382,9 @@ int arbiterMonitor( )
 }
 int main(int argc,char * * argv)
 {
-  shm_stream * __mm_arbiter_strmvar_stream_S = shm_stream_create ( "S","some-format-of-stream-signature",argc,argv ) ;
-  shm_arbiter_buffer_init ( __mm_arbiter_strmvar_buffer_S,__mm_arbiter_strmvar_stream_S,sizeof ( _mm_strm_out_S ),1024 ) ;
+  struct source_control *C;
+  shm_stream * __mm_arbiter_strmvar_stream_S = shm_stream_create ( "S", &C,argc,argv ) ;
+   __mm_arbiter_strmvar_buffer_S = shm_arbiter_buffer_create (__mm_arbiter_strmvar_stream_S,sizeof ( _mm_strm_out_S ),1024 ) ;
   thrd_create ( (&__mm_strmvar_thread_S),(&_mm_strm_fun_S),0 ) ;
   shm_arbiter_buffer_set_active ( __mm_arbiter_strmvar_buffer_S,1 ) ;
   arbiterMonitor ( ) ;
