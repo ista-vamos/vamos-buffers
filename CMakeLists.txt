@@ -14,7 +14,7 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wpedantic -Werror")
 add_compile_options(-Wall -Wextra -pedantic -Werror)
-if (${CMAKE_BUILD_TYPE} NOT STREQUAL "Debug")
+if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -flto")
 endif()
 
