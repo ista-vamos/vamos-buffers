@@ -1,4 +1,6 @@
 add_library(funs-lib STATIC events.c)
+target_compile_options(funs-lib PRIVATE -fPIC)
+
 add_library(funs SHARED funs.c)
 target_link_libraries(funs funs-lib shamon-shmbuf shamon-list)
 target_compile_options(funs PUBLIC -Wno-pedantic -Wno-missing-field-initializers)

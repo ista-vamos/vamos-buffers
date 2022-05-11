@@ -10,7 +10,7 @@ typedef struct _shm_par_queue {
     size_t capacity;
     /* modifications of this variable are going to be atomic,
      * but that is the all atomicity that we need! */
-    size_t elem_num;
+    _Atomic size_t elem_num;
     size_t elem_size;
     size_t head, tail;
 #ifndef NDEBUG

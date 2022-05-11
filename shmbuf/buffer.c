@@ -25,7 +25,7 @@
 
 struct buffer_info {
     size_t capacity;
-    size_t elem_num;
+    _Atomic size_t elem_num;
     size_t elem_size;
     size_t head;
     size_t tail;
