@@ -6,7 +6,7 @@
 #include "stream-funs.h"
 #include "buffer.h"
 #include "arbiter.h"
-#include "drfun/events.h"
+#include "sources/drfun/events.h"
 
 bool funs_is_ready(shm_stream *stream) {
     struct buffer *b = ((shm_stream_funs *)stream)->shmbuffer;
