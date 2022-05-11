@@ -6,7 +6,8 @@
 #include "stream-funs.h"
 #include "buffer.h"
 #include "arbiter.h"
-#include "sources/drfun/events.h"
+#include "sources/drfun/eventspec.h"
+#include "signatures.h"
 
 bool funs_is_ready(shm_stream *stream) {
     struct buffer *b = ((shm_stream_funs *)stream)->shmbuffer;
@@ -42,7 +43,9 @@ shm_stream *shm_create_funs_stream(const char *key) {
 
     for (size_t i = 0; i < evs_num; ++i) {
         assert(ss->events[i].size == 0 ||
-               sizeof(shm_event_funcall) + call_event_spec_get_size(&ss->events[i]) <= ss->events[i].size);
+               (sizeof(shm_event_funcall) +
+                      signature_get_size((unsigned char *)ss->events[i].signature))
+               <= ss->events[i].size);
         ss->events[i].kind = shm_mk_event_kind(ss->events[i].name,
                                                /*sizeof(shm_event_funcall) + call_event_spec_get_size(&ss->events[i]),*/
                                                ss->events[i].size);
