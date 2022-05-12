@@ -57,3 +57,11 @@ bool shm_stream_consume(shm_stream *stream, size_t num) {
 const char *shm_stream_get_str(shm_stream *stream, uint64_t elem) {
     return buffer_get_str(stream->incoming_events, elem);
 }
+
+size_t shm_stream_event_size(shm_stream *s) {
+    return s->event_size;
+}
+
+void shm_stream_notify_last_processed_id(shm_stream *stream, shm_eventid id) {
+    buffer_set_last_processed_id(stream->incoming_events, id);
+}

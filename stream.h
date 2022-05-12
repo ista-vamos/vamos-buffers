@@ -36,10 +36,13 @@ void shm_stream_init(shm_stream *stream,
                      const char * const name);
 
 const char *shm_stream_get_name(shm_stream *);
+size_t shm_stream_event_size(shm_stream *);
 
 void *shm_stream_read_events(shm_stream *, size_t *);
 bool shm_stream_consume(shm_stream *stream, size_t num);
 const char *shm_stream_get_str(shm_stream *stream, uint64_t elem);
+
+void shm_stream_notify_last_processed_id(shm_stream *stream, shm_eventid id);
 
 /*
  * Fill the 'dropped' event for the given stream

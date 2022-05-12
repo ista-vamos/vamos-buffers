@@ -188,6 +188,7 @@ shm_event *shm_par_queue_top(shm_par_queue *q) {
         return (shm_event *)(q->data + q->tail*q->elem_size);
     return (shm_event *)0;
 }
+
 size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
                           void **ptr1, size_t *len1,
                           void **ptr2, size_t *len2) {
@@ -210,6 +211,15 @@ size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
     return  cur_elem_num;
 }
 
+/* peak1 -- it is like top + return the number of elements */
+size_t shm_par_queue_peek1(shm_par_queue *q, void **data) {
+    size_t cur_elem_num = q->elem_num;
+    if (cur_elem_num > 0) {
+        *data = (unsigned char *)(q->data + q->tail*q->elem_size);
+    }
+    return cur_elem_num;
+}
+
 shm_event *shm_par_queue_peek_at(shm_par_queue *q, size_t k) {
     size_t cur_elem_num = q->elem_num;
     if (k >= cur_elem_num)
@@ -217,6 +227,24 @@ shm_event *shm_par_queue_peek_at(shm_par_queue *q, size_t k) {
 
     size_t end = k + q->tail;
     if (end >= q->capacity) {
+        return (shm_event*)(q->data + (end - q->capacity)*q->elem_size);
+    }
+
+    return (shm_event*)(q->data + (q->tail + k)*q->elem_size);
+}
+
+shm_event *shm_par_queue_peek_atmost_at(shm_par_queue *q, size_t *want_k) {
+    size_t k = q->elem_num;
+    if (k == 0)
+        return NULL;
+    if (*want_k >= k) {
+        *want_k = --k;
+    } else {
+        k = *want_k;
+    }
+
+    size_t end = k + q->tail;
+    if (end > q->capacity) {
         return (shm_event*)(q->data + (end - q->capacity)*q->elem_size);
     }
 

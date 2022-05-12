@@ -59,4 +59,6 @@ struct aux_buff_ptr {
     uint32_t offset;
 } __attribute__((packed,aligned(64)));
 
+void buffer_set_last_processed_id(struct buffer *buff, uint64_t id);
+
 #endif /* SHAMON_SHM_BUFFER_H */

@@ -34,8 +34,15 @@ shm_event *shm_par_queue_top(shm_par_queue *q);
 size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
                           void **ptr1, size_t *len1,
                           void **ptr2, size_t *len2);
+/* peek 1 event */
+size_t shm_par_queue_peek1(shm_par_queue *q, void **data);
+
 /* peek at a given element. k = 0 is the first elem (top), k = 1 the second, ... */
 shm_event *shm_par_queue_peek_at(shm_par_queue *q, size_t k);
+/* peek at a given element or the last possible readable element
+ * if there is not enough elements. 'k' is set to the index (starting from 0)
+ * of the peeked element. Returns NULL only if the queue is empty. */
+shm_event *shm_par_queue_peek_atmost_at(shm_par_queue *q, size_t *k);
 
 void *shm_par_queue_write_ptr(shm_par_queue *q);
 bool shm_par_queue_write_finish(shm_par_queue *q);

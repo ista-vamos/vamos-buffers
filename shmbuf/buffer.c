@@ -29,6 +29,7 @@ struct buffer_info {
     size_t elem_size;
     size_t head;
     size_t tail;
+    shm_eventid last_processed_id;
     /* the monitored program exited/destroyed the buffer */
     _Bool destroyed;
     _Bool monitor_attached;
@@ -143,6 +144,7 @@ struct buffer *initialize_shared_buffer(const char *key,
     printf("  .. buffer allocated size = %lu, capacity = %lu\n",
            buffer_allocation_size(), buff->shmbuffer->info.capacity);
     buff->shmbuffer->info.elem_size = elem_size;
+    buff->shmbuffer->info.last_processed_id = 0;
 
     buff->key = strdup(key);
     VEC_INIT(buff->aux_buffers);
@@ -173,6 +175,7 @@ struct buffer *initialize_local_buffer(size_t elem_size)
     printf("  .. buffer allocated size = %lu, capacity = %lu\n",
            buffer_allocation_size(), buff->shmbuffer->info.capacity);
     buff->shmbuffer->info.elem_size = elem_size;
+    buff->shmbuffer->info.last_processed_id = 0;
     /* buff->shmbuffer->info.last_processed_id = 0; */
 
     /* local buffers do not support aux buffers */
@@ -224,6 +227,13 @@ struct buffer *get_shared_buffer(const char *key)
 
 void buffer_set_attached(struct buffer *buff, bool val) {
     buff->shmbuffer->info.monitor_attached = val;
+}
+
+/* set the ID of the last processed event */
+void buffer_set_last_processed_id(struct buffer *buff, shm_eventid id) {
+    assert(buff->shmbuffer->info.last_processed_id <= id
+           && "The IDs are not monotonic");
+    buff->shmbuffer->info.last_processed_id = id;
 }
 
 /* for readers */

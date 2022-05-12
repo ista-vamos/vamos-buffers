@@ -50,6 +50,8 @@ shm_event *shm_arbiter_buffer_top(shm_arbiter_buffer *buffer);
 size_t shm_arbiter_buffer_peek(shm_arbiter_buffer *buffer, size_t n,
                                void **data1, size_t *size1,
                                void **data2, size_t *size2);
+/* peek 1 event */
+size_t shm_arbiter_buffer_peek1(shm_arbiter_buffer *buffer, void **data);
 size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t n);
 bool shm_arbiter_buffer_pop(shm_arbiter_buffer *q, void *buff);
 

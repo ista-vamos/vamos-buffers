@@ -42,7 +42,17 @@ size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *buffer) {
 }
 
 size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t k) {
-    return shm_par_queue_drop(&buffer->buffer, k);
+    shm_event *ev = shm_par_queue_peek_atmost_at(&buffer->buffer, &k);
+    if (!ev)
+        return 0; /* empty queue */
+    shm_eventid last_id = shm_event_id(ev);
+#ifndef NDEBUG
+    size_t n =
+#endif
+    shm_par_queue_drop(&buffer->buffer, k);
+    assert(n == k && "Something changed the queue in between");
+    shm_stream_notify_last_processed_id(buffer->stream, last_id);
+    return k;
 }
 
 bool shm_arbiter_buffer_active(shm_arbiter_buffer *buffer)
@@ -159,6 +169,8 @@ void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
 }
 
 
+/* NOTE: does not notify about processing the event, must
+ * be done manually once all the work with data is done */
 bool shm_arbiter_buffer_pop(shm_arbiter_buffer *buffer, void *elem) {
     return shm_par_queue_pop(&buffer->buffer, elem);
 }
@@ -172,6 +184,11 @@ size_t shm_arbiter_buffer_peek(shm_arbiter_buffer *buffer, size_t n,
                                void **data2, size_t *size2) {
     return shm_par_queue_peek(&buffer->buffer, n, data1, size1, data2, size2);
 }
+
+size_t shm_arbiter_buffer_peek1(shm_arbiter_buffer *buffer, void **data) {
+    return shm_par_queue_peek1(&buffer->buffer, data);
+}
+
 
 #define SLEEP_TIME_NS_INIT 10
 #define SLEEP_TIME_NS_THRES 10000

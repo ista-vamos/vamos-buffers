@@ -89,6 +89,8 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
     if (i >= shm_vector_size(buffers))
         i = 0;
 
+    shm_event *inevent;
+
     while (i < shm_vector_size(buffers)) {
         buffer = ((shm_arbiter_buffer*)shm_vector_at(buffers, i));
         if (!shm_arbiter_buffer_active(buffer))
@@ -97,14 +99,14 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
         stream = shm_arbiter_buffer_stream(buffer);
         ++i;
 
-        qsize = shm_arbiter_buffer_size(buffer);
+        qsize = shm_arbiter_buffer_peek1(buffer, (void**)&inevent);
         if (qsize > 0) {
             assert(shmn->_ev);
             uint64_t c = shm_arbiter_buffer_capacity(buffer);
             /* is the buffer full from 75 or more percent? */
             if (qsize > 0.75*c) {
                 /* drop half of the buffer */
-                shm_eventid id = shm_event_id(shm_arbiter_buffer_top(buffer));
+                shm_eventid id = shm_event_id(inevent);
                 if (!shm_arbiter_buffer_drop(buffer, c/4)) {
                     assert(0 && "Failed dropping events");
                 }
@@ -114,8 +116,9 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
                 return shmn->_ev;
             }
 
-            /* TODO: ideally, we do not copy the event here */
-            shm_arbiter_buffer_pop(buffer, shmn->_ev);
+            /* TODO: ideally, we do not copy the event here but pass it directly to the monitor */
+            memcpy(shmn->_ev, inevent, shm_arbiter_buffer_elem_size(buffer));
+            shm_arbiter_buffer_drop(buffer, 1);
             return shmn->_ev;
         }
     }
