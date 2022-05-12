@@ -195,7 +195,7 @@ size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
     if (n > cur_elem_num)
         n = cur_elem_num;
     size_t end = cur_elem_num + q->tail;
-    if (end > q->capacity) {
+    if (end >= q->capacity) {
         *ptr1 = q->data + q->tail*q->elem_size;
         *len1 = q->capacity - q->tail;
         *ptr2 = q->data;
@@ -216,7 +216,7 @@ shm_event *shm_par_queue_peek_at(shm_par_queue *q, size_t k) {
         return NULL;
 
     size_t end = k + q->tail;
-    if (end > q->capacity) {
+    if (end >= q->capacity) {
         return (shm_event*)(q->data + (end - q->capacity)*q->elem_size);
     }
 
