@@ -206,7 +206,8 @@ size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
         *len2 = 0;
     }
     assert(*len1 + *len2 == n);
-    return  n;
+    /* return  n; */
+    return  cur_elem_num;
 }
 
 shm_event *shm_par_queue_peek_at(shm_par_queue *q, size_t k) {
