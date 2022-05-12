@@ -20,8 +20,9 @@ typedef struct _shm_event {
 
 typedef struct _shm_event_dropped {
     shm_event base;
-    shm_stream *stream;  /* on what stream */
     uint64_t n;          /* how many events were dropped */
+    shm_stream *stream;  /* on what stream, this is implementation
+                            dependent */
 } shm_event_dropped;
 
 /* Must be called before using event API.
