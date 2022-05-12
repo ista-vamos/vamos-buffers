@@ -244,7 +244,7 @@ shm_event *shm_par_queue_peek_atmost_at(shm_par_queue *q, size_t *want_k) {
     }
 
     size_t end = k + q->tail;
-    if (end > q->capacity) {
+    if (end >= q->capacity) {
         return (shm_event*)(q->data + (end - q->capacity)*q->elem_size);
     }
 
