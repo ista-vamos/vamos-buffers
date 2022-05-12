@@ -239,6 +239,7 @@ shm_event *shm_par_queue_peek_atmost_at(shm_par_queue *q, size_t *want_k) {
     if (k == 0)
         return NULL;
     if (*want_k >= k) {
+        /* k is the number of elements, so the index is one less */
         *want_k = --k;
     } else {
         k = *want_k;

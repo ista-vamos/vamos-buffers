@@ -118,7 +118,11 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
 
             /* TODO: ideally, we do not copy the event here but pass it directly to the monitor */
             memcpy(shmn->_ev, inevent, shm_arbiter_buffer_elem_size(buffer));
+#ifndef NDEBUG
+            size_t n =
+#endif
             shm_arbiter_buffer_drop(buffer, 1);
+            assert(n == 1);
             return shmn->_ev;
         }
     }

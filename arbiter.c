@@ -46,6 +46,7 @@ size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *buffer) {
 /* drop an event and notify buffer the buffer that it may free up
  * the payload of this and older events */
 size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t k) {
+    --k; /* peek_*_at takes index from 0 */
     shm_event *ev = shm_par_queue_peek_atmost_at(&buffer->buffer, &k);
     if (!ev)
         return 0; /* empty queue */
@@ -53,7 +54,7 @@ size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t k) {
 #ifndef NDEBUG
     size_t n =
 #endif
-    ++k; /* k is index, we must increase it by one */
+    ++k; /* k is index, we must increase it back by one */
     shm_par_queue_drop(&buffer->buffer, k);
     assert(n == k && "Something changed the queue in between");
     shm_stream_notify_last_processed_id(buffer->stream, last_id);
