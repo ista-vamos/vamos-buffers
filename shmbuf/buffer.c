@@ -45,6 +45,7 @@ struct aux_buffer {
     size_t size;
     size_t head;
     size_t idx;
+    uint64_t last_event_id;
     bool reusable;
     unsigned char data[];
 };
@@ -69,8 +70,8 @@ static size_t aux_buffer_free_space(struct aux_buffer *buff);
 static void aux_buffer_release(struct aux_buffer *buffer);
 //static void aux_buffer_destroy(struct aux_buffer *buffer);
 static size_t _buffer_push_strn(struct buffer *buff, const void *data, size_t size);
-static uint64_t buffer_push_str(struct buffer *buff, const char *str);
-static uint64_t buffer_push_strn(struct buffer *buff, const char *str, size_t len);
+static uint64_t buffer_push_str(struct buffer *buff, uint64_t evid, const char *str);
+static uint64_t buffer_push_strn(struct buffer *buff, uint64_t evid, const char *str, size_t len);
 
 #define BUFF_START(b) ((unsigned char*)b->data)
 #define BUFF_END(b) ((unsigned char*)b->data + MEM_SIZE - 1)
@@ -394,7 +395,7 @@ void *buffer_partial_push(struct buffer *buff, void *prev_push,
 }
 
 void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
-                              const char *str) {
+                              uint64_t evid, const char *str) {
     assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
     /* buffer full */
     assert(buff->shmbuffer->info.elem_num < buff->shmbuffer->info.capacity);
@@ -403,13 +404,13 @@ void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
     assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
     assert((unsigned char *)prev_push < BUFF_END(buff->shmbuffer));
 
-    *((uint64_t *)prev_push) = buffer_push_str(buff, str);
+    *((uint64_t *)prev_push) = buffer_push_str(buff, evid, str);
     /*printf("Pushed str: %lu\n", *((uint64_t *)prev_push));*/
     return (unsigned char *)prev_push + sizeof(uint64_t);
 }
 
 void *buffer_partial_push_str_n(struct buffer *buff, void *prev_push,
-                                const char *str, size_t len) {
+                                uint64_t evid, const char *str, size_t len) {
     assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
     /* buffer full */
     assert(buff->shmbuffer->info.elem_num < buff->shmbuffer->info.capacity);
@@ -418,7 +419,7 @@ void *buffer_partial_push_str_n(struct buffer *buff, void *prev_push,
     assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
     assert((unsigned char *)prev_push < BUFF_END(buff->shmbuffer));
 
-    *((uint64_t *)prev_push) = buffer_push_strn(buff, str, len);
+    *((uint64_t *)prev_push) = buffer_push_strn(buff, evid, str, len);
     /*printf("Pushed str: %lu\n", *((uint64_t *)prev_push));*/
     return (unsigned char *)prev_push + sizeof(uint64_t);
 }
@@ -645,6 +646,7 @@ static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
     ab->head = 0;
     ab->size = size - sizeof(struct aux_buffer);
     ab->idx = idx;
+    ab->last_event_id = ~(0LL);
     ab->reusable = false;
 
     VEC_PUSH(buff->aux_buffers, &ab);
@@ -663,11 +665,16 @@ static struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size
         shm_list_elem *cur = shm_list_first(&buff->aux_buffers_age);
         while (cur) {
             ab = (struct aux_buffer *) cur->data;
+            if (ab->last_event_id <= buff->shmbuffer->info.last_processed_id) {
+                ab->reusable = true;
+                ab->head = 0;
+            }
             if (ab->reusable && ab->size >= size) {
                 assert(shm_list_last(&buff->aux_buffers_age)->data == buff->cur_aux_buff);
                 shm_list_remove(&buff->aux_buffers_age, cur);
                 shm_list_append_elem(&buff->aux_buffers_age, cur);
                 buff->cur_aux_buff = ab;
+                ab->reusable = false;
                 return ab;
             }
             cur = cur->next;
@@ -792,15 +799,16 @@ void *buffer_get_str(struct buffer *buff, uint64_t elem)
     return ab->data + off;
 }
 
-uint64_t buffer_push_str(struct buffer *buff, const char *str) {
+uint64_t buffer_push_str(struct buffer *buff, uint64_t evid, const char *str) {
     size_t len = strlen(str) + 1;
-    size_t off = buffer_push_strn(buff, str, len);
+    size_t off = buffer_push_strn(buff, evid, str, len);
     assert(buff->cur_aux_buff);
     return (off | (buff->cur_aux_buff->idx << 32));
 }
 
-uint64_t buffer_push_strn(struct buffer *buff, const char *str, size_t len) {
+uint64_t buffer_push_strn(struct buffer *buff, uint64_t evid, const char *str, size_t len) {
     size_t off = _buffer_push_strn(buff, str, len);
     assert(buff->cur_aux_buff);
+    buff->cur_aux_buff->last_event_id = evid;
     return (off | (buff->cur_aux_buff->idx << 32));
 }

@@ -151,6 +151,7 @@ bool shm_par_queue_pop(shm_par_queue *q, void *buff) {
 }
 
 size_t shm_par_queue_drop(shm_par_queue *q, size_t k) {
+    assert(k > 0);
     if (q->elem_num < k) {
         k = q->elem_num;
     }

@@ -49,6 +49,7 @@ size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t k) {
 #ifndef NDEBUG
     size_t n =
 #endif
+    ++k; /* k is index, we must increate it by one */
     shm_par_queue_drop(&buffer->buffer, k);
     assert(n == k && "Something changed the queue in between");
     shm_stream_notify_last_processed_id(buffer->stream, last_id);

@@ -48,10 +48,11 @@ void *buffer_start_push(struct buffer *buff);
 
 void *buffer_partial_push(struct buffer *buff, void *prev_push,
                           const void *elem, size_t size);
+/* evid may be ~(0LL), but then there's no garbage collection */
 void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
-                              const char *str);
+                              uint64_t evid, const char *str);
 void *buffer_partial_push_str_n(struct buffer *buff, void *prev_push,
-                                const char *str, size_t len);
+                                uint64_t evid, const char *str, size_t len);
 bool buffer_finish_push(struct buffer *buff);
 
 struct aux_buff_ptr {
