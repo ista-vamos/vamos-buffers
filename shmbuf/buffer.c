@@ -156,6 +156,7 @@ struct buffer *initialize_shared_buffer(const char *key,
     return buff;
 }
 
+#if 0
 struct buffer *initialize_local_buffer(size_t elem_size)
 {
     printf("Initializing _local_ buffer with elem size '%lu'\n", elem_size);
@@ -184,6 +185,7 @@ void free_local_buffer(struct buffer *buff) {
     free(buff->shmbuffer);
     free(buff);
 }
+#endif
 
 struct buffer *get_shared_buffer(const char *key)
 {
