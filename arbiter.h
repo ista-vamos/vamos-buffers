@@ -58,4 +58,6 @@ bool shm_arbiter_buffer_pop(shm_arbiter_buffer *q, void *buff);
 void *stream_fetch(shm_stream *stream,
                    shm_arbiter_buffer *buffer);
 
+size_t shm_arbiter_buffer_dropped_num(shm_arbiter_buffer *buffer);
+
 #endif /* SHAMON_ARBITER_H_ */

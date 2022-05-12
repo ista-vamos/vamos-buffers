@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stddef.h>
 
 #include "utils.h"
 #include "stream.h"
@@ -9,6 +10,7 @@ typedef struct _shm_arbiter_buffer {
     shm_stream *stream;     // the source for the buffer
     shm_par_queue buffer;   // the buffer itself
     size_t dropped_num;     // the number of dropped events
+    size_t total_dropped_num;     // the number of dropped events
     shm_eventid dropped_id; // the id of the next 'dropped' event
     bool active;            // true while the events are being queued
 } shm_arbiter_buffer;
@@ -41,6 +43,8 @@ size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *buffer) {
     return shm_par_queue_capacity(&buffer->buffer);
 }
 
+/* drop an event and notify buffer the buffer that it may free up
+ * the payload of this and older events */
 size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t k) {
     shm_event *ev = shm_par_queue_peek_atmost_at(&buffer->buffer, &k);
     if (!ev)
@@ -49,7 +53,7 @@ size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t k) {
 #ifndef NDEBUG
     size_t n =
 #endif
-    ++k; /* k is index, we must increate it by one */
+    ++k; /* k is index, we must increase it by one */
     shm_par_queue_drop(&buffer->buffer, k);
     assert(n == k && "Something changed the queue in between");
     shm_stream_notify_last_processed_id(buffer->stream, last_id);
@@ -70,6 +74,11 @@ shm_stream *shm_arbiter_buffer_stream(shm_arbiter_buffer *buffer)
     return buffer->stream;
 }
 
+size_t shm_arbiter_buffer_dropped_num(shm_arbiter_buffer *buffer)
+{
+    return buffer->total_dropped_num;
+}
+
 void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
                              shm_stream *stream,
                              size_t out_event_size,
@@ -86,6 +95,7 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
     buffer->stream = stream;
     buffer->active = false;
     buffer->dropped_num = 0;
+    buffer->total_dropped_num = 0;
 }
 
 shm_arbiter_buffer *shm_arbiter_buffer_create(shm_stream *stream,
@@ -127,6 +137,7 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem, size_
             assert(ret && "BUG: queue has not enough free space");
             ret = shm_par_queue_push(&buffer->buffer, elem, size);
             assert(ret && "BUG: queue has not enough free space");
+            buffer->total_dropped_num = buffer->dropped_num;
             buffer->dropped_num = 0;
         }
     } else {
@@ -160,6 +171,7 @@ void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
             assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
             assert(shm_par_queue_free_num(queue) > 1);
             shm_par_queue_push(queue, &dropped, sizeof(dropped));
+            buffer->total_dropped_num = buffer->dropped_num;
             assert(shm_par_queue_free_num(queue) >= 1);
             buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k);
         }
@@ -231,6 +243,7 @@ void *stream_fetch(shm_stream *stream,
             shm_stream_get_dropped_event(stream, &dropped_ev,
                                          buffer->dropped_id, buffer->dropped_num);
             shm_par_queue_push(&buffer->buffer, &dropped_ev, sizeof(dropped_ev));
+            buffer->total_dropped_num = buffer->dropped_num;
             buffer->dropped_num = 0;
             assert(shm_arbiter_buffer_free_space(buffer) > 0);
             return ev;
