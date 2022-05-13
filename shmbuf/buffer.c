@@ -610,7 +610,7 @@ size_t aux_buffer_free_space(struct aux_buffer *buff) {
 static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
     size_t idx = buff->aux_buf_idx++;
     const size_t pg_size = sysconf(_SC_PAGESIZE);
-    size = (((size + sizeof(struct aux_buffer)) / pg_size)+9)*pg_size;
+    size = (((size + sizeof(struct aux_buffer)) / pg_size)+2)*pg_size;
 
     /* create the key */
     char key[20];
