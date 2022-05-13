@@ -227,21 +227,33 @@ void *stream_fetch(shm_stream *stream,
     size_t num = 1;
     size_t sleep_time = SLEEP_TIME_NS_INIT;
     void *ev;
-    do {
+    while (1) {
         /* wait for the event */
         ev = shm_stream_read_events(stream, &num);
         if (ev) {
             sleep_time = SLEEP_TIME_NS_INIT;
             break;
         }
-        if (sleep_time < SLEEP_TIME_NS_THRES)
+
+        /* no event read, sleep a while */
+        if (sleep_time < SLEEP_TIME_NS_THRES) {
             sleep_time *= 10;
+        } else {
+            /* checking for the readiness is not cheap,
+             * so do it only after we haven't read any
+             * event for some time */
+            if (!shm_stream_is_ready(stream))
+                return NULL;
+        }
         sleep_ns(sleep_time);
-    } while (shm_stream_is_ready(stream));
+    }
+
+    assert(ev && "No event read");
+
+    /*
     if (!ev)
         return NULL;
 
-    /*
     printf("FETCH: read event { kind = %lu, id = %lu}\n",
            ((shm_event*)ev)->kind,
            ((shm_event*)ev)->id);*/
