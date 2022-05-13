@@ -61,5 +61,8 @@ struct aux_buff_ptr {
 } __attribute__((packed,aligned(64)));
 
 void buffer_set_last_processed_id(struct buffer *buff, uint64_t id);
+void buffer_notify_dropped(struct buffer *buffer,
+                           uint64_t begin_id,
+                           uint64_t end_id);
 
 #endif /* SHAMON_SHM_BUFFER_H */

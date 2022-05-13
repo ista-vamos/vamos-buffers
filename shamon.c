@@ -104,7 +104,7 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
             assert(shmn->_ev);
             uint64_t c = shm_arbiter_buffer_capacity(buffer);
             /* is the buffer full from 75 or more percent? */
-            if (qsize > 0.75*c) {
+            if (false && qsize > 0.75*c) {
                 /* drop half of the buffer */
                 shm_eventid id = shm_event_id(inevent);
                 if (!shm_arbiter_buffer_drop(buffer, c/4)) {

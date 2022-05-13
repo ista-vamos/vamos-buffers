@@ -46,7 +46,9 @@ bool shm_stream_is_ready(shm_stream *s) {
 }
 
 void *shm_stream_read_events(shm_stream *s, size_t *num) {
-    assert(shm_stream_is_ready(s));
+    /* the buffer may be already destroyed on the client's side,
+     * but still may have some events to read */
+    /* assert(shm_stream_is_ready(s)); */
     return buffer_read_pointer(s->incoming_events, num);
 }
 
@@ -64,4 +66,10 @@ size_t shm_stream_event_size(shm_stream *s) {
 
 void shm_stream_notify_last_processed_id(shm_stream *stream, shm_eventid id) {
     buffer_set_last_processed_id(stream->incoming_events, id);
+}
+
+void shm_stream_notify_dropped(shm_stream *stream,
+                               uint64_t begin_id,
+                               uint64_t end_id) {
+    buffer_notify_dropped(stream->incoming_events, begin_id, end_id);
 }

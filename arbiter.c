@@ -1,10 +1,13 @@
 #include <assert.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #include "utils.h"
 #include "stream.h"
 #include "arbiter.h"
 #include "parallel_queue.h"
+
+#define DROP_SPACE_THRESHOLD 1
 
 typedef struct _shm_arbiter_buffer {
     shm_stream *stream;     // the source for the buffer
@@ -141,6 +144,9 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem, size_
             assert(ret && "BUG: queue has not enough free space");
             buffer->total_dropped_num += buffer->dropped_num;
             buffer->dropped_num = 0;
+            /* the end id may not be precise, but we need just the upper bound */
+            shm_arbiter_buffer_notify_dropped(buffer, buffer->drop_begin_id,
+                                              shm_event_id((shm_event*)elem) - 1);
         }
     } else {
         if (!shm_par_queue_push(&buffer->buffer, elem, size)) {
@@ -174,8 +180,13 @@ void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
             assert(shm_par_queue_free_num(queue) > 1);
             shm_par_queue_push(queue, &dropped, sizeof(dropped));
             buffer->total_dropped_num += buffer->dropped_num;
+
+            /* the end id may not be precise, but we need just the upper bound */
+            shm_arbiter_buffer_notify_dropped(buffer, buffer->drop_begin_id,
+                                              shm_event_id((shm_event*)elems) - 1);
+
             assert(shm_par_queue_free_num(queue) >= 1);
-            buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k);
+            buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k); 
         }
     } else {
         buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k);
@@ -257,18 +268,35 @@ void *stream_fetch(shm_stream *stream,
     printf("FETCH: read event { kind = %lu, id = %lu}\n",
            ((shm_event*)ev)->kind,
            ((shm_event*)ev)->id);*/
+    /*
+    fprintf(stderr, "%d: event = {%lu, %lu}\n", __LINE__,
+            shm_event_kind(ev), shm_event_id(ev));
+            */
     if (buffer->dropped_num > 0) {
-        if (shm_arbiter_buffer_free_space(buffer) > 1) {
+        assert(DROP_SPACE_THRESHOLD < shm_arbiter_buffer_capacity(buffer));
+        if (shm_arbiter_buffer_free_space(buffer) > DROP_SPACE_THRESHOLD) {
             shm_stream_get_dropped_event(stream, &dropped_ev,
                                          buffer->drop_begin_id, buffer->dropped_num);
             shm_par_queue_push(&buffer->buffer, &dropped_ev, sizeof(dropped_ev));
-            buffer->total_dropped_num = buffer->dropped_num;
+            buffer->total_dropped_num += buffer->dropped_num;
             buffer->dropped_num = 0;
+            /* the end id may not be precise, but we need just the upper bound */
+            shm_arbiter_buffer_notify_dropped(buffer,
+                                              buffer->drop_begin_id,
+                                              shm_event_id(ev) - 1);
             assert(shm_arbiter_buffer_free_space(buffer) > 0);
             return ev;
         }
 
         ++buffer->dropped_num;
+        /* notify about dropped events continuously, because it may take
+         * long time to generate the dropped event */
+        /* FIXME: % is slow... and make it configurable */
+        if (buffer->dropped_num % 10000 == 0) {
+            shm_arbiter_buffer_notify_dropped(buffer,
+                                              buffer->drop_begin_id,
+                                              shm_event_id(ev) - 1);
+        }
         /* consume the dropped event */
         shm_stream_consume(stream, 1);
         return NULL;
@@ -284,4 +312,10 @@ void *stream_fetch(shm_stream *stream,
     }
 
     return ev;
+}
+
+void shm_arbiter_buffer_notify_dropped(shm_arbiter_buffer *buffer,
+                                       uint64_t begin_id,
+                                       uint64_t end_id) {
+    shm_stream_notify_dropped(buffer->stream, begin_id, end_id);
 }

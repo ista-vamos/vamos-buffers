@@ -22,6 +22,14 @@
 #define MEM_SIZE (1024*1024)
 
 #define MAX_AUX_BUF_KEY_SIZE 16
+#define DROPPED_RANGES_NUM 5
+
+struct dropped_range {
+    /* the range of autodropped events
+    (for garbage collection) */
+    shm_eventid begin;
+    shm_eventid end;
+};
 
 struct buffer_info {
     size_t capacity;
@@ -30,6 +38,9 @@ struct buffer_info {
     size_t head;
     size_t tail;
     shm_eventid last_processed_id;
+    struct dropped_range dropped_ranges[DROPPED_RANGES_NUM];
+    size_t dropped_ranges_next;
+    _Atomic bool dropped_ranges_lock; /* spin lock */
     /* the monitored program exited/destroyed the buffer */
     _Bool destroyed;
     _Bool monitor_attached;
@@ -50,7 +61,6 @@ struct aux_buffer {
     bool reusable;
     unsigned char data[];
 };
-
 
 struct buffer {
     struct shmbuffer *shmbuffer;
@@ -73,6 +83,19 @@ static void aux_buffer_release(struct aux_buffer *buffer);
 static size_t _buffer_push_strn(struct buffer *buff, const void *data, size_t size);
 static uint64_t buffer_push_str(struct buffer *buff, uint64_t evid, const char *str);
 static uint64_t buffer_push_strn(struct buffer *buff, uint64_t evid, const char *str, size_t len);
+
+static inline void drop_ranges_lock(struct buffer *buff) {
+    _Atomic bool *l = &buff->shmbuffer->info.dropped_ranges_lock;
+    bool unlocked;
+    do {
+        unlocked = false;
+    } while (atomic_compare_exchange_weak(l, &unlocked, true));
+}
+
+static inline void drop_ranges_unlock(struct buffer *buff) {
+    /* FIXME: use explicit memory ordering, seq_cnt is not needed here */
+    buff->shmbuffer->info.dropped_ranges_lock = false;
+}
 
 #define BUFF_START(b) ((unsigned char*)b->data)
 #define BUFF_END(b) ((unsigned char*)b->data + MEM_SIZE - 1)
@@ -147,6 +170,8 @@ struct buffer *initialize_shared_buffer(const char *key,
            buffer_allocation_size(), buff->shmbuffer->info.capacity);
     buff->shmbuffer->info.elem_size = elem_size;
     buff->shmbuffer->info.last_processed_id = 0;
+    buff->shmbuffer->info.dropped_ranges_next = 0;
+    buff->shmbuffer->info.dropped_ranges_lock = false;
 
     buff->key = strdup(key);
     VEC_INIT(buff->aux_buffers);
@@ -660,6 +685,25 @@ static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
     return ab;
 }
 
+static inline bool ab_was_dropped(struct aux_buffer *ab, struct buffer *buff) {
+    struct buffer_info *info = &buff->shmbuffer->info;
+    drop_ranges_lock(buff);
+    for (size_t i = 0; i < DROPPED_RANGES_NUM; ++i) {
+        struct dropped_range *r = &info->dropped_ranges[i];
+        if (r->end == 0)
+            continue;
+        if (r->begin <= ab->first_event_id &&
+                r->end >= ab->last_event_id) {
+            fprintf(stderr, "AB %lu was dropped\n", ab->idx);
+            drop_ranges_unlock(buff);
+            return true;
+        }
+    }
+    drop_ranges_unlock(buff);
+
+    return false;
+}
+
 static struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size) {
     if (!buff->cur_aux_buff || aux_buffer_free_space(buff->cur_aux_buff) < size) {
         /* try to find a free buffer */
@@ -667,9 +711,11 @@ static struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size
         shm_list_elem *cur = shm_list_first(&buff->aux_buffers_age);
         while (cur) {
             ab = (struct aux_buffer *) cur->data;
-            if (ab->last_event_id <= buff->shmbuffer->info.last_processed_id) {
+            if (ab->last_event_id <= buff->shmbuffer->info.last_processed_id || ab_was_dropped(ab, buff)) {
                 ab->reusable = true;
                 ab->head = 0;
+                ab->first_event_id =  0;
+                ab->last_event_id = ~(0LL);
             }
             if (ab->reusable && ab->size >= size) {
                 assert(shm_list_last(&buff->aux_buffers_age)->data == buff->cur_aux_buff);
@@ -698,6 +744,7 @@ static struct aux_buffer *reader_get_aux_buffer(struct buffer *buff, size_t idx)
         return buff->cur_aux_buff;
 
     /* try to find one with the idx */
+    /* FIXME: make it constant access */
     for (size_t i = 0; i < VEC_SIZE(buff->aux_buffers); ++i) {
          struct aux_buffer *ab = buff->aux_buffers[i];
          if (ab->idx == idx) {
@@ -816,4 +863,33 @@ uint64_t buffer_push_strn(struct buffer *buff, uint64_t evid, const char *str, s
         ab->first_event_id = evid;
     ab->last_event_id = evid;
     return (off | (buff->cur_aux_buff->idx << 32));
+}
+
+void buffer_notify_dropped(struct buffer *buff,
+                           uint64_t begin_id,
+                           uint64_t end_id) {
+    fprintf(stderr, "BUFFER NOTIFY DROPPED: %lu %lu\n", begin_id, end_id);
+    struct buffer_info *info = &buff->shmbuffer->info;
+    size_t idx = info->dropped_ranges_next;
+    struct dropped_range *r = &info->dropped_ranges[idx];
+    if (r->begin == begin_id || r->end == r->begin - 1) {
+        drop_ranges_lock(buff);
+        r->end = end_id;
+        drop_ranges_unlock(buff);
+        fprintf(stderr, "  extended: %lu %lu\n", r->begin, r->end);
+        return;
+    }
+
+    if (idx + 1 == DROPPED_RANGES_NUM) {
+        r = &info->dropped_ranges[0];
+        info->dropped_ranges_next = 0;
+    } else {
+        ++r;
+        ++info->dropped_ranges_next;
+    }
+
+    drop_ranges_lock(buff);
+    r->begin = begin_id;
+    r->end = end_id;
+    drop_ranges_unlock(buff);
 }

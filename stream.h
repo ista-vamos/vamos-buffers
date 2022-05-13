@@ -53,4 +53,8 @@ void shm_stream_get_dropped_event(shm_stream *stream,
                                   uint64_t n);
 
 bool shm_stream_is_ready(shm_stream *);
+
+void shm_stream_notify_dropped(shm_stream *stream,
+                               uint64_t begin_id,
+                               uint64_t end_id);
 #endif // SHAMON_STREAMS_H
