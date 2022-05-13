@@ -8,6 +8,7 @@
 typedef enum __MM_STREAMCONST_ENUM { __MM_STREAMCONST_ENUM_Left, __MM_STREAMCONST_ENUM_Right } _MM_STREAMCONST_ENUM;
 typedef enum __MM_EVENTCONST_ENUM { __MM_EVENTCONST_NOTHING, __MM_EVENTCONST_ENUM_hole, __MM_EVENTCONST_ENUM_Prime, __MM_EVENTCONST_ENUM_LPrime, __MM_EVENTCONST_ENUM_RPrime, __MM_EVENTCONST_ENUM_LSkip, __MM_EVENTCONST_ENUM_RSkip } _MM_EVENTCONST_ENUM;
 typedef struct source_control _mm_source_control;
+void _mm_print_streams( );
 typedef struct __MMEV_Prime _MMEV_Prime;
 typedef struct __MMEV_LPrime _MMEV_LPrime;
 typedef struct __MMEV_RPrime _MMEV_RPrime;
@@ -24,6 +25,7 @@ typedef struct __mm_strm_out_Left _mm_strm_out_Left;
 typedef struct __mm_strm_hole_Left _mm_strm_hole_Left;
 _mm_strm_out_Left * __mma_strm_istrt_Left = 0 ;
 _mm_strm_out_Left * __mma_strm_bstrt_Left = 0 ;
+void _mm_print_strm_Left( );
 size_t __mma_strm_ilen_Right = 0 ;
 size_t __mma_strm_blen_Right = 0 ;
 size_t __mma_strm_tlen_Right = 0 ;
@@ -35,6 +37,7 @@ typedef struct __mm_strm_out_Right _mm_strm_out_Right;
 typedef struct __mm_strm_hole_Right _mm_strm_hole_Right;
 _mm_strm_out_Right * __mma_strm_istrt_Right = 0 ;
 _mm_strm_out_Right * __mma_strm_bstrt_Right = 0 ;
+void _mm_print_strm_Right( );
 struct __MMEV_Prime {
   int n ;
   int p ;
@@ -67,6 +70,32 @@ struct __mm_strm_out_Left {
     _MMEV_LPrime LPrime ;
   } cases;
 };
+void _mm_print_event_Left(_mm_strm_out_Left * ev) {
+  switch (((ev->head).kind)) {
+    case __MM_EVENTCONST_ENUM_LPrime:
+    {
+      printf ( "LPrime(" ) ;
+      printf ( "%i",(((ev->cases).LPrime).n) ) ;
+      printf ( ")\n" ) ;
+      break;
+    }
+  }
+}
+void _mm_print_strm_Left( ) {
+  _mm_strm_out_Left * cur = __mma_strm_istrt_Left ;
+  printf ( "\nSTREAM Left:\n" ) ;
+  while((cur < (__mma_strm_istrt_Left + __mma_strm_ilen_Left)))
+  {
+    _mm_print_event_Left ( cur ) ;
+    cur = (cur + 1) ;
+  }
+  cur = __mma_strm_bstrt_Left ;
+  while((cur < (__mma_strm_bstrt_Left + __mma_strm_blen_Left)))
+  {
+    _mm_print_event_Left ( cur ) ;
+    cur = (cur + 1) ;
+  }
+}
 int _mm_strm_fun_Left(void * arg) {
   shm_arbiter_buffer * buffer = __mma_strm_buf_Left ;
   shm_stream * stream = shm_arbiter_buffer_stream ( buffer ) ;
@@ -124,6 +153,32 @@ struct __mm_strm_out_Right {
     _MMEV_RPrime RPrime ;
   } cases;
 };
+void _mm_print_event_Right(_mm_strm_out_Right * ev) {
+  switch (((ev->head).kind)) {
+    case __MM_EVENTCONST_ENUM_RPrime:
+    {
+      printf ( "RPrime(" ) ;
+      printf ( "%i",(((ev->cases).RPrime).n) ) ;
+      printf ( ")\n" ) ;
+      break;
+    }
+  }
+}
+void _mm_print_strm_Right( ) {
+  _mm_strm_out_Right * cur = __mma_strm_istrt_Right ;
+  printf ( "\nSTREAM Right:\n" ) ;
+  while((cur < (__mma_strm_istrt_Right + __mma_strm_ilen_Right)))
+  {
+    _mm_print_event_Right ( cur ) ;
+    cur = (cur + 1) ;
+  }
+  cur = __mma_strm_bstrt_Right ;
+  while((cur < (__mma_strm_bstrt_Right + __mma_strm_blen_Right)))
+  {
+    _mm_print_event_Right ( cur ) ;
+    cur = (cur + 1) ;
+  }
+}
 int _mm_strm_fun_Right(void * arg) {
   shm_arbiter_buffer * buffer = __mma_strm_buf_Right ;
   shm_stream * stream = shm_arbiter_buffer_stream ( buffer ) ;
@@ -176,6 +231,11 @@ struct __MMARBTP {
 struct __MMMONTP {
   int * pbuf ;
 };
+void _mm_print_state(_MMARBTP * arbiter,_MMMONTP * monitor,char * arbstate,char * monstate) {
+  printf ( "Arbiter (%s):",arbstate ) ;
+  printf ( "Monitor (%s):",monstate ) ;
+  _mm_print_streams ( ) ;
+}
 int arbiterMonitor( ) {
   _MMARBTP _mm_arbiter ;
   _MMMONTP _mm_monitor ;
@@ -188,6 +248,7 @@ int arbiterMonitor( ) {
     goto __mm_label_arbmon_L_ArBmOn_EQ;
     __mm_label_arbmon_L_ArBmOn_ERROR:
     printf ( "ERROR: Monitor moved to error state\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","ERROR" ) ;
     exit ( 1 ) ;
     break;
     __mm_label_arbmon_L_ArBmOn_EQ:
@@ -341,6 +402,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","EQ" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -474,6 +536,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","EQ" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -577,6 +640,7 @@ int arbiterMonitor( ) {
       
     }
     printf ( "ERROR: Monitor could not match rule in state L/EQ\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","EQ" ) ;
     break;
     __mm_label_arbmon_L_ArBmOn_Left1:
     {
@@ -730,6 +794,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left1" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -749,6 +814,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left1" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -780,6 +846,7 @@ int arbiterMonitor( ) {
                         if((! 0))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left1" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -835,6 +902,7 @@ int arbiterMonitor( ) {
                   if((! 1))
                   {
                     printf ( "Error detected. Aborting...\n" ) ;
+                    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
                     exit ( 1 ) ;
                   }
                   else
@@ -872,6 +940,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left1" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -914,6 +983,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left1" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -974,6 +1044,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left1" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -1077,6 +1148,7 @@ int arbiterMonitor( ) {
       
     }
     printf ( "ERROR: Monitor could not match rule in state L/Left1\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left1" ) ;
     break;
     __mm_label_arbmon_L_ArBmOn_Left2:
     {
@@ -1231,6 +1303,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left2" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -1250,6 +1323,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left2" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -1281,6 +1355,7 @@ int arbiterMonitor( ) {
                         if((! 0))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left2" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -1336,6 +1411,7 @@ int arbiterMonitor( ) {
                   if((! 1))
                   {
                     printf ( "Error detected. Aborting...\n" ) ;
+                    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
                     exit ( 1 ) ;
                   }
                   else
@@ -1353,6 +1429,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -1392,6 +1469,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left2" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -1409,6 +1487,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left2" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -1453,6 +1532,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left2" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -1470,6 +1550,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left2" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -1532,6 +1613,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left2" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -1635,6 +1717,7 @@ int arbiterMonitor( ) {
       
     }
     printf ( "ERROR: Monitor could not match rule in state L/Left2\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left2" ) ;
     break;
     __mm_label_arbmon_L_ArBmOn_Left3:
     {
@@ -1790,6 +1873,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left3" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -1809,6 +1893,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left3" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -1840,6 +1925,7 @@ int arbiterMonitor( ) {
                         if((! 0))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left3" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -1895,6 +1981,7 @@ int arbiterMonitor( ) {
                   if((! 1))
                   {
                     printf ( "Error detected. Aborting...\n" ) ;
+                    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
                     exit ( 1 ) ;
                   }
                   else
@@ -1912,6 +1999,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -1930,6 +2018,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -1971,6 +2060,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left3" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -1988,6 +2078,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left3" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -2006,6 +2097,7 @@ int arbiterMonitor( ) {
                         if((! 1))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left3" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -2052,6 +2144,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left3" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -2069,6 +2162,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left3" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -2087,6 +2181,7 @@ int arbiterMonitor( ) {
                         if((! 1))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left3" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -2234,6 +2329,7 @@ int arbiterMonitor( ) {
       
     }
     printf ( "ERROR: Monitor could not match rule in state L/Left3\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left3" ) ;
     break;
     __mm_label_arbmon_L_ArBmOn_Right1:
     {
@@ -2386,6 +2482,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right1" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -2520,6 +2617,7 @@ int arbiterMonitor( ) {
                         if((! 1))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right1" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -2539,6 +2637,7 @@ int arbiterMonitor( ) {
                             if((! 0))
                             {
                               printf ( "Error detected. Aborting...\n" ) ;
+                              _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right1" ) ;
                               exit ( 1 ) ;
                             }
                             else
@@ -2570,6 +2669,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right1" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -2680,6 +2780,7 @@ int arbiterMonitor( ) {
       
     }
     printf ( "ERROR: Monitor could not match rule in state L/Right1\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right1" ) ;
     break;
     __mm_label_arbmon_L_ArBmOn_Right2:
     {
@@ -2832,6 +2933,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right2" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -2967,6 +3069,7 @@ int arbiterMonitor( ) {
                         if((! 1))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right2" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -2986,6 +3089,7 @@ int arbiterMonitor( ) {
                             if((! 0))
                             {
                               printf ( "Error detected. Aborting...\n" ) ;
+                              _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right2" ) ;
                               exit ( 1 ) ;
                             }
                             else
@@ -3017,6 +3121,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right2" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -3127,6 +3232,7 @@ int arbiterMonitor( ) {
       
     }
     printf ( "ERROR: Monitor could not match rule in state L/Right2\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right2" ) ;
     break;
     __mm_label_arbmon_L_ArBmOn_Right3:
     {
@@ -3395,6 +3501,7 @@ int arbiterMonitor( ) {
                         if((! 1))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right3" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -3414,6 +3521,7 @@ int arbiterMonitor( ) {
                             if((! 0))
                             {
                               printf ( "Error detected. Aborting...\n" ) ;
+                              _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right3" ) ;
                               exit ( 1 ) ;
                             }
                             else
@@ -3445,6 +3553,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right3" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -3555,9 +3664,11 @@ int arbiterMonitor( ) {
       
     }
     printf ( "ERROR: Monitor could not match rule in state L/Right3\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right3" ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_ERROR:
     printf ( "ERROR: Monitor moved to error state\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","ERROR" ) ;
     exit ( 1 ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_EQ:
@@ -3711,6 +3822,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","EQ" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -3841,6 +3953,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","EQ" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -3881,6 +3994,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","EQ" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -3915,6 +4029,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","EQ" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -3990,6 +4105,7 @@ int arbiterMonitor( ) {
       
     }
     printf ( "ERROR: Monitor could not match rule in state R/EQ\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","EQ" ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_Left1:
     {
@@ -4142,6 +4258,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -4273,6 +4390,7 @@ int arbiterMonitor( ) {
                         if((! 1))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -4292,6 +4410,7 @@ int arbiterMonitor( ) {
                             if((! 0))
                             {
                               printf ( "Error detected. Aborting...\n" ) ;
+                              _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
                               exit ( 1 ) ;
                             }
                             else
@@ -4323,6 +4442,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -4371,6 +4491,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -4390,6 +4511,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -4421,6 +4543,7 @@ int arbiterMonitor( ) {
                         if((! 0))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -4463,6 +4586,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -4482,6 +4606,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -4513,6 +4638,7 @@ int arbiterMonitor( ) {
                         if((! 0))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -4595,6 +4721,7 @@ int arbiterMonitor( ) {
       
     }
     printf ( "ERROR: Monitor could not match rule in state R/Left1\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_Left2:
     {
@@ -4747,6 +4874,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -4879,6 +5007,7 @@ int arbiterMonitor( ) {
                         if((! 1))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -4898,6 +5027,7 @@ int arbiterMonitor( ) {
                             if((! 0))
                             {
                               printf ( "Error detected. Aborting...\n" ) ;
+                              _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
                               exit ( 1 ) ;
                             }
                             else
@@ -4929,6 +5059,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -4978,6 +5109,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -4997,6 +5129,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -5028,6 +5161,7 @@ int arbiterMonitor( ) {
                         if((! 0))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -5071,6 +5205,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -5090,6 +5225,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -5121,6 +5257,7 @@ int arbiterMonitor( ) {
                         if((! 0))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -5203,6 +5340,7 @@ int arbiterMonitor( ) {
       
     }
     printf ( "ERROR: Monitor could not match rule in state R/Left2\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_Left3:
     {
@@ -5468,6 +5606,7 @@ int arbiterMonitor( ) {
                         if((! 1))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -5487,6 +5626,7 @@ int arbiterMonitor( ) {
                             if((! 0))
                             {
                               printf ( "Error detected. Aborting...\n" ) ;
+                              _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
                               exit ( 1 ) ;
                             }
                             else
@@ -5518,6 +5658,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -5568,6 +5709,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -5587,6 +5729,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -5618,6 +5761,7 @@ int arbiterMonitor( ) {
                         if((! 0))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -5662,6 +5806,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -5681,6 +5826,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -5712,6 +5858,7 @@ int arbiterMonitor( ) {
                         if((! 0))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -5794,6 +5941,7 @@ int arbiterMonitor( ) {
       
     }
     printf ( "ERROR: Monitor could not match rule in state R/Left3\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_Right1:
     {
@@ -5947,6 +6095,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right1" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -5966,6 +6115,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right1" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -5997,6 +6147,7 @@ int arbiterMonitor( ) {
                         if((! 0))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right1" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -6068,6 +6219,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right1" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -6110,6 +6262,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right1" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -6170,6 +6323,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right1" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -6210,6 +6364,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right1" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -6244,6 +6399,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right1" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -6319,6 +6475,7 @@ int arbiterMonitor( ) {
       
     }
     printf ( "ERROR: Monitor could not match rule in state R/Right1\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right1" ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_Right2:
     {
@@ -6473,6 +6630,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right2" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -6492,6 +6650,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right2" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -6523,6 +6682,7 @@ int arbiterMonitor( ) {
                         if((! 0))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right2" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -6594,6 +6754,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right2" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -6611,6 +6772,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right2" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -6655,6 +6817,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right2" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -6672,6 +6835,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right2" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -6734,6 +6898,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right2" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -6774,6 +6939,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right2" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -6808,6 +6974,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right2" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -6883,6 +7050,7 @@ int arbiterMonitor( ) {
       
     }
     printf ( "ERROR: Monitor could not match rule in state R/Right2\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right2" ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_Right3:
     {
@@ -7038,6 +7206,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right3" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -7057,6 +7226,7 @@ int arbiterMonitor( ) {
                           if((! 0))
                           {
                             printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right3" ) ;
                             exit ( 1 ) ;
                           }
                           else
@@ -7088,6 +7258,7 @@ int arbiterMonitor( ) {
                         if((! 0))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right3" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -7159,6 +7330,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right3" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -7176,6 +7348,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right3" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -7194,6 +7367,7 @@ int arbiterMonitor( ) {
                         if((! 1))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right3" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -7240,6 +7414,7 @@ int arbiterMonitor( ) {
                     if((! 1))
                     {
                       printf ( "Error detected. Aborting...\n" ) ;
+                      _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right3" ) ;
                       exit ( 1 ) ;
                     }
                     else
@@ -7257,6 +7432,7 @@ int arbiterMonitor( ) {
                       if((! 1))
                       {
                         printf ( "Error detected. Aborting...\n" ) ;
+                        _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right3" ) ;
                         exit ( 1 ) ;
                       }
                       else
@@ -7275,6 +7451,7 @@ int arbiterMonitor( ) {
                         if((! 1))
                         {
                           printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right3" ) ;
                           exit ( 1 ) ;
                         }
                         else
@@ -7428,6 +7605,7 @@ int arbiterMonitor( ) {
       
     }
     printf ( "ERROR: Monitor could not match rule in state R/Right3\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right3" ) ;
     break;
   }
 }
@@ -7445,4 +7623,8 @@ int main(int argc,char * * argv) {
   shm_arbiter_buffer_set_active ( __mma_strm_buf_Right,1 ) ;
   arbiterMonitor ( ) ;
   return 0 ;
+}
+void _mm_print_streams( ) {
+  _mm_print_strm_Left ( ) ;
+  _mm_print_strm_Right ( ) ;
 }
