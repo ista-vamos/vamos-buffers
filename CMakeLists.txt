@@ -14,9 +14,9 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wpedantic -Werror")
 add_compile_options(-Wall -Wextra -pedantic -Werror)
-if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif()
+#if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+#        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+#endif()
 
 if (DYNAMORIO_SOURCES)
         find_package(DynamoRIO)
