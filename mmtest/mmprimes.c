@@ -232,8 +232,11 @@ struct __MMMONTP {
   int * pbuf ;
 };
 void _mm_print_state(_MMARBTP * arbiter,_MMMONTP * monitor,char * arbstate,char * monstate) {
-  printf ( "Arbiter (%s):",arbstate ) ;
-  printf ( "Monitor (%s):",monstate ) ;
+  printf ( "Arbiter (%s):\n",arbstate ) ;
+  printf ( "pre: %i\n",(arbiter->pre) ) ;
+  printf ( "seen: %i\n",(arbiter->seen) ) ;
+  printf ( "post: %i\n",(arbiter->post) ) ;
+  printf ( "Monitor (%s):\n",monstate ) ;
   _mm_print_streams ( ) ;
 }
 int arbiterMonitor( ) {
@@ -638,6 +641,8 @@ int arbiterMonitor( ) {
       {
       }
       
+      printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
+      goto __mm_label_arbmon_L_ArBmOn_EQ;
     }
     printf ( "ERROR: Monitor could not match rule in state L/EQ\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","EQ" ) ;
@@ -1146,6 +1151,8 @@ int arbiterMonitor( ) {
       {
       }
       
+      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
+      goto __mm_label_arbmon_L_ArBmOn_Left1;
     }
     printf ( "ERROR: Monitor could not match rule in state L/Left1\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left1" ) ;
@@ -1715,6 +1722,8 @@ int arbiterMonitor( ) {
       {
       }
       
+      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
+      goto __mm_label_arbmon_L_ArBmOn_Left2;
     }
     printf ( "ERROR: Monitor could not match rule in state L/Left2\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left2" ) ;
@@ -2327,6 +2336,8 @@ int arbiterMonitor( ) {
       {
       }
       
+      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left3\n" ) ;
+      goto __mm_label_arbmon_L_ArBmOn_Left3;
     }
     printf ( "ERROR: Monitor could not match rule in state L/Left3\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left3" ) ;
@@ -2778,6 +2789,8 @@ int arbiterMonitor( ) {
       {
       }
       
+      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right1\n" ) ;
+      goto __mm_label_arbmon_L_ArBmOn_Right1;
     }
     printf ( "ERROR: Monitor could not match rule in state L/Right1\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right1" ) ;
@@ -3230,6 +3243,8 @@ int arbiterMonitor( ) {
       {
       }
       
+      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right2\n" ) ;
+      goto __mm_label_arbmon_L_ArBmOn_Right2;
     }
     printf ( "ERROR: Monitor could not match rule in state L/Right2\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right2" ) ;
@@ -3662,6 +3677,8 @@ int arbiterMonitor( ) {
       {
       }
       
+      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right3\n" ) ;
+      goto __mm_label_arbmon_L_ArBmOn_Right3;
     }
     printf ( "ERROR: Monitor could not match rule in state L/Right3\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right3" ) ;
@@ -4103,6 +4120,8 @@ int arbiterMonitor( ) {
       {
       }
       
+      printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
+      goto __mm_label_arbmon_R_ArBmOn_EQ;
     }
     printf ( "ERROR: Monitor could not match rule in state R/EQ\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","EQ" ) ;
@@ -4719,6 +4738,8 @@ int arbiterMonitor( ) {
       {
       }
       
+      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
+      goto __mm_label_arbmon_R_ArBmOn_Left1;
     }
     printf ( "ERROR: Monitor could not match rule in state R/Left1\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
@@ -5338,6 +5359,8 @@ int arbiterMonitor( ) {
       {
       }
       
+      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left2\n" ) ;
+      goto __mm_label_arbmon_R_ArBmOn_Left2;
     }
     printf ( "ERROR: Monitor could not match rule in state R/Left2\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
@@ -5939,6 +5962,8 @@ int arbiterMonitor( ) {
       {
       }
       
+      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left3\n" ) ;
+      goto __mm_label_arbmon_R_ArBmOn_Left3;
     }
     printf ( "ERROR: Monitor could not match rule in state R/Left3\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
@@ -6473,6 +6498,8 @@ int arbiterMonitor( ) {
       {
       }
       
+      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right1\n" ) ;
+      goto __mm_label_arbmon_R_ArBmOn_Right1;
     }
     printf ( "ERROR: Monitor could not match rule in state R/Right1\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right1" ) ;
@@ -7048,6 +7075,8 @@ int arbiterMonitor( ) {
       {
       }
       
+      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right2\n" ) ;
+      goto __mm_label_arbmon_R_ArBmOn_Right2;
     }
     printf ( "ERROR: Monitor could not match rule in state R/Right2\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right2" ) ;
@@ -7603,6 +7632,8 @@ int arbiterMonitor( ) {
       {
       }
       
+      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right3\n" ) ;
+      goto __mm_label_arbmon_R_ArBmOn_Right3;
     }
     printf ( "ERROR: Monitor could not match rule in state R/Right3\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right3" ) ;
