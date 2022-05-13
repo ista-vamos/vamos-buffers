@@ -139,7 +139,7 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem, size_
             assert(ret && "BUG: queue has not enough free space");
             ret = shm_par_queue_push(&buffer->buffer, elem, size);
             assert(ret && "BUG: queue has not enough free space");
-            buffer->total_dropped_num = buffer->dropped_num;
+            buffer->total_dropped_num += buffer->dropped_num;
             buffer->dropped_num = 0;
         }
     } else {
@@ -173,7 +173,7 @@ void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
             assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
             assert(shm_par_queue_free_num(queue) > 1);
             shm_par_queue_push(queue, &dropped, sizeof(dropped));
-            buffer->total_dropped_num = buffer->dropped_num;
+            buffer->total_dropped_num += buffer->dropped_num;
             assert(shm_par_queue_free_num(queue) >= 1);
             buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k);
         }
