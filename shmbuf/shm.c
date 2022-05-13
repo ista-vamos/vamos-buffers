@@ -22,7 +22,7 @@ char *shm_mapname(const char *name, char *buf)
 	assert(name[0] == '/');
 	/* Construct the filename.  */
 	while (name[0] == '/')
-		++name;	
+		++name;
 	size_t namelen = strlen (name) + 1;
 	/* Validate the filename.  */
 	if (namelen == 1 || namelen >= SHM_NAME_MAXLEN ||
@@ -43,10 +43,12 @@ char *shm_mapname(const char *name, char *buf)
 
 char *shamon_map_ctrl_key(const char *buffkey, char key[SHM_NAME_MAXLEN])
 {
-    size_t tmplen = strlen(buffkey);
+    const size_t tmplen = strlen(buffkey);
     assert(tmplen < SHM_NAME_MAXLEN - 6);
-    strncpy(key, buffkey, tmplen);
-    strncpy(key + tmplen, ".ctrl", 6);
+    memcpy(key, buffkey, tmplen);
+    memcpy(key + tmplen, ".ctrl", 6);
+    /* we must have copied also the nul character */
+    assert(key[tmplen + 5] == '\0');
 
     return key;
 }

@@ -22,7 +22,7 @@ int main(void) {
     shm_list_elem *cur = l.first;
     int i = 0;
     int sum = 0;
-    shm_list_elem *x;
+    shm_list_elem *x = NULL;
     while (cur) {
             assert(cur->data == num + i);
             if (i == 2)
