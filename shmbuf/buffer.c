@@ -297,6 +297,7 @@ void destroy_shared_buffer(struct buffer *buff)
          aux_buffer_release(ab);
     }
     VEC_DESTROY(buff->aux_buffers);
+    fprintf(stderr, "Totally used %lu aux buffers\n", vecsize);
 
     if (munmap(buff->shmbuffer, buffer_allocation_size()) != 0) {
         perror("destroy_shared_buffer: munmap failure");
@@ -642,7 +643,7 @@ static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
     char key[20];
     snprintf(key, 19, "/aux.%lu", idx);
 
-    printf("Initializing aux buffer %s\n", key);
+    /* printf("Initializing aux buffer %s\n", key); */
 
     int fd = shamon_shm_open(key, O_RDWR|O_CREAT, S_IRWXU);
     if(fd < 0) {
@@ -694,7 +695,6 @@ static inline bool ab_was_dropped(struct aux_buffer *ab, struct buffer *buff) {
             continue;
         if (r->begin <= ab->first_event_id &&
                 r->end >= ab->last_event_id) {
-            fprintf(stderr, "AB %lu was dropped\n", ab->idx);
             drop_ranges_unlock(buff);
             return true;
         }
@@ -868,7 +868,6 @@ uint64_t buffer_push_strn(struct buffer *buff, uint64_t evid, const char *str, s
 void buffer_notify_dropped(struct buffer *buff,
                            uint64_t begin_id,
                            uint64_t end_id) {
-    fprintf(stderr, "BUFFER NOTIFY DROPPED: %lu %lu\n", begin_id, end_id);
     struct buffer_info *info = &buff->shmbuffer->info;
     size_t idx = info->dropped_ranges_next;
     struct dropped_range *r = &info->dropped_ranges[idx];
@@ -876,7 +875,6 @@ void buffer_notify_dropped(struct buffer *buff,
         drop_ranges_lock(buff);
         r->end = end_id;
         drop_ranges_unlock(buff);
-        fprintf(stderr, "  extended: %lu %lu\n", r->begin, r->end);
         return;
     }
 
