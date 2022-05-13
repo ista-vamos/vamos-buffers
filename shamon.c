@@ -156,10 +156,13 @@ shm_vector *shamon_get_buffers(shamon *shmn) {
 
 void shamon_destroy(shamon *shmn) {
     VEC_DESTROY(shmn->streams);
+    assert(VEC_SIZE(shmn->buffer_threads) == shm_vector_size(&shmn->buffers));
     for (size_t i = 0; i < VEC_SIZE(shmn->buffer_threads); ++i) {
+	/*
         shm_arbiter_buffer *buff
             = *((shm_arbiter_buffer **)shm_vector_at(&shmn->buffers, i));
         shm_arbiter_buffer_set_active(buff, false);
+	*/
         thrd_join(shmn->buffer_threads[i], NULL);
         //shm_arbiter_buffer_destroy(buff);
     }

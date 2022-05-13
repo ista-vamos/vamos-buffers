@@ -43,7 +43,7 @@ const char *get_next_part(const char *params, char out[256], char delim) {
     if (param_end) {
         assert(params - param_end < 256 && "Parameter too long");
         strncpy(out, params, param_end - params);
-        out[params - param_end] = 0;
+        out[param_end - params] = 0;
         return param_end + 1;
     } else {
         strcpy(out, params);

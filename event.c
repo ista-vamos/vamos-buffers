@@ -45,8 +45,8 @@ shm_kind shm_mk_event_kind(const char* name,
     events_info[idx].ev_size = event_size;
 
     assert(strlen(signature) <= sizeof(events_info[idx].signature));
-    strncpy((char *)events_info[idx].signature,
-            signature, sizeof(events_info[idx].signature));
+    memcpy((char *)events_info[idx].signature,
+            signature, strlen(signature));
     assert(events_info[idx].name);
     assert(idx != 0 || strcmp(name, "dropped") == 0);
     return idx + 1;
