@@ -417,6 +417,8 @@ void *buffer_partial_push(struct buffer *buff, void *prev_push,
     assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
     assert((unsigned char *)prev_push < BUFF_END(buff->shmbuffer));
     assert((unsigned char *)prev_push <= BUFF_END(buff->shmbuffer) - size);
+    (void) buff;
+
     memcpy(prev_push, elem, size);
     return (unsigned char *)prev_push + size;
 }

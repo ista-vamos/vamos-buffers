@@ -38,8 +38,9 @@ shm_stream *shm_create_sregex_stream(const char *key,
                     "regex-stream");
     ss->shmbuffer = shmbuffer;
 
-    *control = get_shared_control_buffer(key);
-    ss->base.control = *control;
+    void *cntrl = get_shared_control_buffer(key);
+    *control = cntrl;
+    ss->base.control = cntrl;
     size_t evs_num = ((ss->base.control->size - sizeof(struct source_control))/sizeof(struct event_record));
     size_t ev_size, max_size = 0;
 

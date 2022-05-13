@@ -1,3 +1,4 @@
+#undef NDEBUG
 #include <assert.h>
 #include <stdlib.h>
 #include "shmbuf/buffer.h"
