@@ -45,6 +45,7 @@ struct aux_buffer {
     size_t size;
     size_t head;
     size_t idx;
+    uint64_t first_event_id;
     uint64_t last_event_id;
     bool reusable;
     unsigned char data[];
@@ -646,6 +647,7 @@ static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
     ab->head = 0;
     ab->size = size - sizeof(struct aux_buffer);
     ab->idx = idx;
+    ab->first_event_id = 0;
     ab->last_event_id = ~(0LL);
     ab->reusable = false;
 
@@ -808,7 +810,10 @@ uint64_t buffer_push_str(struct buffer *buff, uint64_t evid, const char *str) {
 
 uint64_t buffer_push_strn(struct buffer *buff, uint64_t evid, const char *str, size_t len) {
     size_t off = _buffer_push_strn(buff, str, len);
-    assert(buff->cur_aux_buff);
-    buff->cur_aux_buff->last_event_id = evid;
+    struct aux_buffer *ab = buff->cur_aux_buff;
+    assert(ab);
+    if (ab->first_event_id == 0)
+        ab->first_event_id = evid;
+    ab->last_event_id = evid;
     return (off | (buff->cur_aux_buff->idx << 32));
 }
