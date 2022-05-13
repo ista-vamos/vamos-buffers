@@ -187,11 +187,12 @@ int arbiterMonitor( ) {
   {
     goto __mm_label_arbmon_L_ArBmOn_EQ;
     __mm_label_arbmon_L_ArBmOn_ERROR:
+    printf ( "ERROR: Monitor moved to error state\n" ) ;
     exit ( 1 ) ;
     break;
     __mm_label_arbmon_L_ArBmOn_EQ:
     {
-      __mma_strm_tlen_Left = shm_arbiter_buffer_peek ( __mma_strm_buf_Left,0,((void * *)(&__mma_strm_istrt_Left)),(&__mma_strm_ilen_Left),((void * *)(&__mma_strm_bstrt_Left)),(&__mma_strm_blen_Left) ) ;
+      __mma_strm_tlen_Left = shm_arbiter_buffer_peek ( __mma_strm_buf_Left,1,((void * *)(&__mma_strm_istrt_Left)),(&__mma_strm_ilen_Left),((void * *)(&__mma_strm_bstrt_Left)),(&__mma_strm_blen_Left) ) ;
       __mma_strm_flen_Left = (__mma_strm_ilen_Left + __mma_strm_blen_Left) ;
       if((__mma_strm_tlen_Left == 0))
       {
@@ -201,6 +202,7 @@ int arbiterMonitor( ) {
           {
             if(((_mm_arbiter.seen) == 0))
             {
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_EQ;
             }
             else
@@ -230,6 +232,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = (_mm_arbiter.post) ;
             (_mm_arbiter.post) = 0 ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_EQ;
           }
           else
@@ -259,6 +262,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_4) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_EQ;
             }
             else
@@ -293,6 +297,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_5) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_EQ;
           }
           else
@@ -312,6 +317,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - 1) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_EQ;
           }
           else
@@ -328,6 +334,26 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_7 ;
                 {
+                  int _mm_uv_mvar_n_25 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_25 == __mm_arbiter_yieldvar_n))
+                  {
+                    ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_25 ;
+                    if((! 1))
+                    {
+                      printf ( "Error detected. Aborting...\n" ) ;
+                      exit ( 1 ) ;
+                    }
+                    else
+                    {
+                    }
+                    
+                    printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right1\n" ) ;
+                    goto __mm_label_arbmon_L_ArBmOn_Right1;
+                  }
+                  else
+                  {
+                  }
+                  
                 }
               }
             }
@@ -447,12 +473,14 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_24 ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left1;
                     }
                     else
@@ -476,6 +504,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_EQ;
             }
             else
@@ -486,6 +515,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_EQ;
             }
             else
@@ -512,6 +542,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_EQ;
             }
             else
@@ -522,6 +553,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_EQ;
             }
             else
@@ -544,10 +576,11 @@ int arbiterMonitor( ) {
       }
       
     }
+    printf ( "ERROR: Monitor could not match rule in state L/EQ\n" ) ;
     break;
     __mm_label_arbmon_L_ArBmOn_Left1:
     {
-      __mma_strm_tlen_Left = shm_arbiter_buffer_peek ( __mma_strm_buf_Left,0,((void * *)(&__mma_strm_istrt_Left)),(&__mma_strm_ilen_Left),((void * *)(&__mma_strm_bstrt_Left)),(&__mma_strm_blen_Left) ) ;
+      __mma_strm_tlen_Left = shm_arbiter_buffer_peek ( __mma_strm_buf_Left,1,((void * *)(&__mma_strm_istrt_Left)),(&__mma_strm_ilen_Left),((void * *)(&__mma_strm_bstrt_Left)),(&__mma_strm_blen_Left) ) ;
       __mma_strm_flen_Left = (__mma_strm_ilen_Left + __mma_strm_blen_Left) ;
       if((__mma_strm_tlen_Left == 0))
       {
@@ -557,6 +590,7 @@ int arbiterMonitor( ) {
           {
             if(((_mm_arbiter.seen) == 0))
             {
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left1;
             }
             else
@@ -586,6 +620,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = (_mm_arbiter.post) ;
             (_mm_arbiter.post) = 0 ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left1;
           }
           else
@@ -615,6 +650,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_4) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left1;
             }
             else
@@ -649,6 +685,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_5) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left1;
           }
           else
@@ -668,6 +705,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - 1) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left1;
           }
           else
@@ -684,36 +722,40 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_7 ;
                 {
-                  int _mm_uv_mvar_n_26 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_26 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_27 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
                   {
-                    if((_mm_uv_mvar_n_26 == ((_mm_monitor.pbuf) [ 0 ])))
+                    if((_mm_uv_mvar_n_27 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
                       goto __mm_label_arbmon_L_ArBmOn_EQ;
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_27 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_28 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_28 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_27 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_L_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_L_ArBmOn_ERROR;
                         }
                         else
@@ -730,19 +772,21 @@ int arbiterMonitor( ) {
                   }
                   else
                   {
-                    int _mm_uv_mvar_n_27 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_28 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_28 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_27 != ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         if((! 0))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_L_ArBmOn_ERROR\n" ) ;
                         goto __mm_label_arbmon_L_ArBmOn_ERROR;
                       }
                       else
@@ -790,12 +834,14 @@ int arbiterMonitor( ) {
                 {
                   if((! 1))
                   {
+                    printf ( "Error detected. Aborting...\n" ) ;
                     exit ( 1 ) ;
                   }
                   else
                   {
                   }
                   
+                  printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
                   goto __mm_label_arbmon_R_ArBmOn_EQ;
                 }
                 else
@@ -825,12 +871,14 @@ int arbiterMonitor( ) {
                   {
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
                     goto __mm_label_arbmon_L_ArBmOn_EQ;
                   }
                   else
@@ -865,12 +913,14 @@ int arbiterMonitor( ) {
                   {
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
                     goto __mm_label_arbmon_L_ArBmOn_EQ;
                   }
                   else
@@ -917,18 +967,20 @@ int arbiterMonitor( ) {
                 {
                   int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_11 ;
                   {
-                    int _mm_uv_mvar_n_25 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_25 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_26 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_26 == __mm_arbiter_yieldvar_n))
                     {
-                      ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_25 ;
+                      ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_26 ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left2;
                     }
                     else
@@ -952,6 +1004,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left1;
             }
             else
@@ -962,6 +1015,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left1;
             }
             else
@@ -988,6 +1042,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left1;
             }
             else
@@ -998,6 +1053,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left1;
             }
             else
@@ -1020,10 +1076,11 @@ int arbiterMonitor( ) {
       }
       
     }
+    printf ( "ERROR: Monitor could not match rule in state L/Left1\n" ) ;
     break;
     __mm_label_arbmon_L_ArBmOn_Left2:
     {
-      __mma_strm_tlen_Left = shm_arbiter_buffer_peek ( __mma_strm_buf_Left,0,((void * *)(&__mma_strm_istrt_Left)),(&__mma_strm_ilen_Left),((void * *)(&__mma_strm_bstrt_Left)),(&__mma_strm_blen_Left) ) ;
+      __mma_strm_tlen_Left = shm_arbiter_buffer_peek ( __mma_strm_buf_Left,1,((void * *)(&__mma_strm_istrt_Left)),(&__mma_strm_ilen_Left),((void * *)(&__mma_strm_bstrt_Left)),(&__mma_strm_blen_Left) ) ;
       __mma_strm_flen_Left = (__mma_strm_ilen_Left + __mma_strm_blen_Left) ;
       if((__mma_strm_tlen_Left == 0))
       {
@@ -1033,6 +1090,7 @@ int arbiterMonitor( ) {
           {
             if(((_mm_arbiter.seen) == 0))
             {
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left2\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left2;
             }
             else
@@ -1062,6 +1120,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = (_mm_arbiter.post) ;
             (_mm_arbiter.post) = 0 ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left2;
           }
           else
@@ -1091,6 +1150,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_4) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left2;
             }
             else
@@ -1125,6 +1185,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_5) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left2;
           }
           else
@@ -1144,6 +1205,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - 1) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left2;
           }
           else
@@ -1160,37 +1222,41 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_7 ;
                 {
-                  int _mm_uv_mvar_n_29 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_29 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_30 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_30 == __mm_arbiter_yieldvar_n))
                   {
-                    if((_mm_uv_mvar_n_29 == ((_mm_monitor.pbuf) [ 0 ])))
+                    if((_mm_uv_mvar_n_30 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left1;
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_30 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_30 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_31 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_30 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_L_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_L_ArBmOn_ERROR;
                         }
                         else
@@ -1207,19 +1273,21 @@ int arbiterMonitor( ) {
                   }
                   else
                   {
-                    int _mm_uv_mvar_n_30 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_30 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_31 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_30 != ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         if((! 0))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_L_ArBmOn_ERROR\n" ) ;
                         goto __mm_label_arbmon_L_ArBmOn_ERROR;
                       }
                       else
@@ -1267,12 +1335,14 @@ int arbiterMonitor( ) {
                 {
                   if((! 1))
                   {
+                    printf ( "Error detected. Aborting...\n" ) ;
                     exit ( 1 ) ;
                   }
                   else
                   {
                   }
                   
+                  printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
                   goto __mm_label_arbmon_R_ArBmOn_EQ;
                 }
                 else
@@ -1282,12 +1352,14 @@ int arbiterMonitor( ) {
                     ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
                     goto __mm_label_arbmon_R_ArBmOn_Left1;
                   }
                   else
@@ -1319,12 +1391,14 @@ int arbiterMonitor( ) {
                   {
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
                     goto __mm_label_arbmon_L_ArBmOn_EQ;
                   }
                   else
@@ -1334,12 +1408,14 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left1;
                     }
                     else
@@ -1376,12 +1452,14 @@ int arbiterMonitor( ) {
                   {
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
                     goto __mm_label_arbmon_L_ArBmOn_EQ;
                   }
                   else
@@ -1391,12 +1469,14 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left1;
                     }
                     else
@@ -1445,18 +1525,20 @@ int arbiterMonitor( ) {
                 {
                   int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_11 ;
                   {
-                    int _mm_uv_mvar_n_28 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_28 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_29 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_29 == __mm_arbiter_yieldvar_n))
                     {
-                      ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_28 ;
+                      ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_29 ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left3\n" ) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left3;
                     }
                     else
@@ -1480,6 +1562,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left2;
             }
             else
@@ -1490,6 +1573,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left2;
             }
             else
@@ -1516,6 +1600,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left2;
             }
             else
@@ -1526,6 +1611,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left2;
             }
             else
@@ -1548,10 +1634,11 @@ int arbiterMonitor( ) {
       }
       
     }
+    printf ( "ERROR: Monitor could not match rule in state L/Left2\n" ) ;
     break;
     __mm_label_arbmon_L_ArBmOn_Left3:
     {
-      __mma_strm_tlen_Left = shm_arbiter_buffer_peek ( __mma_strm_buf_Left,0,((void * *)(&__mma_strm_istrt_Left)),(&__mma_strm_ilen_Left),((void * *)(&__mma_strm_bstrt_Left)),(&__mma_strm_blen_Left) ) ;
+      __mma_strm_tlen_Left = shm_arbiter_buffer_peek ( __mma_strm_buf_Left,1,((void * *)(&__mma_strm_istrt_Left)),(&__mma_strm_ilen_Left),((void * *)(&__mma_strm_bstrt_Left)),(&__mma_strm_blen_Left) ) ;
       __mma_strm_flen_Left = (__mma_strm_ilen_Left + __mma_strm_blen_Left) ;
       if((__mma_strm_tlen_Left == 0))
       {
@@ -1561,6 +1648,7 @@ int arbiterMonitor( ) {
           {
             if(((_mm_arbiter.seen) == 0))
             {
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left3\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left3;
             }
             else
@@ -1590,6 +1678,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = (_mm_arbiter.post) ;
             (_mm_arbiter.post) = 0 ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left3\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left3;
           }
           else
@@ -1619,6 +1708,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_4) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left3\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left3;
             }
             else
@@ -1653,6 +1743,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_5) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left3\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left3;
           }
           else
@@ -1672,6 +1763,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - 1) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left3\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left3;
           }
           else
@@ -1688,38 +1780,42 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_7 ;
                 {
-                  int _mm_uv_mvar_n_31 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_32 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_32 == __mm_arbiter_yieldvar_n))
                   {
-                    if((_mm_uv_mvar_n_31 == ((_mm_monitor.pbuf) [ 0 ])))
+                    if((_mm_uv_mvar_n_32 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left2;
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_32 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_32 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_33 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_33 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_32 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_33 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_L_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_L_ArBmOn_ERROR;
                         }
                         else
@@ -1736,19 +1832,21 @@ int arbiterMonitor( ) {
                   }
                   else
                   {
-                    int _mm_uv_mvar_n_32 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_32 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_33 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_33 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_32 != ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_33 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         if((! 0))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_L_ArBmOn_ERROR\n" ) ;
                         goto __mm_label_arbmon_L_ArBmOn_ERROR;
                       }
                       else
@@ -1796,12 +1894,14 @@ int arbiterMonitor( ) {
                 {
                   if((! 1))
                   {
+                    printf ( "Error detected. Aborting...\n" ) ;
                     exit ( 1 ) ;
                   }
                   else
                   {
                   }
                   
+                  printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
                   goto __mm_label_arbmon_R_ArBmOn_EQ;
                 }
                 else
@@ -1811,12 +1911,14 @@ int arbiterMonitor( ) {
                     ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
                     goto __mm_label_arbmon_R_ArBmOn_Left1;
                   }
                   else
@@ -1827,12 +1929,14 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left2\n" ) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left2;
                     }
                     else
@@ -1866,12 +1970,14 @@ int arbiterMonitor( ) {
                   {
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
                     goto __mm_label_arbmon_L_ArBmOn_EQ;
                   }
                   else
@@ -1881,12 +1987,14 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left1;
                     }
                     else
@@ -1897,12 +2005,14 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                         if((! 1))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
                         goto __mm_label_arbmon_L_ArBmOn_Left2;
                       }
                       else
@@ -1941,12 +2051,14 @@ int arbiterMonitor( ) {
                   {
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
                     goto __mm_label_arbmon_L_ArBmOn_EQ;
                   }
                   else
@@ -1956,12 +2068,14 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left1;
                     }
                     else
@@ -1972,12 +2086,14 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                         if((! 1))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
                         goto __mm_label_arbmon_L_ArBmOn_Left2;
                       }
                       else
@@ -2045,6 +2161,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left3\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left3;
             }
             else
@@ -2055,6 +2172,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left3\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left3;
             }
             else
@@ -2081,6 +2199,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left3\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left3;
             }
             else
@@ -2091,6 +2210,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left3\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left3;
             }
             else
@@ -2113,10 +2233,11 @@ int arbiterMonitor( ) {
       }
       
     }
+    printf ( "ERROR: Monitor could not match rule in state L/Left3\n" ) ;
     break;
     __mm_label_arbmon_L_ArBmOn_Right1:
     {
-      __mma_strm_tlen_Left = shm_arbiter_buffer_peek ( __mma_strm_buf_Left,0,((void * *)(&__mma_strm_istrt_Left)),(&__mma_strm_ilen_Left),((void * *)(&__mma_strm_bstrt_Left)),(&__mma_strm_blen_Left) ) ;
+      __mma_strm_tlen_Left = shm_arbiter_buffer_peek ( __mma_strm_buf_Left,1,((void * *)(&__mma_strm_istrt_Left)),(&__mma_strm_ilen_Left),((void * *)(&__mma_strm_bstrt_Left)),(&__mma_strm_blen_Left) ) ;
       __mma_strm_flen_Left = (__mma_strm_ilen_Left + __mma_strm_blen_Left) ;
       if((__mma_strm_tlen_Left == 0))
       {
@@ -2126,6 +2247,7 @@ int arbiterMonitor( ) {
           {
             if(((_mm_arbiter.seen) == 0))
             {
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right1\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right1;
             }
             else
@@ -2155,6 +2277,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = (_mm_arbiter.post) ;
             (_mm_arbiter.post) = 0 ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right1\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right1;
           }
           else
@@ -2184,6 +2307,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_4) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right1\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right1;
             }
             else
@@ -2218,6 +2342,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_5) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right1\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right1;
           }
           else
@@ -2237,6 +2362,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - 1) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right1\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right1;
           }
           else
@@ -2253,18 +2379,20 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_7 ;
                 {
-                  int _mm_uv_mvar_n_33 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_33 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_34 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_34 == __mm_arbiter_yieldvar_n))
                   {
-                    ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_33 ;
+                    ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_34 ;
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right2\n" ) ;
                     goto __mm_label_arbmon_L_ArBmOn_Right2;
                   }
                   else
@@ -2384,36 +2512,40 @@ int arbiterMonitor( ) {
                 {
                   int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_11 ;
                   {
-                    int _mm_uv_mvar_n_34 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_34 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_35 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_35 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_34 == ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_35 == ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         if((! 1))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
                         goto __mm_label_arbmon_L_ArBmOn_EQ;
                       }
                       else
                       {
-                        int _mm_uv_mvar_n_35 = __mm_arbiter_yieldvar_n ;
-                        if((_mm_uv_mvar_n_35 == __mm_arbiter_yieldvar_n))
+                        int _mm_uv_mvar_n_36 = __mm_arbiter_yieldvar_n ;
+                        if((_mm_uv_mvar_n_36 == __mm_arbiter_yieldvar_n))
                         {
-                          if((_mm_uv_mvar_n_35 != ((_mm_monitor.pbuf) [ 0 ])))
+                          if((_mm_uv_mvar_n_36 != ((_mm_monitor.pbuf) [ 0 ])))
                           {
                             if((! 0))
                             {
+                              printf ( "Error detected. Aborting...\n" ) ;
                               exit ( 1 ) ;
                             }
                             else
                             {
                             }
                             
+                            printf ( "Going to __mm_label_arbmon_L_ArBmOn_ERROR\n" ) ;
                             goto __mm_label_arbmon_L_ArBmOn_ERROR;
                           }
                           else
@@ -2430,19 +2562,21 @@ int arbiterMonitor( ) {
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_35 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_35 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_36 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_36 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_35 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_36 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_L_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_L_ArBmOn_ERROR;
                         }
                         else
@@ -2473,6 +2607,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right1\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right1;
             }
             else
@@ -2483,6 +2618,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right1\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right1;
             }
             else
@@ -2509,6 +2645,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right1\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right1;
             }
             else
@@ -2519,6 +2656,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right1\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right1;
             }
             else
@@ -2541,10 +2679,11 @@ int arbiterMonitor( ) {
       }
       
     }
+    printf ( "ERROR: Monitor could not match rule in state L/Right1\n" ) ;
     break;
     __mm_label_arbmon_L_ArBmOn_Right2:
     {
-      __mma_strm_tlen_Left = shm_arbiter_buffer_peek ( __mma_strm_buf_Left,0,((void * *)(&__mma_strm_istrt_Left)),(&__mma_strm_ilen_Left),((void * *)(&__mma_strm_bstrt_Left)),(&__mma_strm_blen_Left) ) ;
+      __mma_strm_tlen_Left = shm_arbiter_buffer_peek ( __mma_strm_buf_Left,1,((void * *)(&__mma_strm_istrt_Left)),(&__mma_strm_ilen_Left),((void * *)(&__mma_strm_bstrt_Left)),(&__mma_strm_blen_Left) ) ;
       __mma_strm_flen_Left = (__mma_strm_ilen_Left + __mma_strm_blen_Left) ;
       if((__mma_strm_tlen_Left == 0))
       {
@@ -2554,6 +2693,7 @@ int arbiterMonitor( ) {
           {
             if(((_mm_arbiter.seen) == 0))
             {
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right2\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right2;
             }
             else
@@ -2583,6 +2723,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = (_mm_arbiter.post) ;
             (_mm_arbiter.post) = 0 ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right2\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right2;
           }
           else
@@ -2612,6 +2753,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_4) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right2\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right2;
             }
             else
@@ -2646,6 +2788,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_5) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right2\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right2;
           }
           else
@@ -2665,6 +2808,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - 1) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right2\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right2;
           }
           else
@@ -2681,18 +2825,20 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_7 ;
                 {
-                  int _mm_uv_mvar_n_36 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_36 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_37 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_37 == __mm_arbiter_yieldvar_n))
                   {
-                    ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_36 ;
+                    ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_37 ;
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right3\n" ) ;
                     goto __mm_label_arbmon_L_ArBmOn_Right3;
                   }
                   else
@@ -2812,37 +2958,41 @@ int arbiterMonitor( ) {
                 {
                   int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_11 ;
                   {
-                    int _mm_uv_mvar_n_37 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_37 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_38 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_38 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_37 == ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_38 == ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         if((! 1))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
                         goto __mm_label_arbmon_L_ArBmOn_Left1;
                       }
                       else
                       {
-                        int _mm_uv_mvar_n_38 = __mm_arbiter_yieldvar_n ;
-                        if((_mm_uv_mvar_n_38 == __mm_arbiter_yieldvar_n))
+                        int _mm_uv_mvar_n_39 = __mm_arbiter_yieldvar_n ;
+                        if((_mm_uv_mvar_n_39 == __mm_arbiter_yieldvar_n))
                         {
-                          if((_mm_uv_mvar_n_38 != ((_mm_monitor.pbuf) [ 0 ])))
+                          if((_mm_uv_mvar_n_39 != ((_mm_monitor.pbuf) [ 0 ])))
                           {
                             if((! 0))
                             {
+                              printf ( "Error detected. Aborting...\n" ) ;
                               exit ( 1 ) ;
                             }
                             else
                             {
                             }
                             
+                            printf ( "Going to __mm_label_arbmon_L_ArBmOn_ERROR\n" ) ;
                             goto __mm_label_arbmon_L_ArBmOn_ERROR;
                           }
                           else
@@ -2859,19 +3009,21 @@ int arbiterMonitor( ) {
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_38 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_38 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_39 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_39 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_38 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_39 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_L_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_L_ArBmOn_ERROR;
                         }
                         else
@@ -2902,6 +3054,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right2\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right2;
             }
             else
@@ -2912,6 +3065,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right2\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right2;
             }
             else
@@ -2938,6 +3092,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right2\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right2;
             }
             else
@@ -2948,6 +3103,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right2\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right2;
             }
             else
@@ -2970,10 +3126,11 @@ int arbiterMonitor( ) {
       }
       
     }
+    printf ( "ERROR: Monitor could not match rule in state L/Right2\n" ) ;
     break;
     __mm_label_arbmon_L_ArBmOn_Right3:
     {
-      __mma_strm_tlen_Left = shm_arbiter_buffer_peek ( __mma_strm_buf_Left,0,((void * *)(&__mma_strm_istrt_Left)),(&__mma_strm_ilen_Left),((void * *)(&__mma_strm_bstrt_Left)),(&__mma_strm_blen_Left) ) ;
+      __mma_strm_tlen_Left = shm_arbiter_buffer_peek ( __mma_strm_buf_Left,1,((void * *)(&__mma_strm_istrt_Left)),(&__mma_strm_ilen_Left),((void * *)(&__mma_strm_bstrt_Left)),(&__mma_strm_blen_Left) ) ;
       __mma_strm_flen_Left = (__mma_strm_ilen_Left + __mma_strm_blen_Left) ;
       if((__mma_strm_tlen_Left == 0))
       {
@@ -2983,6 +3140,7 @@ int arbiterMonitor( ) {
           {
             if(((_mm_arbiter.seen) == 0))
             {
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right3\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right3;
             }
             else
@@ -3012,6 +3170,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = (_mm_arbiter.post) ;
             (_mm_arbiter.post) = 0 ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right3\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right3;
           }
           else
@@ -3041,6 +3200,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_4) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right3\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right3;
             }
             else
@@ -3075,6 +3235,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_5) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right3\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right3;
           }
           else
@@ -3094,6 +3255,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - 1) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right3\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right3;
           }
           else
@@ -3223,38 +3385,42 @@ int arbiterMonitor( ) {
                 {
                   int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_11 ;
                   {
-                    int _mm_uv_mvar_n_39 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_39 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_40 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_40 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_39 == ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_40 == ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                         if((! 1))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right2\n" ) ;
                         goto __mm_label_arbmon_L_ArBmOn_Right2;
                       }
                       else
                       {
-                        int _mm_uv_mvar_n_40 = __mm_arbiter_yieldvar_n ;
-                        if((_mm_uv_mvar_n_40 == __mm_arbiter_yieldvar_n))
+                        int _mm_uv_mvar_n_41 = __mm_arbiter_yieldvar_n ;
+                        if((_mm_uv_mvar_n_41 == __mm_arbiter_yieldvar_n))
                         {
-                          if((_mm_uv_mvar_n_40 != ((_mm_monitor.pbuf) [ 0 ])))
+                          if((_mm_uv_mvar_n_41 != ((_mm_monitor.pbuf) [ 0 ])))
                           {
                             if((! 0))
                             {
+                              printf ( "Error detected. Aborting...\n" ) ;
                               exit ( 1 ) ;
                             }
                             else
                             {
                             }
                             
+                            printf ( "Going to __mm_label_arbmon_L_ArBmOn_ERROR\n" ) ;
                             goto __mm_label_arbmon_L_ArBmOn_ERROR;
                           }
                           else
@@ -3271,19 +3437,21 @@ int arbiterMonitor( ) {
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_40 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_40 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_41 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_41 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_40 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_41 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_L_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_L_ArBmOn_ERROR;
                         }
                         else
@@ -3314,6 +3482,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right3\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right3;
             }
             else
@@ -3324,6 +3493,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right3\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right3;
             }
             else
@@ -3350,6 +3520,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right3\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right3;
             }
             else
@@ -3360,6 +3531,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right3\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right3;
             }
             else
@@ -3382,13 +3554,15 @@ int arbiterMonitor( ) {
       }
       
     }
+    printf ( "ERROR: Monitor could not match rule in state L/Right3\n" ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_ERROR:
+    printf ( "ERROR: Monitor moved to error state\n" ) ;
     exit ( 1 ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_EQ:
     {
-      __mma_strm_tlen_Right = shm_arbiter_buffer_peek ( __mma_strm_buf_Right,0,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) ;
+      __mma_strm_tlen_Right = shm_arbiter_buffer_peek ( __mma_strm_buf_Right,1,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) ;
       __mma_strm_flen_Right = (__mma_strm_ilen_Right + __mma_strm_blen_Right) ;
       if((__mma_strm_tlen_Right == 0))
       {
@@ -3398,6 +3572,7 @@ int arbiterMonitor( ) {
           {
             if(((_mm_arbiter.seen) == 0))
             {
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_EQ;
             }
             else
@@ -3427,6 +3602,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = (_mm_arbiter.post) ;
             (_mm_arbiter.post) = 0 ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_EQ;
           }
           else
@@ -3456,6 +3632,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_14) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_EQ;
             }
             else
@@ -3490,6 +3667,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_15) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_EQ;
           }
           else
@@ -3509,6 +3687,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - 1) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_EQ;
           }
           else
@@ -3531,12 +3710,14 @@ int arbiterMonitor( ) {
                     ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_24 ;
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
                     goto __mm_label_arbmon_R_ArBmOn_Left1;
                   }
                   else
@@ -3570,6 +3751,7 @@ int arbiterMonitor( ) {
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_EQ;
           }
           else
@@ -3652,6 +3834,26 @@ int arbiterMonitor( ) {
                 {
                   int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_21 ;
                   {
+                    int _mm_uv_mvar_n_25 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_25 == __mm_arbiter_yieldvar_n))
+                    {
+                      ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_25 ;
+                      if((! 1))
+                      {
+                        printf ( "Error detected. Aborting...\n" ) ;
+                        exit ( 1 ) ;
+                      }
+                      else
+                      {
+                      }
+                      
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right1\n" ) ;
+                      goto __mm_label_arbmon_R_ArBmOn_Right1;
+                    }
+                    else
+                    {
+                    }
+                    
                   }
                 }
               }
@@ -3672,6 +3874,26 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
                 {
+                  int _mm_uv_mvar_n_25 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_25 == __mm_arbiter_yieldvar_n))
+                  {
+                    ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_25 ;
+                    if((! 1))
+                    {
+                      printf ( "Error detected. Aborting...\n" ) ;
+                      exit ( 1 ) ;
+                    }
+                    else
+                    {
+                    }
+                    
+                    printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right1\n" ) ;
+                    goto __mm_label_arbmon_R_ArBmOn_Right1;
+                  }
+                  else
+                  {
+                  }
+                  
                 }
               }
             }
@@ -3686,6 +3908,26 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
                 {
+                  int _mm_uv_mvar_n_25 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_25 == __mm_arbiter_yieldvar_n))
+                  {
+                    ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_25 ;
+                    if((! 1))
+                    {
+                      printf ( "Error detected. Aborting...\n" ) ;
+                      exit ( 1 ) ;
+                    }
+                    else
+                    {
+                    }
+                    
+                    printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right1\n" ) ;
+                    goto __mm_label_arbmon_R_ArBmOn_Right1;
+                  }
+                  else
+                  {
+                  }
+                  
                 }
               }
             }
@@ -3713,6 +3955,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_EQ;
             }
             else
@@ -3723,6 +3966,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_EQ;
             }
             else
@@ -3745,10 +3989,11 @@ int arbiterMonitor( ) {
       }
       
     }
+    printf ( "ERROR: Monitor could not match rule in state R/EQ\n" ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_Left1:
     {
-      __mma_strm_tlen_Right = shm_arbiter_buffer_peek ( __mma_strm_buf_Right,0,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) ;
+      __mma_strm_tlen_Right = shm_arbiter_buffer_peek ( __mma_strm_buf_Right,1,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) ;
       __mma_strm_flen_Right = (__mma_strm_ilen_Right + __mma_strm_blen_Right) ;
       if((__mma_strm_tlen_Right == 0))
       {
@@ -3758,6 +4003,7 @@ int arbiterMonitor( ) {
           {
             if(((_mm_arbiter.seen) == 0))
             {
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left1;
             }
             else
@@ -3787,6 +4033,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = (_mm_arbiter.post) ;
             (_mm_arbiter.post) = 0 ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Left1;
           }
           else
@@ -3816,6 +4063,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_14) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left1;
             }
             else
@@ -3850,6 +4098,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_15) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Left1;
           }
           else
@@ -3869,6 +4118,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - 1) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Left1;
           }
           else
@@ -3885,18 +4135,20 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_17 ;
                 {
-                  int _mm_uv_mvar_n_25 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_25 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_26 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_26 == __mm_arbiter_yieldvar_n))
                   {
-                    ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_25 ;
+                    ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_26 ;
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left2\n" ) ;
                     goto __mm_label_arbmon_R_ArBmOn_Left2;
                   }
                   else
@@ -3930,6 +4182,7 @@ int arbiterMonitor( ) {
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left1;
           }
           else
@@ -4012,36 +4265,40 @@ int arbiterMonitor( ) {
                 {
                   int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_21 ;
                   {
-                    int _mm_uv_mvar_n_26 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_26 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_27 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_26 == ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_27 == ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         if((! 1))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
                         goto __mm_label_arbmon_R_ArBmOn_EQ;
                       }
                       else
                       {
-                        int _mm_uv_mvar_n_27 = __mm_arbiter_yieldvar_n ;
-                        if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
+                        int _mm_uv_mvar_n_28 = __mm_arbiter_yieldvar_n ;
+                        if((_mm_uv_mvar_n_28 == __mm_arbiter_yieldvar_n))
                         {
-                          if((_mm_uv_mvar_n_27 != ((_mm_monitor.pbuf) [ 0 ])))
+                          if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                           {
                             if((! 0))
                             {
+                              printf ( "Error detected. Aborting...\n" ) ;
                               exit ( 1 ) ;
                             }
                             else
                             {
                             }
                             
+                            printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                             goto __mm_label_arbmon_R_ArBmOn_ERROR;
                           }
                           else
@@ -4058,19 +4315,21 @@ int arbiterMonitor( ) {
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_27 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_28 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_28 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_27 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_R_ArBmOn_ERROR;
                         }
                         else
@@ -4104,36 +4363,40 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
                 {
-                  int _mm_uv_mvar_n_26 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_26 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_27 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
                   {
-                    if((_mm_uv_mvar_n_26 == ((_mm_monitor.pbuf) [ 0 ])))
+                    if((_mm_uv_mvar_n_27 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
                       goto __mm_label_arbmon_R_ArBmOn_EQ;
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_27 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_28 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_28 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_27 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_R_ArBmOn_ERROR;
                         }
                         else
@@ -4150,19 +4413,21 @@ int arbiterMonitor( ) {
                   }
                   else
                   {
-                    int _mm_uv_mvar_n_27 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_28 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_28 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_27 != ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         if((! 0))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                         goto __mm_label_arbmon_R_ArBmOn_ERROR;
                       }
                       else
@@ -4190,36 +4455,40 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
                 {
-                  int _mm_uv_mvar_n_26 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_26 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_27 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
                   {
-                    if((_mm_uv_mvar_n_26 == ((_mm_monitor.pbuf) [ 0 ])))
+                    if((_mm_uv_mvar_n_27 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
                       goto __mm_label_arbmon_R_ArBmOn_EQ;
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_27 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_28 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_28 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_27 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_R_ArBmOn_ERROR;
                         }
                         else
@@ -4236,19 +4505,21 @@ int arbiterMonitor( ) {
                   }
                   else
                   {
-                    int _mm_uv_mvar_n_27 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_28 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_28 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_27 != ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         if((! 0))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                         goto __mm_label_arbmon_R_ArBmOn_ERROR;
                       }
                       else
@@ -4289,6 +4560,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left1;
             }
             else
@@ -4299,6 +4571,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left1;
             }
             else
@@ -4321,10 +4594,11 @@ int arbiterMonitor( ) {
       }
       
     }
+    printf ( "ERROR: Monitor could not match rule in state R/Left1\n" ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_Left2:
     {
-      __mma_strm_tlen_Right = shm_arbiter_buffer_peek ( __mma_strm_buf_Right,0,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) ;
+      __mma_strm_tlen_Right = shm_arbiter_buffer_peek ( __mma_strm_buf_Right,1,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) ;
       __mma_strm_flen_Right = (__mma_strm_ilen_Right + __mma_strm_blen_Right) ;
       if((__mma_strm_tlen_Right == 0))
       {
@@ -4334,6 +4608,7 @@ int arbiterMonitor( ) {
           {
             if(((_mm_arbiter.seen) == 0))
             {
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left2;
             }
             else
@@ -4363,6 +4638,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = (_mm_arbiter.post) ;
             (_mm_arbiter.post) = 0 ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left2\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Left2;
           }
           else
@@ -4392,6 +4668,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_14) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left2\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left2;
             }
             else
@@ -4426,6 +4703,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_15) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left2\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Left2;
           }
           else
@@ -4445,6 +4723,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - 1) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left2\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Left2;
           }
           else
@@ -4461,18 +4740,20 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_17 ;
                 {
-                  int _mm_uv_mvar_n_28 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_28 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_29 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_29 == __mm_arbiter_yieldvar_n))
                   {
-                    ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_28 ;
+                    ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_29 ;
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left3\n" ) ;
                     goto __mm_label_arbmon_R_ArBmOn_Left3;
                   }
                   else
@@ -4506,6 +4787,7 @@ int arbiterMonitor( ) {
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left2\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left2;
           }
           else
@@ -4588,37 +4870,41 @@ int arbiterMonitor( ) {
                 {
                   int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_21 ;
                   {
-                    int _mm_uv_mvar_n_29 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_29 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_30 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_30 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_29 == ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_30 == ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         if((! 1))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left1;
                       }
                       else
                       {
-                        int _mm_uv_mvar_n_30 = __mm_arbiter_yieldvar_n ;
-                        if((_mm_uv_mvar_n_30 == __mm_arbiter_yieldvar_n))
+                        int _mm_uv_mvar_n_31 = __mm_arbiter_yieldvar_n ;
+                        if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
                         {
-                          if((_mm_uv_mvar_n_30 != ((_mm_monitor.pbuf) [ 0 ])))
+                          if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                           {
                             if((! 0))
                             {
+                              printf ( "Error detected. Aborting...\n" ) ;
                               exit ( 1 ) ;
                             }
                             else
                             {
                             }
                             
+                            printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                             goto __mm_label_arbmon_R_ArBmOn_ERROR;
                           }
                           else
@@ -4635,19 +4921,21 @@ int arbiterMonitor( ) {
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_30 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_30 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_31 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_30 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_R_ArBmOn_ERROR;
                         }
                         else
@@ -4681,37 +4969,41 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
                 {
-                  int _mm_uv_mvar_n_29 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_29 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_30 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_30 == __mm_arbiter_yieldvar_n))
                   {
-                    if((_mm_uv_mvar_n_29 == ((_mm_monitor.pbuf) [ 0 ])))
+                    if((_mm_uv_mvar_n_30 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left1;
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_30 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_30 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_31 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_30 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_R_ArBmOn_ERROR;
                         }
                         else
@@ -4728,19 +5020,21 @@ int arbiterMonitor( ) {
                   }
                   else
                   {
-                    int _mm_uv_mvar_n_30 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_30 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_31 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_30 != ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         if((! 0))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                         goto __mm_label_arbmon_R_ArBmOn_ERROR;
                       }
                       else
@@ -4768,37 +5062,41 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
                 {
-                  int _mm_uv_mvar_n_29 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_29 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_30 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_30 == __mm_arbiter_yieldvar_n))
                   {
-                    if((_mm_uv_mvar_n_29 == ((_mm_monitor.pbuf) [ 0 ])))
+                    if((_mm_uv_mvar_n_30 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left1;
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_30 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_30 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_31 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_30 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_R_ArBmOn_ERROR;
                         }
                         else
@@ -4815,19 +5113,21 @@ int arbiterMonitor( ) {
                   }
                   else
                   {
-                    int _mm_uv_mvar_n_30 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_30 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_31 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_30 != ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         if((! 0))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                         goto __mm_label_arbmon_R_ArBmOn_ERROR;
                       }
                       else
@@ -4868,6 +5168,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left2\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left2;
             }
             else
@@ -4878,6 +5179,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left2\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left2;
             }
             else
@@ -4900,10 +5202,11 @@ int arbiterMonitor( ) {
       }
       
     }
+    printf ( "ERROR: Monitor could not match rule in state R/Left2\n" ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_Left3:
     {
-      __mma_strm_tlen_Right = shm_arbiter_buffer_peek ( __mma_strm_buf_Right,0,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) ;
+      __mma_strm_tlen_Right = shm_arbiter_buffer_peek ( __mma_strm_buf_Right,1,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) ;
       __mma_strm_flen_Right = (__mma_strm_ilen_Right + __mma_strm_blen_Right) ;
       if((__mma_strm_tlen_Right == 0))
       {
@@ -4913,6 +5216,7 @@ int arbiterMonitor( ) {
           {
             if(((_mm_arbiter.seen) == 0))
             {
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left3\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left3;
             }
             else
@@ -4942,6 +5246,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = (_mm_arbiter.post) ;
             (_mm_arbiter.post) = 0 ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left3\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Left3;
           }
           else
@@ -4971,6 +5276,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_14) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left3\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left3;
             }
             else
@@ -5005,6 +5311,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_15) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left3\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Left3;
           }
           else
@@ -5024,6 +5331,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - 1) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left3\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Left3;
           }
           else
@@ -5067,6 +5375,7 @@ int arbiterMonitor( ) {
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left3\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left3;
           }
           else
@@ -5149,38 +5458,42 @@ int arbiterMonitor( ) {
                 {
                   int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_21 ;
                   {
-                    int _mm_uv_mvar_n_31 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_32 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_32 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_31 == ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_32 == ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                         if((! 1))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left2\n" ) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left2;
                       }
                       else
                       {
-                        int _mm_uv_mvar_n_32 = __mm_arbiter_yieldvar_n ;
-                        if((_mm_uv_mvar_n_32 == __mm_arbiter_yieldvar_n))
+                        int _mm_uv_mvar_n_33 = __mm_arbiter_yieldvar_n ;
+                        if((_mm_uv_mvar_n_33 == __mm_arbiter_yieldvar_n))
                         {
-                          if((_mm_uv_mvar_n_32 != ((_mm_monitor.pbuf) [ 0 ])))
+                          if((_mm_uv_mvar_n_33 != ((_mm_monitor.pbuf) [ 0 ])))
                           {
                             if((! 0))
                             {
+                              printf ( "Error detected. Aborting...\n" ) ;
                               exit ( 1 ) ;
                             }
                             else
                             {
                             }
                             
+                            printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                             goto __mm_label_arbmon_R_ArBmOn_ERROR;
                           }
                           else
@@ -5197,19 +5510,21 @@ int arbiterMonitor( ) {
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_32 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_32 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_33 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_33 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_32 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_33 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_R_ArBmOn_ERROR;
                         }
                         else
@@ -5243,38 +5558,42 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
                 {
-                  int _mm_uv_mvar_n_31 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_32 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_32 == __mm_arbiter_yieldvar_n))
                   {
-                    if((_mm_uv_mvar_n_31 == ((_mm_monitor.pbuf) [ 0 ])))
+                    if((_mm_uv_mvar_n_32 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left2\n" ) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left2;
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_32 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_32 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_33 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_33 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_32 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_33 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_R_ArBmOn_ERROR;
                         }
                         else
@@ -5291,19 +5610,21 @@ int arbiterMonitor( ) {
                   }
                   else
                   {
-                    int _mm_uv_mvar_n_32 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_32 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_33 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_33 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_32 != ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_33 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         if((! 0))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                         goto __mm_label_arbmon_R_ArBmOn_ERROR;
                       }
                       else
@@ -5331,38 +5652,42 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
                 {
-                  int _mm_uv_mvar_n_31 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_32 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_32 == __mm_arbiter_yieldvar_n))
                   {
-                    if((_mm_uv_mvar_n_31 == ((_mm_monitor.pbuf) [ 0 ])))
+                    if((_mm_uv_mvar_n_32 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left2\n" ) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left2;
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_32 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_32 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_33 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_33 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_32 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_33 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_R_ArBmOn_ERROR;
                         }
                         else
@@ -5379,19 +5704,21 @@ int arbiterMonitor( ) {
                   }
                   else
                   {
-                    int _mm_uv_mvar_n_32 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_32 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_33 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_33 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_32 != ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_33 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         if((! 0))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                         goto __mm_label_arbmon_R_ArBmOn_ERROR;
                       }
                       else
@@ -5432,6 +5759,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left3\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left3;
             }
             else
@@ -5442,6 +5770,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left3\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left3;
             }
             else
@@ -5464,10 +5793,11 @@ int arbiterMonitor( ) {
       }
       
     }
+    printf ( "ERROR: Monitor could not match rule in state R/Left3\n" ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_Right1:
     {
-      __mma_strm_tlen_Right = shm_arbiter_buffer_peek ( __mma_strm_buf_Right,0,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) ;
+      __mma_strm_tlen_Right = shm_arbiter_buffer_peek ( __mma_strm_buf_Right,1,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) ;
       __mma_strm_flen_Right = (__mma_strm_ilen_Right + __mma_strm_blen_Right) ;
       if((__mma_strm_tlen_Right == 0))
       {
@@ -5477,6 +5807,7 @@ int arbiterMonitor( ) {
           {
             if(((_mm_arbiter.seen) == 0))
             {
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right1\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right1;
             }
             else
@@ -5506,6 +5837,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = (_mm_arbiter.post) ;
             (_mm_arbiter.post) = 0 ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right1\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Right1;
           }
           else
@@ -5535,6 +5867,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_14) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right1\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right1;
             }
             else
@@ -5569,6 +5902,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_15) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right1\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Right1;
           }
           else
@@ -5588,6 +5922,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - 1) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right1\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Right1;
           }
           else
@@ -5604,36 +5939,40 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_17 ;
                 {
-                  int _mm_uv_mvar_n_34 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_34 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_35 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_35 == __mm_arbiter_yieldvar_n))
                   {
-                    if((_mm_uv_mvar_n_34 == ((_mm_monitor.pbuf) [ 0 ])))
+                    if((_mm_uv_mvar_n_35 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
                       goto __mm_label_arbmon_R_ArBmOn_EQ;
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_35 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_35 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_36 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_36 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_35 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_36 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_R_ArBmOn_ERROR;
                         }
                         else
@@ -5650,19 +5989,21 @@ int arbiterMonitor( ) {
                   }
                   else
                   {
-                    int _mm_uv_mvar_n_35 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_35 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_36 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_36 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_35 != ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_36 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         if((! 0))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                         goto __mm_label_arbmon_R_ArBmOn_ERROR;
                       }
                       else
@@ -5703,6 +6044,7 @@ int arbiterMonitor( ) {
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right1\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right1;
           }
           else
@@ -5725,12 +6067,14 @@ int arbiterMonitor( ) {
                   {
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
                     goto __mm_label_arbmon_R_ArBmOn_EQ;
                   }
                   else
@@ -5765,12 +6109,14 @@ int arbiterMonitor( ) {
                   {
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
                     goto __mm_label_arbmon_L_ArBmOn_EQ;
                   }
                   else
@@ -5817,18 +6163,20 @@ int arbiterMonitor( ) {
                 {
                   int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_21 ;
                   {
-                    int _mm_uv_mvar_n_33 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_33 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_34 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_34 == __mm_arbiter_yieldvar_n))
                     {
-                      ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_33 ;
+                      ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_34 ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right2\n" ) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right2;
                     }
                     else
@@ -5855,18 +6203,20 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
                 {
-                  int _mm_uv_mvar_n_33 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_33 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_34 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_34 == __mm_arbiter_yieldvar_n))
                   {
-                    ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_33 ;
+                    ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_34 ;
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right2\n" ) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right2;
                   }
                   else
@@ -5887,18 +6237,20 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
                 {
-                  int _mm_uv_mvar_n_33 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_33 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_34 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_34 == __mm_arbiter_yieldvar_n))
                   {
-                    ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_33 ;
+                    ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_34 ;
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right2\n" ) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right2;
                   }
                   else
@@ -5932,6 +6284,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right1\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right1;
             }
             else
@@ -5942,6 +6295,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right1\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right1;
             }
             else
@@ -5964,10 +6318,11 @@ int arbiterMonitor( ) {
       }
       
     }
+    printf ( "ERROR: Monitor could not match rule in state R/Right1\n" ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_Right2:
     {
-      __mma_strm_tlen_Right = shm_arbiter_buffer_peek ( __mma_strm_buf_Right,0,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) ;
+      __mma_strm_tlen_Right = shm_arbiter_buffer_peek ( __mma_strm_buf_Right,1,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) ;
       __mma_strm_flen_Right = (__mma_strm_ilen_Right + __mma_strm_blen_Right) ;
       if((__mma_strm_tlen_Right == 0))
       {
@@ -5977,6 +6332,7 @@ int arbiterMonitor( ) {
           {
             if(((_mm_arbiter.seen) == 0))
             {
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right2\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right2;
             }
             else
@@ -6006,6 +6362,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = (_mm_arbiter.post) ;
             (_mm_arbiter.post) = 0 ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right2\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Right2;
           }
           else
@@ -6035,6 +6392,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_14) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right2\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right2;
             }
             else
@@ -6069,6 +6427,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_15) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right2\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Right2;
           }
           else
@@ -6088,6 +6447,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - 1) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right2\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Right2;
           }
           else
@@ -6104,37 +6464,41 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_17 ;
                 {
-                  int _mm_uv_mvar_n_37 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_37 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_38 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_38 == __mm_arbiter_yieldvar_n))
                   {
-                    if((_mm_uv_mvar_n_37 == ((_mm_monitor.pbuf) [ 0 ])))
+                    if((_mm_uv_mvar_n_38 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left1;
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_38 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_38 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_39 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_39 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_38 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_39 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_R_ArBmOn_ERROR;
                         }
                         else
@@ -6151,19 +6515,21 @@ int arbiterMonitor( ) {
                   }
                   else
                   {
-                    int _mm_uv_mvar_n_38 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_38 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_39 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_39 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_38 != ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_39 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         if((! 0))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                         goto __mm_label_arbmon_R_ArBmOn_ERROR;
                       }
                       else
@@ -6204,6 +6570,7 @@ int arbiterMonitor( ) {
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right2\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right2;
           }
           else
@@ -6226,12 +6593,14 @@ int arbiterMonitor( ) {
                   {
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
                     goto __mm_label_arbmon_R_ArBmOn_EQ;
                   }
                   else
@@ -6241,12 +6610,14 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Left1\n" ) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left1;
                     }
                     else
@@ -6283,12 +6654,14 @@ int arbiterMonitor( ) {
                   {
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
                     goto __mm_label_arbmon_L_ArBmOn_EQ;
                   }
                   else
@@ -6298,12 +6671,14 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Left1\n" ) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left1;
                     }
                     else
@@ -6352,18 +6727,20 @@ int arbiterMonitor( ) {
                 {
                   int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_21 ;
                   {
-                    int _mm_uv_mvar_n_36 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_36 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_37 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_37 == __mm_arbiter_yieldvar_n))
                     {
-                      ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_36 ;
+                      ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_37 ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right3\n" ) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right3;
                     }
                     else
@@ -6390,18 +6767,20 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
                 {
-                  int _mm_uv_mvar_n_36 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_36 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_37 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_37 == __mm_arbiter_yieldvar_n))
                   {
-                    ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_36 ;
+                    ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_37 ;
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right3\n" ) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right3;
                   }
                   else
@@ -6422,18 +6801,20 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
                 {
-                  int _mm_uv_mvar_n_36 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_36 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_37 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_37 == __mm_arbiter_yieldvar_n))
                   {
-                    ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_36 ;
+                    ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_37 ;
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right3\n" ) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right3;
                   }
                   else
@@ -6467,6 +6848,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right2\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right2;
             }
             else
@@ -6477,6 +6859,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right2\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right2;
             }
             else
@@ -6499,10 +6882,11 @@ int arbiterMonitor( ) {
       }
       
     }
+    printf ( "ERROR: Monitor could not match rule in state R/Right2\n" ) ;
     break;
     __mm_label_arbmon_R_ArBmOn_Right3:
     {
-      __mma_strm_tlen_Right = shm_arbiter_buffer_peek ( __mma_strm_buf_Right,0,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) ;
+      __mma_strm_tlen_Right = shm_arbiter_buffer_peek ( __mma_strm_buf_Right,1,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) ;
       __mma_strm_flen_Right = (__mma_strm_ilen_Right + __mma_strm_blen_Right) ;
       if((__mma_strm_tlen_Right == 0))
       {
@@ -6512,6 +6896,7 @@ int arbiterMonitor( ) {
           {
             if(((_mm_arbiter.seen) == 0))
             {
+              printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right3\n" ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right3;
             }
             else
@@ -6541,6 +6926,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = (_mm_arbiter.post) ;
             (_mm_arbiter.post) = 0 ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right3\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Right3;
           }
           else
@@ -6570,6 +6956,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_14) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right3\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right3;
             }
             else
@@ -6604,6 +6991,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_15) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right3\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Right3;
           }
           else
@@ -6623,6 +7011,7 @@ int arbiterMonitor( ) {
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - 1) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right3\n" ) ;
             goto __mm_label_arbmon_R_ArBmOn_Right3;
           }
           else
@@ -6639,38 +7028,42 @@ int arbiterMonitor( ) {
               {
                 int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_17 ;
                 {
-                  int _mm_uv_mvar_n_39 = __mm_arbiter_yieldvar_n ;
-                  if((_mm_uv_mvar_n_39 == __mm_arbiter_yieldvar_n))
+                  int _mm_uv_mvar_n_40 = __mm_arbiter_yieldvar_n ;
+                  if((_mm_uv_mvar_n_40 == __mm_arbiter_yieldvar_n))
                   {
-                    if((_mm_uv_mvar_n_39 == ((_mm_monitor.pbuf) [ 0 ])))
+                    if((_mm_uv_mvar_n_40 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right2\n" ) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right2;
                     }
                     else
                     {
-                      int _mm_uv_mvar_n_40 = __mm_arbiter_yieldvar_n ;
-                      if((_mm_uv_mvar_n_40 == __mm_arbiter_yieldvar_n))
+                      int _mm_uv_mvar_n_41 = __mm_arbiter_yieldvar_n ;
+                      if((_mm_uv_mvar_n_41 == __mm_arbiter_yieldvar_n))
                       {
-                        if((_mm_uv_mvar_n_40 != ((_mm_monitor.pbuf) [ 0 ])))
+                        if((_mm_uv_mvar_n_41 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           if((! 0))
                           {
+                            printf ( "Error detected. Aborting...\n" ) ;
                             exit ( 1 ) ;
                           }
                           else
                           {
                           }
                           
+                          printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                           goto __mm_label_arbmon_R_ArBmOn_ERROR;
                         }
                         else
@@ -6687,19 +7080,21 @@ int arbiterMonitor( ) {
                   }
                   else
                   {
-                    int _mm_uv_mvar_n_40 = __mm_arbiter_yieldvar_n ;
-                    if((_mm_uv_mvar_n_40 == __mm_arbiter_yieldvar_n))
+                    int _mm_uv_mvar_n_41 = __mm_arbiter_yieldvar_n ;
+                    if((_mm_uv_mvar_n_41 == __mm_arbiter_yieldvar_n))
                     {
-                      if((_mm_uv_mvar_n_40 != ((_mm_monitor.pbuf) [ 0 ])))
+                      if((_mm_uv_mvar_n_41 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         if((! 0))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_R_ArBmOn_ERROR\n" ) ;
                         goto __mm_label_arbmon_R_ArBmOn_ERROR;
                       }
                       else
@@ -6740,6 +7135,7 @@ int arbiterMonitor( ) {
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
+            printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right3\n" ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right3;
           }
           else
@@ -6762,12 +7158,14 @@ int arbiterMonitor( ) {
                   {
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_R_ArBmOn_EQ\n" ) ;
                     goto __mm_label_arbmon_R_ArBmOn_EQ;
                   }
                   else
@@ -6777,12 +7175,14 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right1\n" ) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right1;
                     }
                     else
@@ -6793,12 +7193,14 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                         if((! 1))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right2\n" ) ;
                         goto __mm_label_arbmon_R_ArBmOn_Right2;
                       }
                       else
@@ -6837,12 +7239,14 @@ int arbiterMonitor( ) {
                   {
                     if((! 1))
                     {
+                      printf ( "Error detected. Aborting...\n" ) ;
                       exit ( 1 ) ;
                     }
                     else
                     {
                     }
                     
+                    printf ( "Going to __mm_label_arbmon_L_ArBmOn_EQ\n" ) ;
                     goto __mm_label_arbmon_L_ArBmOn_EQ;
                   }
                   else
@@ -6852,12 +7256,14 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                       if((! 1))
                       {
+                        printf ( "Error detected. Aborting...\n" ) ;
                         exit ( 1 ) ;
                       }
                       else
                       {
                       }
                       
+                      printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right1\n" ) ;
                       goto __mm_label_arbmon_L_ArBmOn_Right1;
                     }
                     else
@@ -6868,12 +7274,14 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                         if((! 1))
                         {
+                          printf ( "Error detected. Aborting...\n" ) ;
                           exit ( 1 ) ;
                         }
                         else
                         {
                         }
                         
+                        printf ( "Going to __mm_label_arbmon_L_ArBmOn_Right2\n" ) ;
                         goto __mm_label_arbmon_L_ArBmOn_Right2;
                       }
                       else
@@ -6985,6 +7393,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right3\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right3;
             }
             else
@@ -6995,6 +7404,7 @@ int arbiterMonitor( ) {
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
+              printf ( "Going to __mm_label_arbmon_R_ArBmOn_Right3\n" ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right3;
             }
             else
@@ -7017,6 +7427,7 @@ int arbiterMonitor( ) {
       }
       
     }
+    printf ( "ERROR: Monitor could not match rule in state R/Right3\n" ) ;
     break;
   }
 }
