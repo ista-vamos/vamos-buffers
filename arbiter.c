@@ -269,12 +269,17 @@ void *stream_fetch(shm_stream *stream,
         }
 
         ++buffer->dropped_num;
+        /* consume the dropped event */
+        shm_stream_consume(stream, 1);
         return NULL;
     }
 
+    assert(buffer->dropped_num == 0);
     if (shm_arbiter_buffer_free_space(buffer) == 0) {
         buffer->drop_begin_id = shm_event_id(ev);
+        assert(buffer->dropped_num == 0);
         ++buffer->dropped_num;
+        shm_stream_consume(stream, 1);
         return NULL;
     }
 
