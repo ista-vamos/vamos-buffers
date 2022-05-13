@@ -11,7 +11,7 @@ typedef struct _shm_arbiter_buffer {
     shm_par_queue buffer;   // the buffer itself
     size_t dropped_num;     // the number of dropped events
     size_t total_dropped_num;     // the number of dropped events
-    shm_eventid dropped_id; // the id of the next 'dropped' event
+    shm_eventid drop_begin_id; // the id of the next 'dropped' event
     bool active;            // true while the events are being queued
 } shm_arbiter_buffer;
 
@@ -132,7 +132,8 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem, size_
             bool ret;
 
             shm_stream_get_dropped_event(buffer->stream, &dropped,
-                                         buffer->dropped_id, buffer->dropped_num);
+                                         buffer->drop_begin_id,
+                                         buffer->dropped_num);
             assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
             ret = shm_par_queue_push(queue, &dropped, sizeof(dropped));
             assert(ret && "BUG: queue has not enough free space");
@@ -143,7 +144,7 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem, size_
         }
     } else {
         if (!shm_par_queue_push(&buffer->buffer, elem, size)) {
-            buffer->dropped_id = shm_event_id((shm_event*)elem);
+            buffer->drop_begin_id = shm_event_id((shm_event*)elem);
             ++buffer->dropped_num;
         }
     }
@@ -168,7 +169,7 @@ void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
             shm_event_dropped dropped;
 
             shm_stream_get_dropped_event(buffer->stream, &dropped,
-                                         buffer->dropped_id, buffer->dropped_num);
+                                         buffer->drop_begin_id, buffer->dropped_num);
             assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
             assert(shm_par_queue_free_num(queue) > 1);
             shm_par_queue_push(queue, &dropped, sizeof(dropped));
@@ -177,8 +178,13 @@ void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
             buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k);
         }
     } else {
-        buffer->dropped_id = shm_event_id((shm_event*)elems);
         buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k);
+        if (buffer->dropped_num > 0) {
+            shm_event *first_dropped_ev
+                    = shm_par_queue_peek_at(&buffer->buffer, k - buffer->dropped_num);
+            assert(first_dropped_ev);
+            buffer->drop_begin_id = shm_event_id((shm_event*)first_dropped_ev);
+        }
     }
 }
 
@@ -242,7 +248,7 @@ void *stream_fetch(shm_stream *stream,
     if (buffer->dropped_num > 0) {
         if (shm_arbiter_buffer_free_space(buffer) > 1) {
             shm_stream_get_dropped_event(stream, &dropped_ev,
-                                         buffer->dropped_id, buffer->dropped_num);
+                                         buffer->drop_begin_id, buffer->dropped_num);
             shm_par_queue_push(&buffer->buffer, &dropped_ev, sizeof(dropped_ev));
             buffer->total_dropped_num = buffer->dropped_num;
             buffer->dropped_num = 0;
@@ -255,7 +261,7 @@ void *stream_fetch(shm_stream *stream,
     }
 
     if (shm_arbiter_buffer_free_space(buffer) == 0) {
-        buffer->dropped_id = shm_event_id(ev);
+        buffer->drop_begin_id = shm_event_id(ev);
         ++buffer->dropped_num;
         return NULL;
     }
