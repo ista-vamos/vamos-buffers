@@ -115,6 +115,8 @@ int _mm_strm_fun_Left(void * arg) {
 	    left_done = 1;
 	    if (left_done + right_done == 2)
 		    exit(0);
+	    else
+		    break;
     }
     else
     {
@@ -205,6 +207,8 @@ int _mm_strm_fun_Right(void * arg) {
 	    right_done = 1;
 	    if (left_done + right_done == 2)
 		    exit(0);
+  	    else
+		    break;
     }
     else
     {
