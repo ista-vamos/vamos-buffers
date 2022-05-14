@@ -40,7 +40,8 @@ int main(void) {
             cur = cur->next;
     }
     assert(sum == 10);
-    shm_list_destroy(&l, NULL);
+    // TODO: we leak it, destroy assumes that the list is dynamically allocated
+    // shm_list_destroy(&l, NULL);
 
     shm_list_init(&l);
     for (size_t i = 0; i < 4; ++i)
