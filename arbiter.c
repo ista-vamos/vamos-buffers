@@ -228,14 +228,7 @@ size_t shm_arbiter_buffer_peek1(shm_arbiter_buffer *buffer, void **data) {
 #define SLEEP_TIME_NS_INIT 10
 #define SLEEP_TIME_NS_THRES 10000
 
-/* wait for an event on the 'stream' and return a pointer for it
- * in 'in' param. Also set 'out' to point where this event should be
- * written if it is not dropped. 'pushed' means that the lastly
- * fetched event was pushed to the arbiter buffer*/
-void *stream_fetch(shm_stream *stream,
-                   shm_arbiter_buffer *buffer) {
-    static shm_event_dropped dropped_ev;
-
+static void *get_event(shm_stream *stream) {
     /* TODO: if there is no filtering and modifications, we can push multiple events forward.
              if there are filtering and modifications, we could have an additional thread
              to handle the load of data if we copy them in chunks */
@@ -247,7 +240,7 @@ void *stream_fetch(shm_stream *stream,
         ev = shm_stream_read_events(stream, &num);
         if (ev) {
             sleep_time = SLEEP_TIME_NS_INIT;
-            break;
+            return ev;
         }
 
         /* no event read, sleep a while */
@@ -263,59 +256,71 @@ void *stream_fetch(shm_stream *stream,
         sleep_ns(sleep_time);
     }
 
-    assert(ev && "No event read");
+    assert(0 && "Unreachable");
+}
 
-    /*
-    if (!ev)
-        return NULL;
+/* wait for an event on the 'stream' and return a pointer for it
+ * in 'in' param. Also set 'out' to point where this event should be
+ * written if it is not dropped. 'pushed' means that the lastly
+ * fetched event was pushed to the arbiter buffer*/
+void *stream_fetch(shm_stream *stream,
+                   shm_arbiter_buffer *buffer) {
+    static shm_event_dropped dropped_ev;
+    void *ev;
+    while (1) {
+        ev = get_event(stream);
+        if (!ev)
+            return NULL; /* stream ended */
 
-    printf("FETCH: read event { kind = %lu, id = %lu}\n",
-           ((shm_event*)ev)->kind,
-           ((shm_event*)ev)->id);*/
-    /*
-    fprintf(stderr, "%d: event = {%lu, %lu}\n", __LINE__,
-            shm_event_kind(ev), shm_event_id(ev));
-            */
-    if (buffer->dropped_num > 0) {
-        assert(DROP_SPACE_THRESHOLD < shm_arbiter_buffer_capacity(buffer));
-        if (shm_arbiter_buffer_free_space(buffer) > DROP_SPACE_THRESHOLD) {
-            shm_stream_get_dropped_event(stream, &dropped_ev,
-                                         buffer->drop_begin_id, buffer->dropped_num);
-            shm_par_queue_push(&buffer->buffer, &dropped_ev, sizeof(dropped_ev));
-            buffer->total_dropped_num += buffer->dropped_num;
-            buffer->dropped_num = 0;
-            /* the end id may not be precise, but we need just the upper bound */
-            shm_arbiter_buffer_notify_dropped(buffer,
-                                              buffer->drop_begin_id,
-                                              shm_event_id(ev) - 1);
-            assert(shm_arbiter_buffer_free_space(buffer) > 0);
-            return ev;
+        /*
+        printf("FETCH: read event { kind = %lu, id = %lu}\n",
+               ((shm_event*)ev)->kind,
+               ((shm_event*)ev)->id);*/
+        /*
+        fprintf(stderr, "%d: event = {%lu, %lu}\n", __LINE__,
+                shm_event_kind(ev), shm_event_id(ev));
+                */
+        if (buffer->dropped_num > 0) {
+            assert(DROP_SPACE_THRESHOLD < shm_arbiter_buffer_capacity(buffer));
+            if (shm_arbiter_buffer_free_space(buffer) > DROP_SPACE_THRESHOLD) {
+                shm_stream_get_dropped_event(stream, &dropped_ev,
+                                             buffer->drop_begin_id, buffer->dropped_num);
+                shm_par_queue_push(&buffer->buffer, &dropped_ev, sizeof(dropped_ev));
+                buffer->total_dropped_num += buffer->dropped_num;
+                buffer->dropped_num = 0;
+                /* the end id may not be precise, but we need just the upper bound */
+                shm_arbiter_buffer_notify_dropped(buffer,
+                                                  buffer->drop_begin_id,
+                                                  shm_event_id(ev) - 1);
+                assert(shm_arbiter_buffer_free_space(buffer) > 0);
+                return ev;
+            }
+
+            ++buffer->dropped_num;
+            /* notify about dropped events continuously, because it may take
+             * long time to generate the dropped event */
+            /* FIXME: % is slow... and make it configurable */
+            if (buffer->dropped_num % 10000 == 0) {
+                shm_arbiter_buffer_notify_dropped(buffer,
+                                                  buffer->drop_begin_id,
+                                                  shm_event_id(ev) - 1);
+            }
+            /* consume the dropped event */
+            shm_stream_consume(stream, 1);
+            continue;
         }
 
-        ++buffer->dropped_num;
-        /* notify about dropped events continuously, because it may take
-         * long time to generate the dropped event */
-        /* FIXME: % is slow... and make it configurable */
-        if (buffer->dropped_num % 10000 == 0) {
-            shm_arbiter_buffer_notify_dropped(buffer,
-                                              buffer->drop_begin_id,
-                                              shm_event_id(ev) - 1);
-        }
-        /* consume the dropped event */
-        shm_stream_consume(stream, 1);
-        return NULL;
-    }
-
-    assert(buffer->dropped_num == 0);
-    if (shm_arbiter_buffer_free_space(buffer) == 0) {
-        buffer->drop_begin_id = shm_event_id(ev);
         assert(buffer->dropped_num == 0);
-        ++buffer->dropped_num;
-        shm_stream_consume(stream, 1);
-        return NULL;
-    }
+        if (shm_arbiter_buffer_free_space(buffer) == 0) {
+            buffer->drop_begin_id = shm_event_id(ev);
+            assert(buffer->dropped_num == 0);
+            ++buffer->dropped_num;
+            shm_stream_consume(stream, 1);
+            continue;
+        }
 
-    return ev;
+        return ev;
+    }
 }
 
 void shm_arbiter_buffer_notify_dropped(shm_arbiter_buffer *buffer,
