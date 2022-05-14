@@ -14,6 +14,8 @@ typedef struct __MMEV_LPrime _MMEV_LPrime;
 typedef struct __MMEV_RPrime _MMEV_RPrime;
 typedef struct __MMEV_LSkip _MMEV_LSkip;
 typedef struct __MMEV_RSkip _MMEV_RSkip;
+int left_done = 0;
+int right_done = 0;
 size_t __mma_strm_ilen_Left = 0 ;
 size_t __mma_strm_blen_Left = 0 ;
 size_t __mma_strm_tlen_Left = 0 ;
@@ -103,16 +105,21 @@ int _mm_strm_fun_Left(void * arg) {
   _mm_strm_out_Left * outevent ;
   while((! shm_arbiter_buffer_active ( buffer )))
   {
-    sleep ( 100 ) ;
+    sleep_ns ( 10 ) ;
   }
   while(1)
   {
     inevent = stream_fetch ( stream,buffer ) ;
     if((inevent == 0))
     {
+	    left_done = 1;
+	    if (left_done + right_done == 2)
+		    exit(0);
     }
     else
     {
+	printf("[%d] left fetch: {%lu, %lu}\n",
+	       __LINE__, inevent->head.kind, inevent->head.id);
     }
     
     switch (((inevent->head).kind)) {
@@ -131,6 +138,8 @@ int _mm_strm_fun_Left(void * arg) {
       {
         outevent = shm_arbiter_buffer_write_ptr ( buffer ) ;
         memcpy ( outevent,inevent,sizeof ( _mm_strm_in_Left ) ) ;
+	printf("in: {%lu, %lu}\n", inevent->head.kind, inevent->head.id);
+	printf("out: {%lu, %lu}\n", outevent->head.kind, outevent->head.id);
         shm_arbiter_buffer_write_finish ( buffer ) ;
         shm_stream_consume ( stream,1 ) ;
       }
@@ -186,16 +195,21 @@ int _mm_strm_fun_Right(void * arg) {
   _mm_strm_out_Right * outevent ;
   while((! shm_arbiter_buffer_active ( buffer )))
   {
-    sleep ( 100 ) ;
+    sleep_ns ( 10 ) ;
   }
   while(1)
   {
     inevent = stream_fetch ( stream,buffer ) ;
     if((inevent == 0))
     {
+	    right_done = 1;
+	    if (left_done + right_done == 2)
+		    exit(0);
     }
     else
     {
+	printf("[%d] right fetch: {%lu, %lu}\n",
+	       __LINE__, inevent->head.kind, inevent->head.id);
     }
     
     switch (((inevent->head).kind)) {
@@ -519,6 +533,10 @@ int arbiterMonitor( ) {
         _mm_strm_out_Left * __mm_evref_Left_0 = _MM_EVACCESS ( 0,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_bstrt_Left ) ;
         if((((__mm_evref_Left_0->head).kind) == __MM_EVENTCONST_ENUM_LPrime))
         {
+
+          printf("[%d] LEFT: {%lu, %lu}\n", __LINE__,
+	         __mm_evref_Left_0->head.kind,
+	         __mm_evref_Left_0->head.id);
           int __mm_evfref_Left_0_n = (((__mm_evref_Left_0->cases).LPrime).n) ;
           int _mm_uv_mvar_n_11 = __mm_evfref_Left_0_n ;
           if((__mma_strm_tlen_Right == 0))
@@ -528,8 +546,10 @@ int arbiterMonitor( ) {
               if(((_mm_arbiter.post) == 0))
               {
                 (_mm_arbiter.seen) = ((_mm_arbiter.seen) + 1) ;
-                __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
-                {
+
+		__MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,
+		               __mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left
+		) ; {
                   int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_11 ;
                   {
                     int _mm_uv_mvar_n_24 = __mm_arbiter_yieldvar_n ;
