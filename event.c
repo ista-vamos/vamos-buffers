@@ -38,6 +38,7 @@ shm_kind shm_mk_event_kind(const char* name,
     if (ev_kinds_num_allocated < ev_kinds_num) {
         ev_kinds_num_allocated += 10;
         events_info = realloc(events_info, sizeof(struct _ev_kind_rec) * ev_kinds_num_allocated);
+        memset(events_info + idx, 0, sizeof(struct _ev_kind_rec)*10);
         assert(events_info && "Allocation failed");
     }
 
@@ -58,7 +59,7 @@ void initialize_events() {
 
     dropped_kind = shm_mk_event_kind("dropped",
                                      sizeof(shm_event_dropped),
-                                     "pd");
+                                     "dp");
     /* FIXME */
     assert(dropped_kind == 1 && "We assume that the 'dropped_kind' is 1 for now");
 
