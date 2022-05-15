@@ -58,9 +58,13 @@ typedef struct monitored_process
 	struct monitor_buffer_node *thread_buffers;
 } * monitored_process;
 
-static int shamon_shm_unlink(monitor_buffer buffer, pid_t pid, pid_t tid)
+int shamon_fastbuf_unlink(monitor_buffer buffer, pid_t pid, pid_t tid)
 {
 	char name[SHM_NAME_MAXLEN];
+	if(buffer==NULL)
+	{
+
+	}
 	if (shm_mapname_thread_pid_tid(name, pid, tid) == 0)
 	{
 		abort();
@@ -81,7 +85,7 @@ void wait_for_process(monitored_process proc)
 struct monitor_buffer_node *attach_to_buffer(pid_t pid, pid_t tid, size_t size_in_pages)
 {
 	char name[SHM_NAME_MAXLEN];
-	if (shm_mapname_thread_pid_tid(name, pid, tid) <= 0)
+	if (shm_mapname_thread_pid_tid(name, pid, tid) == 0)
 	{
 		abort();
 	}
@@ -113,7 +117,7 @@ struct monitor_buffer_node *attach_to_buffer(pid_t pid, pid_t tid, size_t size_i
 databuffer *attach_to_databuffer(pid_t pid, pid_t tid, size_t size_in_pages, uint64_t bufid)
 {
 	char name[SHM_NAME_MAXLEN];
-	if (shm_mapname_thread_data(name, pid, tid, bufid) <= 0)
+	if (shm_mapname_thread_data(name, pid, tid, bufid) == 0)
 	{
 		abort();
 	}
@@ -204,7 +208,10 @@ void insert_data_buffer(monitored_process proc, pid_t tid, databuffer * dbuf)
 
 void finalize_data_buffer(monitored_process proc, pid_t tid, uint64_t dbufid)
 {
+	if(proc==NULL&&tid==0&&dbufid==0)
+	{
 
+	}
 }
 
 databuffer * progress_data_buffer(monitor_buffer buf, uint64_t dbufid)
@@ -326,12 +333,13 @@ int main_process_event_loop(void *arg)
 			}
 		}
 	}
+	return 0;
 }
 
 monitored_process only_attach_to_process(pid_t pid, int (*register_thread_buffer)(monitor_buffer buffer))
 {
 	char name[SHM_NAME_MAXLEN];
-	if (shm_mapname_thread_pid(name, pid) <= 0)
+	if (shm_mapname_thread_pid(name, pid) == 0)
 	{
 		abort();
 	}

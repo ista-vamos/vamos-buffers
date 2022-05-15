@@ -41,3 +41,8 @@ char *shm_mapname_thread_data(char *buf, pid_t pid, pid_t tid, uint64_t dbufid)
 	return buf;
 }
 
+void spin_wait()
+{
+	for (int i = 0; i < 500; i++)
+		;
+}

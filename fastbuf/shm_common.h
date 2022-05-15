@@ -33,8 +33,4 @@ char *shm_mapname_thread_pid_tid(char *buf, pid_t pid, pid_t tid);
 char *shm_mapname_thread_data(char *buf, pid_t pid, pid_t tid, uint64_t dbufid);
 
 
-static void spin_wait()
-{
-	for (int i = 0; i < 500; i++)
-		;
-}
+void spin_wait();

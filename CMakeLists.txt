@@ -50,6 +50,7 @@ add_library(shamon STATIC shamon.c)
 add_subdirectory(streams)
 add_subdirectory(sources)
 add_subdirectory(shmbuf)
+add_subdirectory(fastbuf)
 
 add_library(shamon-lib SHARED arbiter.c event.c stream.c)
 target_compile_definitions(shamon-lib PUBLIC -D_POSIX_C_SOURCE=200809L)
@@ -59,3 +60,4 @@ target_link_libraries(shamon-lib PUBLIC shamon-parallel-queue
 
 add_subdirectory(experiments)
 add_subdirectory(tests)
+

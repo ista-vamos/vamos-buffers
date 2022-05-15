@@ -41,6 +41,7 @@ int register_monitored_thread(monitor_buffer buffer)
 {
 	thrd_t thrd;
 	thrd_create(&thrd, &monitoring_thread, buffer);
+	return 0;
 }
 
 int main(int argc, char** argv)
