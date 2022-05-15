@@ -22,6 +22,11 @@ void sregex_alter(shm_stream *stream,
     memcpy(out, in, stream->event_size);
 }
 
+static void sregex_destroy(shm_stream *s) {
+    release_shared_buffer(((shm_stream_sregex*)s)->shmbuffer);
+    free(s);
+}
+
 shm_stream *shm_create_sregex_stream(const char *key,
                                      struct source_control **control) {
     shm_stream_sregex *ss = malloc(sizeof *ss);
@@ -35,6 +40,7 @@ shm_stream *shm_create_sregex_stream(const char *key,
                     sregex_is_ready,
                     NULL,
                     sregex_alter,
+                    sregex_destroy,
                     "regex-stream");
     ss->shmbuffer = shmbuffer;
 
@@ -62,10 +68,5 @@ shm_stream *shm_create_sregex_stream(const char *key,
 
     buffer_set_attached(ss->shmbuffer, true);
     return (shm_stream *) ss;
-}
-
-void shm_destroy_sregex_stream(shm_stream_sregex *ss) {
-    release_shared_buffer(ss->shmbuffer);
-    free(ss);
 }
 

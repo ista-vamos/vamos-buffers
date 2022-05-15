@@ -22,6 +22,12 @@ void drregex_alter(shm_stream *stream,
     memcpy(out, in, stream->event_size);
 }
 
+void drregex_destroy(shm_stream *s) {
+    shm_stream_drregex *ss = (shm_stream_drregex*)s;
+    release_shared_buffer(ss->shmbuffer);
+    free(ss);
+}
+
 shm_stream *shm_create_drregex_stream(const char *key,
                                      struct source_control **control) {
     shm_stream_drregex *ss = malloc(sizeof *ss);
@@ -35,6 +41,7 @@ shm_stream *shm_create_drregex_stream(const char *key,
                     drregex_is_ready,
                     NULL,
                     drregex_alter,
+                    drregex_destroy,
                     "drregex-stream");
     ss->shmbuffer = shmbuffer;
 
@@ -64,7 +71,3 @@ shm_stream *shm_create_drregex_stream(const char *key,
     return (shm_stream *) ss;
 }
 
-void shm_destroy_drregex_stream(shm_stream_drregex *ss) {
-    release_shared_buffer(ss->shmbuffer);
-    free(ss);
-}

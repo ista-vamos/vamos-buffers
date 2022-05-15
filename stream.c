@@ -20,6 +20,7 @@ void shm_stream_init(shm_stream *stream,
                      shm_stream_is_ready_fn is_ready,
                      shm_stream_filter_fn filter,
                      shm_stream_alter_fn alter,
+                     shm_stream_destroy_fn destroy,
                      const char * const name) {
         stream->id = ++last_stream_id;
         stream->event_size = event_size;
@@ -27,6 +28,7 @@ void shm_stream_init(shm_stream *stream,
         stream->is_ready = is_ready;
         stream->filter = filter;
         stream->alter = alter;
+        stream->destroy = destroy;
         stream->name = name;
 }
 
@@ -72,4 +74,9 @@ void shm_stream_notify_dropped(shm_stream *stream,
                                uint64_t begin_id,
                                uint64_t end_id) {
     buffer_notify_dropped(stream->incoming_events, begin_id, end_id);
+}
+
+void shm_stream_destroy(shm_stream *stream) {
+    if (stream->destroy)
+            stream->destroy(stream);
 }

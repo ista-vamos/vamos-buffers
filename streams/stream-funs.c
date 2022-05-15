@@ -22,6 +22,11 @@ void funs_alter(shm_stream *stream,
     memcpy(out, in, stream->event_size);
 }
 
+static void funs_destroy(shm_stream *s) {
+    release_shared_buffer(((shm_stream_funs*)s)->shmbuffer);
+    free(s);
+}
+
 shm_stream *shm_create_funs_stream(const char *key,
                                    struct source_control **control) {
     shm_stream_funs *ss = malloc(sizeof *ss);
@@ -35,6 +40,7 @@ shm_stream *shm_create_funs_stream(const char *key,
                     funs_is_ready,
                     NULL,
                     funs_alter,
+                    funs_destroy,
                     "funs-stream");
     ss->shmbuffer = shmbuffer;
     *control = get_shared_control_buffer(key);
@@ -71,11 +77,6 @@ shm_stream *shm_create_funs_stream(const char *key,
 
 const char *shm_stream_funs_get_str(shm_stream_funs *fstream, uint64_t elem) {
     return buffer_get_str(fstream->shmbuffer, elem);
-}
-
-void shm_destroy_funs_stream(shm_stream_funs *ss) {
-    release_shared_buffer(ss->shmbuffer);
-    free(ss);
 }
 
 struct event_record *shm_funs_stream_get_event_spec(shm_stream_funs *stream, shm_kind kind) {
