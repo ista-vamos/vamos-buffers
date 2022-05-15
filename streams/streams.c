@@ -5,6 +5,7 @@
 
 #include "stream-funs.h"
 #include "stream-regex.h"
+#include "stream-drregex.h"
 
 /*
 static const char *get_arg(const char *name, size_t len,
@@ -71,6 +72,7 @@ struct stream_rec avail_streams[] = {
   {"calls", "connect to dynamorio libfuns.so and track calls of a function"},
   {"files", "open given files and read from them (the files can be pipes)"},
   {"regex", "read stdin and parse it using regexes"},
+  {"drregex", "read stdin and stdout and parse it using regexes (DynamoRIO based)"},
   {NULL, NULL} /* to mark the end */
 };
 
@@ -124,6 +126,18 @@ shm_stream *shm_stream_create(const char *stream_name,
         }
 
         return shm_create_sregex_stream(key, control);
+    } else if (strncmp(source, "drregex", 7) == 0) {
+        if (!next || *next == 0) {
+            fprintf(stderr, "error: source 'drregex' needs the key to SHM as parameter\n");
+            return NULL;
+        }
+        char key[256];
+        next = get_next_part(next, key, ';');
+        if (next) {
+            fprintf(stderr, "warning: source 'drregex' ignoring further parameter (FOR NOW)\n");
+        }
+
+        return shm_create_drregex_stream(key, control);
     }
 #if 0
     else if (strncmp(name, "files", 5) == 0) {
