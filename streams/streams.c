@@ -184,4 +184,3 @@ shm_stream *shm_stream_create(const char *stream_name,
     abort();
     return NULL;
 }
-
