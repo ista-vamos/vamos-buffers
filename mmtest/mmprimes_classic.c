@@ -841,9 +841,16 @@ int arbiterMonitor( ) {
                       {
                         if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
-                          _mm_gco _mm_uv_gvar_tmpstrng_42 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_42->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_42 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left1" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_L_ArBmOn_EQ;
                         }
                         else
@@ -865,9 +872,16 @@ int arbiterMonitor( ) {
                     {
                       if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
-                        _mm_gco _mm_uv_gvar_tmpstrng_43 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_43->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_43 ) ;
+                        if((! 0))
+                        {
+                          printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left1" ) ;
+                          exit ( 1 ) ;
+                        }
+                        else
+                        {
+                        }
+                        
                         goto __mm_label_arbmon_L_ArBmOn_EQ;
                       }
                       else
@@ -1287,9 +1301,16 @@ int arbiterMonitor( ) {
                         if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_44 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_44->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_44 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left2" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_L_ArBmOn_Left1;
                         }
                         else
@@ -1312,9 +1333,16 @@ int arbiterMonitor( ) {
                       if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_45 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_45->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_45 ) ;
+                        if((! 0))
+                        {
+                          printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left2" ) ;
+                          exit ( 1 ) ;
+                        }
+                        else
+                        {
+                        }
+                        
                         goto __mm_label_arbmon_L_ArBmOn_Left1;
                       }
                       else
@@ -1763,9 +1791,16 @@ int arbiterMonitor( ) {
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_46 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_46->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_46 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left3" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_L_ArBmOn_Left2;
                         }
                         else
@@ -1789,9 +1824,16 @@ int arbiterMonitor( ) {
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_47 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_47->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_47 ) ;
+                        if((! 0))
+                        {
+                          printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Left3" ) ;
+                          exit ( 1 ) ;
+                        }
+                        else
+                        {
+                        }
+                        
                         goto __mm_label_arbmon_L_ArBmOn_Left2;
                       }
                       else
@@ -2379,9 +2421,16 @@ int arbiterMonitor( ) {
                         {
                           if((_mm_uv_mvar_n_36 != ((_mm_monitor.pbuf) [ 0 ])))
                           {
-                            _mm_gco _mm_uv_gvar_tmpstrng_48 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_36 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_48->data) ) ;
-                            _mm_decref ( _mm_uv_gvar_tmpstrng_48 ) ;
+                            if((! 0))
+                            {
+                              printf ( "Error detected. Aborting...\n" ) ;
+                              _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right1" ) ;
+                              exit ( 1 ) ;
+                            }
+                            else
+                            {
+                            }
+                            
                             goto __mm_label_arbmon_L_ArBmOn_EQ;
                           }
                           else
@@ -2403,9 +2452,16 @@ int arbiterMonitor( ) {
                       {
                         if((_mm_uv_mvar_n_36 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
-                          _mm_gco _mm_uv_gvar_tmpstrng_49 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_36 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_49->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_49 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right1" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_L_ArBmOn_EQ;
                         }
                         else
@@ -2801,9 +2857,16 @@ int arbiterMonitor( ) {
                           if((_mm_uv_mvar_n_39 != ((_mm_monitor.pbuf) [ 0 ])))
                           {
                             ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                            _mm_gco _mm_uv_gvar_tmpstrng_50 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_39 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_50->data) ) ;
-                            _mm_decref ( _mm_uv_gvar_tmpstrng_50 ) ;
+                            if((! 0))
+                            {
+                              printf ( "Error detected. Aborting...\n" ) ;
+                              _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right2" ) ;
+                              exit ( 1 ) ;
+                            }
+                            else
+                            {
+                            }
+                            
                             goto __mm_label_arbmon_L_ArBmOn_Left1;
                           }
                           else
@@ -2826,9 +2889,16 @@ int arbiterMonitor( ) {
                         if((_mm_uv_mvar_n_39 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_51 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_39 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_51->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_51 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right2" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_L_ArBmOn_Left1;
                         }
                         else
@@ -3216,9 +3286,16 @@ int arbiterMonitor( ) {
                           {
                             ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                             ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                            _mm_gco _mm_uv_gvar_tmpstrng_52 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_41 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_52->data) ) ;
-                            _mm_decref ( _mm_uv_gvar_tmpstrng_52 ) ;
+                            if((! 0))
+                            {
+                              printf ( "Error detected. Aborting...\n" ) ;
+                              _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right3" ) ;
+                              exit ( 1 ) ;
+                            }
+                            else
+                            {
+                            }
+                            
                             goto __mm_label_arbmon_L_ArBmOn_Right2;
                           }
                           else
@@ -3242,9 +3319,16 @@ int arbiterMonitor( ) {
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_53 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_41 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_53->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_53 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"L","Right3" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_L_ArBmOn_Right2;
                         }
                         else
@@ -4039,9 +4123,16 @@ int arbiterMonitor( ) {
                         {
                           if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                           {
-                            _mm_gco _mm_uv_gvar_tmpstrng_54 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_54->data) ) ;
-                            _mm_decref ( _mm_uv_gvar_tmpstrng_54 ) ;
+                            if((! 0))
+                            {
+                              printf ( "Error detected. Aborting...\n" ) ;
+                              _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
+                              exit ( 1 ) ;
+                            }
+                            else
+                            {
+                            }
+                            
                             goto __mm_label_arbmon_R_ArBmOn_EQ;
                           }
                           else
@@ -4063,9 +4154,16 @@ int arbiterMonitor( ) {
                       {
                         if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
-                          _mm_gco _mm_uv_gvar_tmpstrng_55 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_55->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_55 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_R_ArBmOn_EQ;
                         }
                         else
@@ -4113,9 +4211,16 @@ int arbiterMonitor( ) {
                       {
                         if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
-                          _mm_gco _mm_uv_gvar_tmpstrng_56 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_56->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_56 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_R_ArBmOn_EQ;
                         }
                         else
@@ -4137,9 +4242,16 @@ int arbiterMonitor( ) {
                     {
                       if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
-                        _mm_gco _mm_uv_gvar_tmpstrng_57 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_57->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_57 ) ;
+                        if((! 0))
+                        {
+                          printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
+                          exit ( 1 ) ;
+                        }
+                        else
+                        {
+                        }
+                        
                         goto __mm_label_arbmon_R_ArBmOn_EQ;
                       }
                       else
@@ -4181,9 +4293,16 @@ int arbiterMonitor( ) {
                       {
                         if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
-                          _mm_gco _mm_uv_gvar_tmpstrng_58 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_58->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_58 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_R_ArBmOn_EQ;
                         }
                         else
@@ -4205,9 +4324,16 @@ int arbiterMonitor( ) {
                     {
                       if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
-                        _mm_gco _mm_uv_gvar_tmpstrng_59 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_59->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_59 ) ;
+                        if((! 0))
+                        {
+                          printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
+                          exit ( 1 ) ;
+                        }
+                        else
+                        {
+                        }
+                        
                         goto __mm_label_arbmon_R_ArBmOn_EQ;
                       }
                       else
@@ -4573,9 +4699,16 @@ int arbiterMonitor( ) {
                           if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                           {
                             ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                            _mm_gco _mm_uv_gvar_tmpstrng_60 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_60->data) ) ;
-                            _mm_decref ( _mm_uv_gvar_tmpstrng_60 ) ;
+                            if((! 0))
+                            {
+                              printf ( "Error detected. Aborting...\n" ) ;
+                              _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
+                              exit ( 1 ) ;
+                            }
+                            else
+                            {
+                            }
+                            
                             goto __mm_label_arbmon_R_ArBmOn_Left1;
                           }
                           else
@@ -4598,9 +4731,16 @@ int arbiterMonitor( ) {
                         if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_61 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_61->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_61 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_R_ArBmOn_Left1;
                         }
                         else
@@ -4650,9 +4790,16 @@ int arbiterMonitor( ) {
                         if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_62 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_62->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_62 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_R_ArBmOn_Left1;
                         }
                         else
@@ -4675,9 +4822,16 @@ int arbiterMonitor( ) {
                       if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_63 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_63->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_63 ) ;
+                        if((! 0))
+                        {
+                          printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
+                          exit ( 1 ) ;
+                        }
+                        else
+                        {
+                        }
+                        
                         goto __mm_label_arbmon_R_ArBmOn_Left1;
                       }
                       else
@@ -4721,9 +4875,16 @@ int arbiterMonitor( ) {
                         if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_64 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_64->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_64 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_R_ArBmOn_Left1;
                         }
                         else
@@ -4746,9 +4907,16 @@ int arbiterMonitor( ) {
                       if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_65 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_65->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_65 ) ;
+                        if((! 0))
+                        {
+                          printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
+                          exit ( 1 ) ;
+                        }
+                        else
+                        {
+                        }
+                        
                         goto __mm_label_arbmon_R_ArBmOn_Left1;
                       }
                       else
@@ -5106,9 +5274,16 @@ int arbiterMonitor( ) {
                           {
                             ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                             ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                            _mm_gco _mm_uv_gvar_tmpstrng_66 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_66->data) ) ;
-                            _mm_decref ( _mm_uv_gvar_tmpstrng_66 ) ;
+                            if((! 0))
+                            {
+                              printf ( "Error detected. Aborting...\n" ) ;
+                              _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
+                              exit ( 1 ) ;
+                            }
+                            else
+                            {
+                            }
+                            
                             goto __mm_label_arbmon_R_ArBmOn_Left2;
                           }
                           else
@@ -5132,9 +5307,16 @@ int arbiterMonitor( ) {
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_67 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_67->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_67 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_R_ArBmOn_Left2;
                         }
                         else
@@ -5186,9 +5368,16 @@ int arbiterMonitor( ) {
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_68 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_68->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_68 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_R_ArBmOn_Left2;
                         }
                         else
@@ -5212,9 +5401,16 @@ int arbiterMonitor( ) {
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_69 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_69->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_69 ) ;
+                        if((! 0))
+                        {
+                          printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
+                          exit ( 1 ) ;
+                        }
+                        else
+                        {
+                        }
+                        
                         goto __mm_label_arbmon_R_ArBmOn_Left2;
                       }
                       else
@@ -5260,9 +5456,16 @@ int arbiterMonitor( ) {
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_70 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_70->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_70 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_R_ArBmOn_Left2;
                         }
                         else
@@ -5286,9 +5489,16 @@ int arbiterMonitor( ) {
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_71 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_71->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_71 ) ;
+                        if((! 0))
+                        {
+                          printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
+                          exit ( 1 ) ;
+                        }
+                        else
+                        {
+                        }
+                        
                         goto __mm_label_arbmon_R_ArBmOn_Left2;
                       }
                       else
@@ -5533,9 +5743,16 @@ int arbiterMonitor( ) {
                       {
                         if((_mm_uv_mvar_n_36 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
-                          _mm_gco _mm_uv_gvar_tmpstrng_72 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_36 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_72->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_72 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right1" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_R_ArBmOn_EQ;
                         }
                         else
@@ -5557,9 +5774,16 @@ int arbiterMonitor( ) {
                     {
                       if((_mm_uv_mvar_n_36 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
-                        _mm_gco _mm_uv_gvar_tmpstrng_73 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_36 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_73->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_73 ) ;
+                        if((! 0))
+                        {
+                          printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right1" ) ;
+                          exit ( 1 ) ;
+                        }
+                        else
+                        {
+                        }
+                        
                         goto __mm_label_arbmon_R_ArBmOn_EQ;
                       }
                       else
@@ -5995,9 +6219,16 @@ int arbiterMonitor( ) {
                         if((_mm_uv_mvar_n_39 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_74 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_39 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_74->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_74 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right2" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_R_ArBmOn_Left1;
                         }
                         else
@@ -6020,9 +6251,16 @@ int arbiterMonitor( ) {
                       if((_mm_uv_mvar_n_39 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_75 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_39 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_75->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_75 ) ;
+                        if((! 0))
+                        {
+                          printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right2" ) ;
+                          exit ( 1 ) ;
+                        }
+                        else
+                        {
+                        }
+                        
                         goto __mm_label_arbmon_R_ArBmOn_Left1;
                       }
                       else
@@ -6478,9 +6716,16 @@ int arbiterMonitor( ) {
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_76 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_41 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_76->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_76 ) ;
+                          if((! 0))
+                          {
+                            printf ( "Error detected. Aborting...\n" ) ;
+                            _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right3" ) ;
+                            exit ( 1 ) ;
+                          }
+                          else
+                          {
+                          }
+                          
                           goto __mm_label_arbmon_R_ArBmOn_Right2;
                         }
                         else
@@ -6504,9 +6749,16 @@ int arbiterMonitor( ) {
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_77 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_41 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_77->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_77 ) ;
+                        if((! 0))
+                        {
+                          printf ( "Error detected. Aborting...\n" ) ;
+                          _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right3" ) ;
+                          exit ( 1 ) ;
+                        }
+                        else
+                        {
+                        }
+                        
                         goto __mm_label_arbmon_R_ArBmOn_Right2;
                       }
                       else
