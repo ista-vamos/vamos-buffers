@@ -65,8 +65,8 @@ static int shamon_shm_open_app_buffer(int flags, mode_t mode)
 	{
 		abort();
 	}
-	printf("%s\n",name);
-	fflush(stdout);
+	//printf("%s\n",name);
+	//fflush(stdout);
 	return open(name, flags | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK | O_CREAT, mode);
 }
 
