@@ -18,6 +18,7 @@ typedef union _signature_operand {
         uint64_t shared;
         const char *local;
     } S;
+    /* any of those types */
 } signature_operand;
 
 size_t signature_op_get_size(unsigned char c);
