@@ -7,7 +7,7 @@
 #include "../gen/shamon.h"
 #include "../gen/mmlib.h"
 typedef enum __MM_STREAMCONST_ENUM { __MM_STREAMCONST_ENUM_Left, __MM_STREAMCONST_ENUM_Right } _MM_STREAMCONST_ENUM;
-typedef enum __MM_EVENTCONST_ENUM { __MM_EVENTCONST_NOTHING, __MM_EVENTCONST_ENUM_hole, __MM_EVENTCONST_ENUM_Prime, __MM_EVENTCONST_ENUM_LPrime, __MM_EVENTCONST_ENUM_RPrime, __MM_EVENTCONST_ENUM_LSkip, __MM_EVENTCONST_ENUM_RSkip } _MM_EVENTCONST_ENUM;
+typedef enum __MM_EVENTCONST_ENUM { __MM_EVENTCONST_NOTHING, __MM_EVENTCONST_ENUM_hole, __MM_EVENTCONST_ENUM_Prime, __MM_EVENTCONST_ENUM_LPrime, __MM_EVENTCONST_ENUM_RPrime, __MM_EVENTCONST_ENUM_LSkip, __MM_EVENTCONST_ENUM_RSkip, __MM_EVENTCONST_ENUM_EFinal } _MM_EVENTCONST_ENUM;
 typedef struct source_control _mm_source_control;
 void _mm_print_streams( );
 typedef struct __MMEV_Prime _MMEV_Prime;
@@ -15,6 +15,7 @@ typedef struct __MMEV_LPrime _MMEV_LPrime;
 typedef struct __MMEV_RPrime _MMEV_RPrime;
 typedef struct __MMEV_LSkip _MMEV_LSkip;
 typedef struct __MMEV_RSkip _MMEV_RSkip;
+typedef struct __MMEV_EFinal _MMEV_EFinal;
 size_t __mma_strm_ilen_Left = 0 ;
 size_t __mma_strm_blen_Left = 0 ;
 size_t __mma_strm_tlen_Left = 0 ;
@@ -56,6 +57,8 @@ struct __MMEV_LSkip {
 };
 struct __MMEV_RSkip {
   int x ;
+};
+struct __MMEV_EFinal {
 };
 struct __mm_strm_hole_Left {
   int n ;
@@ -270,16 +273,28 @@ struct __MMARBTP {
   int pre ;
   int seen ;
   int post ;
+  int sl ;
+  int sr ;
+  int dl ;
+  int dr ;
 };
 struct __MMMONTP {
   int * pbuf ;
+  int pl ;
+  int pr ;
 };
 void _mm_print_state(_MMARBTP * arbiter,_MMMONTP * monitor,char * arbstate,char * monstate) {
   printf ( "Arbiter (%s):\n",arbstate ) ;
   printf ( "pre: %i\n",(arbiter->pre) ) ;
   printf ( "seen: %i\n",(arbiter->seen) ) ;
   printf ( "post: %i\n",(arbiter->post) ) ;
+  printf ( "sl: %i\n",(arbiter->sl) ) ;
+  printf ( "sr: %i\n",(arbiter->sr) ) ;
+  printf ( "dl: %i\n",(arbiter->dl) ) ;
+  printf ( "dr: %i\n",(arbiter->dr) ) ;
   printf ( "Monitor (%s):\n",monstate ) ;
+  printf ( "pl: %i\n",(monitor->pl) ) ;
+  printf ( "pr: %i\n",(monitor->pr) ) ;
   _mm_print_streams ( ) ;
 }
 int arbiterMonitor( ) {
@@ -288,7 +303,13 @@ int arbiterMonitor( ) {
   (_mm_arbiter.pre) = 0 ;
   (_mm_arbiter.seen) = 0 ;
   (_mm_arbiter.post) = 0 ;
+  (_mm_arbiter.sl) = 0 ;
+  (_mm_arbiter.sr) = 0 ;
+  (_mm_arbiter.dl) = 0 ;
+  (_mm_arbiter.dr) = 0 ;
   (_mm_monitor.pbuf) = (int *) malloc(sizeof(int) * 3) ;
+  (_mm_monitor.pl) = 0 ;
+  (_mm_monitor.pr) = 0 ;
   while(__mm_monitor_running)
   {
     goto __mm_label_arbmon_L_ArBmOn_EQ;
@@ -303,7 +324,14 @@ int arbiterMonitor( ) {
       {
         if(((__mma_strm_tlen_Right == 0) && (atomic_load_explicit ( (&__mm_strm_done_Right),memory_order_acquire ) && (shm_arbiter_buffer_peek ( __mma_strm_buf_Right,0,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) == 0))))
         {
-          return 0 ;
+          {
+            {
+              _mm_gco _mm_uv_gvar_tmpstrng_42 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
+              printf ( "%s\n",(_mm_uv_gvar_tmpstrng_42->data) ) ;
+              _mm_decref ( _mm_uv_gvar_tmpstrng_42 ) ;
+              goto __mm_label_arbmon_Finished_ArBmOn_EQ;
+            }
+          }
         }
         else
         {
@@ -381,6 +409,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) == 0))
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_4) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_4) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_EQ;
             }
@@ -415,6 +444,7 @@ int arbiterMonitor( ) {
           if((_mm_uv_mvar_n_5 <= (_mm_arbiter.pre)))
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_5) ;
+            (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_5) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
             goto __mm_label_arbmon_L_ArBmOn_EQ;
           }
@@ -455,6 +485,7 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_25 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_25 ;
+                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_L_ArBmOn_Right1;
                   }
                   else
@@ -487,12 +518,10 @@ int arbiterMonitor( ) {
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_8 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
+            (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_8) ;
+            (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_arbiter.seen)) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
-            {
-              int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
-              {
-              }
-            }
+            goto __mm_label_arbmon_R_ArBmOn_EQ;
           }
           else
           {
@@ -506,6 +535,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = ((((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post)) - _mm_uv_mvar_n_9) ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = 0 ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_9) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_arbiter.seen)) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
@@ -530,6 +561,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = 0 ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) - (_mm_uv_mvar_n_10 - (_mm_arbiter.pre))) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_10) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_uv_mvar_n_10 - (_mm_arbiter.pre))) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_uv_mvar_n_10 - (_mm_arbiter.pre)) ;
@@ -578,6 +611,7 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_24 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_24 ;
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left1;
                     }
                     else
@@ -636,6 +670,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.seen) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_EQ;
             }
@@ -646,6 +681,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_EQ;
             }
@@ -679,7 +715,14 @@ int arbiterMonitor( ) {
       {
         if(((__mma_strm_tlen_Right == 0) && (atomic_load_explicit ( (&__mm_strm_done_Right),memory_order_acquire ) && (shm_arbiter_buffer_peek ( __mma_strm_buf_Right,0,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) == 0))))
         {
-          return 0 ;
+          {
+            {
+              _mm_gco _mm_uv_gvar_tmpstrng_43 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
+              printf ( "%s\n",(_mm_uv_gvar_tmpstrng_43->data) ) ;
+              _mm_decref ( _mm_uv_gvar_tmpstrng_43 ) ;
+              goto __mm_label_arbmon_Finished_ArBmOn_Left1;
+            }
+          }
         }
         else
         {
@@ -757,6 +800,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) == 0))
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_4) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_4) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left1;
             }
@@ -791,6 +835,7 @@ int arbiterMonitor( ) {
           if((_mm_uv_mvar_n_5 <= (_mm_arbiter.pre)))
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_5) ;
+            (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_5) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left1;
           }
@@ -832,6 +877,7 @@ int arbiterMonitor( ) {
                   {
                     if((_mm_uv_mvar_n_27 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_EQ;
                     }
                     else
@@ -841,9 +887,10 @@ int arbiterMonitor( ) {
                       {
                         if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
-                          _mm_gco _mm_uv_gvar_tmpstrng_42 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_42->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_42 ) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_44 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_44->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_44 ) ;
                           goto __mm_label_arbmon_L_ArBmOn_EQ;
                         }
                         else
@@ -865,9 +912,10 @@ int arbiterMonitor( ) {
                     {
                       if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
-                        _mm_gco _mm_uv_gvar_tmpstrng_43 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_43->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_43 ) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        _mm_gco _mm_uv_gvar_tmpstrng_45 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_45->data) ) ;
+                        _mm_decref ( _mm_uv_gvar_tmpstrng_45 ) ;
                         goto __mm_label_arbmon_L_ArBmOn_EQ;
                       }
                       else
@@ -907,20 +955,10 @@ int arbiterMonitor( ) {
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_8 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
+            (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_8) ;
+            (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_arbiter.seen)) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
-            {
-              int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
-              {
-                if((__mm_arbiter_yieldvar_x == 1))
-                {
-                  goto __mm_label_arbmon_R_ArBmOn_EQ;
-                }
-                else
-                {
-                }
-                
-              }
-            }
+            goto __mm_label_arbmon_R_ArBmOn_Left1;
           }
           else
           {
@@ -934,6 +972,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = ((((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post)) - _mm_uv_mvar_n_9) ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = 0 ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_9) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_arbiter.seen)) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
@@ -966,6 +1006,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = 0 ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) - (_mm_uv_mvar_n_10 - (_mm_arbiter.pre))) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_10) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_uv_mvar_n_10 - (_mm_arbiter.pre))) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_uv_mvar_n_10 - (_mm_arbiter.pre)) ;
@@ -1022,6 +1064,7 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_26 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_26 ;
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left2;
                     }
                     else
@@ -1080,6 +1123,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.seen) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left1;
             }
@@ -1090,6 +1134,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left1;
             }
@@ -1123,7 +1168,14 @@ int arbiterMonitor( ) {
       {
         if(((__mma_strm_tlen_Right == 0) && (atomic_load_explicit ( (&__mm_strm_done_Right),memory_order_acquire ) && (shm_arbiter_buffer_peek ( __mma_strm_buf_Right,0,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) == 0))))
         {
-          return 0 ;
+          {
+            {
+              _mm_gco _mm_uv_gvar_tmpstrng_46 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
+              printf ( "%s\n",(_mm_uv_gvar_tmpstrng_46->data) ) ;
+              _mm_decref ( _mm_uv_gvar_tmpstrng_46 ) ;
+              goto __mm_label_arbmon_Finished_ArBmOn_Left2;
+            }
+          }
         }
         else
         {
@@ -1201,6 +1253,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) == 0))
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_4) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_4) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left2;
             }
@@ -1235,6 +1288,7 @@ int arbiterMonitor( ) {
           if((_mm_uv_mvar_n_5 <= (_mm_arbiter.pre)))
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_5) ;
+            (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_5) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left2;
           }
@@ -1277,6 +1331,7 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_30 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left1;
                     }
                     else
@@ -1287,9 +1342,10 @@ int arbiterMonitor( ) {
                         if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_44 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_44->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_44 ) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_47 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_47->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_47 ) ;
                           goto __mm_label_arbmon_L_ArBmOn_Left1;
                         }
                         else
@@ -1312,9 +1368,10 @@ int arbiterMonitor( ) {
                       if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_45 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_45->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_45 ) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        _mm_gco _mm_uv_gvar_tmpstrng_48 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_48->data) ) ;
+                        _mm_decref ( _mm_uv_gvar_tmpstrng_48 ) ;
                         goto __mm_label_arbmon_L_ArBmOn_Left1;
                       }
                       else
@@ -1354,29 +1411,10 @@ int arbiterMonitor( ) {
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_8 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
+            (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_8) ;
+            (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_arbiter.seen)) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
-            {
-              int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
-              {
-                if((__mm_arbiter_yieldvar_x == 2))
-                {
-                  goto __mm_label_arbmon_R_ArBmOn_EQ;
-                }
-                else
-                {
-                  if((__mm_arbiter_yieldvar_x == 1))
-                  {
-                    ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                    goto __mm_label_arbmon_R_ArBmOn_Left1;
-                  }
-                  else
-                  {
-                  }
-                  
-                }
-                
-              }
-            }
+            goto __mm_label_arbmon_R_ArBmOn_Left2;
           }
           else
           {
@@ -1390,6 +1428,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = ((((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post)) - _mm_uv_mvar_n_9) ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = 0 ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_9) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_arbiter.seen)) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
@@ -1431,6 +1471,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = 0 ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) - (_mm_uv_mvar_n_10 - (_mm_arbiter.pre))) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_10) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_uv_mvar_n_10 - (_mm_arbiter.pre))) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_uv_mvar_n_10 - (_mm_arbiter.pre)) ;
@@ -1496,6 +1538,7 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_29 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_29 ;
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left3;
                     }
                     else
@@ -1554,6 +1597,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.seen) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left2;
             }
@@ -1564,6 +1608,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left2;
             }
@@ -1597,7 +1642,14 @@ int arbiterMonitor( ) {
       {
         if(((__mma_strm_tlen_Right == 0) && (atomic_load_explicit ( (&__mm_strm_done_Right),memory_order_acquire ) && (shm_arbiter_buffer_peek ( __mma_strm_buf_Right,0,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) == 0))))
         {
-          return 0 ;
+          {
+            {
+              _mm_gco _mm_uv_gvar_tmpstrng_49 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
+              printf ( "%s\n",(_mm_uv_gvar_tmpstrng_49->data) ) ;
+              _mm_decref ( _mm_uv_gvar_tmpstrng_49 ) ;
+              goto __mm_label_arbmon_Finished_ArBmOn_Left3;
+            }
+          }
         }
         else
         {
@@ -1675,6 +1727,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) == 0))
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_4) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_4) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left3;
             }
@@ -1709,6 +1762,7 @@ int arbiterMonitor( ) {
           if((_mm_uv_mvar_n_5 <= (_mm_arbiter.pre)))
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_5) ;
+            (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_5) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left3;
           }
@@ -1752,6 +1806,7 @@ int arbiterMonitor( ) {
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left2;
                     }
                     else
@@ -1763,9 +1818,10 @@ int arbiterMonitor( ) {
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_46 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_46->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_46 ) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_50 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_50->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_50 ) ;
                           goto __mm_label_arbmon_L_ArBmOn_Left2;
                         }
                         else
@@ -1789,9 +1845,10 @@ int arbiterMonitor( ) {
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_47 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_47->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_47 ) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        _mm_gco _mm_uv_gvar_tmpstrng_51 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_51->data) ) ;
+                        _mm_decref ( _mm_uv_gvar_tmpstrng_51 ) ;
                         goto __mm_label_arbmon_L_ArBmOn_Left2;
                       }
                       else
@@ -1831,39 +1888,10 @@ int arbiterMonitor( ) {
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_8 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
+            (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_8) ;
+            (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_arbiter.seen)) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
-            {
-              int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
-              {
-                if((__mm_arbiter_yieldvar_x == 3))
-                {
-                  goto __mm_label_arbmon_R_ArBmOn_EQ;
-                }
-                else
-                {
-                  if((__mm_arbiter_yieldvar_x == 2))
-                  {
-                    ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                    goto __mm_label_arbmon_R_ArBmOn_Left1;
-                  }
-                  else
-                  {
-                    if((__mm_arbiter_yieldvar_x == 1))
-                    {
-                      ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                      ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                      goto __mm_label_arbmon_R_ArBmOn_Left2;
-                    }
-                    else
-                    {
-                    }
-                    
-                  }
-                  
-                }
-                
-              }
-            }
+            goto __mm_label_arbmon_R_ArBmOn_Left3;
           }
           else
           {
@@ -1877,6 +1905,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = ((((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post)) - _mm_uv_mvar_n_9) ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = 0 ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_9) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_arbiter.seen)) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
@@ -1928,6 +1958,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = 0 ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) - (_mm_uv_mvar_n_10 - (_mm_arbiter.pre))) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_10) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_uv_mvar_n_10 - (_mm_arbiter.pre))) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_uv_mvar_n_10 - (_mm_arbiter.pre)) ;
@@ -2051,6 +2083,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.seen) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left3;
             }
@@ -2061,6 +2094,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Left3;
             }
@@ -2094,7 +2128,14 @@ int arbiterMonitor( ) {
       {
         if(((__mma_strm_tlen_Right == 0) && (atomic_load_explicit ( (&__mm_strm_done_Right),memory_order_acquire ) && (shm_arbiter_buffer_peek ( __mma_strm_buf_Right,0,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) == 0))))
         {
-          return 0 ;
+          {
+            {
+              _mm_gco _mm_uv_gvar_tmpstrng_52 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
+              printf ( "%s\n",(_mm_uv_gvar_tmpstrng_52->data) ) ;
+              _mm_decref ( _mm_uv_gvar_tmpstrng_52 ) ;
+              goto __mm_label_arbmon_Finished_ArBmOn_Right1;
+            }
+          }
         }
         else
         {
@@ -2172,6 +2213,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) == 0))
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_4) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_4) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right1;
             }
@@ -2206,6 +2248,7 @@ int arbiterMonitor( ) {
           if((_mm_uv_mvar_n_5 <= (_mm_arbiter.pre)))
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_5) ;
+            (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_5) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right1;
           }
@@ -2246,6 +2289,7 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_34 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_34 ;
+                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_L_ArBmOn_Right2;
                   }
                   else
@@ -2278,12 +2322,10 @@ int arbiterMonitor( ) {
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_8 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
+            (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_8) ;
+            (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_arbiter.seen)) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
-            {
-              int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
-              {
-              }
-            }
+            goto __mm_label_arbmon_R_ArBmOn_Right1;
           }
           else
           {
@@ -2297,6 +2339,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = ((((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post)) - _mm_uv_mvar_n_9) ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = 0 ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_9) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_arbiter.seen)) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
@@ -2321,6 +2365,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = 0 ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) - (_mm_uv_mvar_n_10 - (_mm_arbiter.pre))) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_10) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_uv_mvar_n_10 - (_mm_arbiter.pre))) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_uv_mvar_n_10 - (_mm_arbiter.pre)) ;
@@ -2370,6 +2416,7 @@ int arbiterMonitor( ) {
                     {
                       if((_mm_uv_mvar_n_35 == ((_mm_monitor.pbuf) [ 0 ])))
                       {
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_L_ArBmOn_EQ;
                       }
                       else
@@ -2379,9 +2426,10 @@ int arbiterMonitor( ) {
                         {
                           if((_mm_uv_mvar_n_36 != ((_mm_monitor.pbuf) [ 0 ])))
                           {
-                            _mm_gco _mm_uv_gvar_tmpstrng_48 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_36 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_48->data) ) ;
-                            _mm_decref ( _mm_uv_gvar_tmpstrng_48 ) ;
+                            (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                            _mm_gco _mm_uv_gvar_tmpstrng_53 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_36 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_53->data) ) ;
+                            _mm_decref ( _mm_uv_gvar_tmpstrng_53 ) ;
                             goto __mm_label_arbmon_L_ArBmOn_EQ;
                           }
                           else
@@ -2403,9 +2451,10 @@ int arbiterMonitor( ) {
                       {
                         if((_mm_uv_mvar_n_36 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
-                          _mm_gco _mm_uv_gvar_tmpstrng_49 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_36 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_49->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_49 ) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_54 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_36 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_54->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_54 ) ;
                           goto __mm_label_arbmon_L_ArBmOn_EQ;
                         }
                         else
@@ -2471,6 +2520,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.seen) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right1;
             }
@@ -2481,6 +2531,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right1;
             }
@@ -2514,7 +2565,14 @@ int arbiterMonitor( ) {
       {
         if(((__mma_strm_tlen_Right == 0) && (atomic_load_explicit ( (&__mm_strm_done_Right),memory_order_acquire ) && (shm_arbiter_buffer_peek ( __mma_strm_buf_Right,0,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) == 0))))
         {
-          return 0 ;
+          {
+            {
+              _mm_gco _mm_uv_gvar_tmpstrng_55 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
+              printf ( "%s\n",(_mm_uv_gvar_tmpstrng_55->data) ) ;
+              _mm_decref ( _mm_uv_gvar_tmpstrng_55 ) ;
+              goto __mm_label_arbmon_Finished_ArBmOn_Right2;
+            }
+          }
         }
         else
         {
@@ -2592,6 +2650,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) == 0))
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_4) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_4) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right2;
             }
@@ -2626,6 +2685,7 @@ int arbiterMonitor( ) {
           if((_mm_uv_mvar_n_5 <= (_mm_arbiter.pre)))
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_5) ;
+            (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_5) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right2;
           }
@@ -2666,6 +2726,7 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_37 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_37 ;
+                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_L_ArBmOn_Right3;
                   }
                   else
@@ -2698,12 +2759,10 @@ int arbiterMonitor( ) {
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_8 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
+            (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_8) ;
+            (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_arbiter.seen)) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
-            {
-              int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
-              {
-              }
-            }
+            goto __mm_label_arbmon_R_ArBmOn_Right2;
           }
           else
           {
@@ -2717,6 +2776,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = ((((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post)) - _mm_uv_mvar_n_9) ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = 0 ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_9) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_arbiter.seen)) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
@@ -2741,6 +2802,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = 0 ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) - (_mm_uv_mvar_n_10 - (_mm_arbiter.pre))) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_10) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_uv_mvar_n_10 - (_mm_arbiter.pre))) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_uv_mvar_n_10 - (_mm_arbiter.pre)) ;
@@ -2791,7 +2854,8 @@ int arbiterMonitor( ) {
                       if((_mm_uv_mvar_n_38 == ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                        goto __mm_label_arbmon_L_ArBmOn_Left1;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                        goto __mm_label_arbmon_L_ArBmOn_Right1;
                       }
                       else
                       {
@@ -2801,10 +2865,11 @@ int arbiterMonitor( ) {
                           if((_mm_uv_mvar_n_39 != ((_mm_monitor.pbuf) [ 0 ])))
                           {
                             ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                            _mm_gco _mm_uv_gvar_tmpstrng_50 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_39 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_50->data) ) ;
-                            _mm_decref ( _mm_uv_gvar_tmpstrng_50 ) ;
-                            goto __mm_label_arbmon_L_ArBmOn_Left1;
+                            (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                            _mm_gco _mm_uv_gvar_tmpstrng_56 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_39 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_56->data) ) ;
+                            _mm_decref ( _mm_uv_gvar_tmpstrng_56 ) ;
+                            goto __mm_label_arbmon_L_ArBmOn_Right1;
                           }
                           else
                           {
@@ -2826,10 +2891,11 @@ int arbiterMonitor( ) {
                         if((_mm_uv_mvar_n_39 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_51 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_39 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_51->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_51 ) ;
-                          goto __mm_label_arbmon_L_ArBmOn_Left1;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_57 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_39 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_57->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_57 ) ;
+                          goto __mm_label_arbmon_L_ArBmOn_Right1;
                         }
                         else
                         {
@@ -2894,6 +2960,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.seen) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right2;
             }
@@ -2904,6 +2971,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right2;
             }
@@ -2937,7 +3005,14 @@ int arbiterMonitor( ) {
       {
         if(((__mma_strm_tlen_Right == 0) && (atomic_load_explicit ( (&__mm_strm_done_Right),memory_order_acquire ) && (shm_arbiter_buffer_peek ( __mma_strm_buf_Right,0,((void * *)(&__mma_strm_istrt_Right)),(&__mma_strm_ilen_Right),((void * *)(&__mma_strm_bstrt_Right)),(&__mma_strm_blen_Right) ) == 0))))
         {
-          return 0 ;
+          {
+            {
+              _mm_gco _mm_uv_gvar_tmpstrng_58 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
+              printf ( "%s\n",(_mm_uv_gvar_tmpstrng_58->data) ) ;
+              _mm_decref ( _mm_uv_gvar_tmpstrng_58 ) ;
+              goto __mm_label_arbmon_Finished_ArBmOn_Right3;
+            }
+          }
         }
         else
         {
@@ -3015,6 +3090,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) == 0))
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_4) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_4) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right3;
             }
@@ -3049,6 +3125,7 @@ int arbiterMonitor( ) {
           if((_mm_uv_mvar_n_5 <= (_mm_arbiter.pre)))
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_5) ;
+            (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_5) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right3;
           }
@@ -3111,12 +3188,10 @@ int arbiterMonitor( ) {
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_8 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
+            (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_8) ;
+            (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_arbiter.seen)) ;
             __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
-            {
-              int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
-              {
-              }
-            }
+            goto __mm_label_arbmon_R_ArBmOn_Right3;
           }
           else
           {
@@ -3130,6 +3205,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = ((((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post)) - _mm_uv_mvar_n_9) ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = 0 ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_9) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_arbiter.seen)) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
@@ -3154,6 +3231,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = 0 ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) - (_mm_uv_mvar_n_10 - (_mm_arbiter.pre))) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_10) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + (_mm_uv_mvar_n_10 - (_mm_arbiter.pre))) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_uv_mvar_n_10 - (_mm_arbiter.pre)) ;
@@ -3205,6 +3284,7 @@ int arbiterMonitor( ) {
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_L_ArBmOn_Right2;
                       }
                       else
@@ -3216,9 +3296,10 @@ int arbiterMonitor( ) {
                           {
                             ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                             ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                            _mm_gco _mm_uv_gvar_tmpstrng_52 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_41 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_52->data) ) ;
-                            _mm_decref ( _mm_uv_gvar_tmpstrng_52 ) ;
+                            (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                            _mm_gco _mm_uv_gvar_tmpstrng_59 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_41 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_59->data) ) ;
+                            _mm_decref ( _mm_uv_gvar_tmpstrng_59 ) ;
                             goto __mm_label_arbmon_L_ArBmOn_Right2;
                           }
                           else
@@ -3242,9 +3323,10 @@ int arbiterMonitor( ) {
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_53 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_41 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_53->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_53 ) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_60 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_41 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_60->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_60 ) ;
                           goto __mm_label_arbmon_L_ArBmOn_Right2;
                         }
                         else
@@ -3310,6 +3392,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.seen) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right3;
             }
@@ -3320,6 +3403,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_13) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_13) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               goto __mm_label_arbmon_L_ArBmOn_Right3;
             }
@@ -3436,6 +3520,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) == 0))
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_14) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_14) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_EQ;
             }
@@ -3470,6 +3555,7 @@ int arbiterMonitor( ) {
           if((_mm_uv_mvar_n_15 <= (_mm_arbiter.pre)))
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_15) ;
+            (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_15) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
             goto __mm_label_arbmon_R_ArBmOn_EQ;
           }
@@ -3510,6 +3596,7 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_24 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_24 ;
+                    (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Left1;
                   }
                   else
@@ -3542,6 +3629,7 @@ int arbiterMonitor( ) {
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_18 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
+            (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_18) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
             goto __mm_label_arbmon_L_ArBmOn_EQ;
           }
@@ -3557,6 +3645,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = ((((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post)) - _mm_uv_mvar_n_19) ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = 0 ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_19) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_arbiter.seen)) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
@@ -3581,6 +3671,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = 0 ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) - (_mm_uv_mvar_n_20 - (_mm_arbiter.pre))) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_20) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_uv_mvar_n_20 - (_mm_arbiter.pre))) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_uv_mvar_n_20 - (_mm_arbiter.pre)) ;
@@ -3629,6 +3721,7 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_25 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_25 ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right1;
                     }
                     else
@@ -3659,6 +3752,7 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_25 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_25 ;
+                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right1;
                   }
                   else
@@ -3683,6 +3777,7 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_25 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_25 ;
+                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right1;
                   }
                   else
@@ -3715,6 +3810,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.seen) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_EQ;
             }
@@ -3725,6 +3821,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_EQ;
             }
@@ -3747,7 +3844,14 @@ int arbiterMonitor( ) {
       {
       }
       
-      goto __mm_label_arbmon_R_ArBmOn_EQ;
+      {
+        {
+          _mm_gco _mm_uv_gvar_tmpstrng_61 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
+          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_61->data) ) ;
+          _mm_decref ( _mm_uv_gvar_tmpstrng_61 ) ;
+          goto __mm_label_arbmon_Finished_ArBmOn_EQ;
+        }
+      }
     }
     printf ( "ERROR: Monitor could not match rule in state R/EQ\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","EQ" ) ;
@@ -3836,6 +3940,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) == 0))
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_14) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_14) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left1;
             }
@@ -3870,6 +3975,7 @@ int arbiterMonitor( ) {
           if((_mm_uv_mvar_n_15 <= (_mm_arbiter.pre)))
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_15) ;
+            (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_15) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
             goto __mm_label_arbmon_R_ArBmOn_Left1;
           }
@@ -3910,6 +4016,7 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_26 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_26 ;
+                    (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Left2;
                   }
                   else
@@ -3942,6 +4049,7 @@ int arbiterMonitor( ) {
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_18 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
+            (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_18) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left1;
           }
@@ -3957,6 +4065,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = ((((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post)) - _mm_uv_mvar_n_19) ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = 0 ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_19) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_arbiter.seen)) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
@@ -3981,6 +4091,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = 0 ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) - (_mm_uv_mvar_n_20 - (_mm_arbiter.pre))) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_20) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_uv_mvar_n_20 - (_mm_arbiter.pre))) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_uv_mvar_n_20 - (_mm_arbiter.pre)) ;
@@ -4030,6 +4142,7 @@ int arbiterMonitor( ) {
                     {
                       if((_mm_uv_mvar_n_27 == ((_mm_monitor.pbuf) [ 0 ])))
                       {
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_EQ;
                       }
                       else
@@ -4039,9 +4152,10 @@ int arbiterMonitor( ) {
                         {
                           if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                           {
-                            _mm_gco _mm_uv_gvar_tmpstrng_54 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_54->data) ) ;
-                            _mm_decref ( _mm_uv_gvar_tmpstrng_54 ) ;
+                            (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                            _mm_gco _mm_uv_gvar_tmpstrng_62 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_62->data) ) ;
+                            _mm_decref ( _mm_uv_gvar_tmpstrng_62 ) ;
                             goto __mm_label_arbmon_R_ArBmOn_EQ;
                           }
                           else
@@ -4063,9 +4177,10 @@ int arbiterMonitor( ) {
                       {
                         if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
-                          _mm_gco _mm_uv_gvar_tmpstrng_55 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_55->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_55 ) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_63 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_63->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_63 ) ;
                           goto __mm_label_arbmon_R_ArBmOn_EQ;
                         }
                         else
@@ -4104,6 +4219,7 @@ int arbiterMonitor( ) {
                   {
                     if((_mm_uv_mvar_n_27 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_EQ;
                     }
                     else
@@ -4113,9 +4229,10 @@ int arbiterMonitor( ) {
                       {
                         if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
-                          _mm_gco _mm_uv_gvar_tmpstrng_56 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_56->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_56 ) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_64 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_64->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_64 ) ;
                           goto __mm_label_arbmon_R_ArBmOn_EQ;
                         }
                         else
@@ -4137,9 +4254,10 @@ int arbiterMonitor( ) {
                     {
                       if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
-                        _mm_gco _mm_uv_gvar_tmpstrng_57 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_57->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_57 ) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        _mm_gco _mm_uv_gvar_tmpstrng_65 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_65->data) ) ;
+                        _mm_decref ( _mm_uv_gvar_tmpstrng_65 ) ;
                         goto __mm_label_arbmon_R_ArBmOn_EQ;
                       }
                       else
@@ -4172,6 +4290,7 @@ int arbiterMonitor( ) {
                   {
                     if((_mm_uv_mvar_n_27 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_EQ;
                     }
                     else
@@ -4181,9 +4300,10 @@ int arbiterMonitor( ) {
                       {
                         if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
-                          _mm_gco _mm_uv_gvar_tmpstrng_58 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_58->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_58 ) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_66 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_66->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_66 ) ;
                           goto __mm_label_arbmon_R_ArBmOn_EQ;
                         }
                         else
@@ -4205,9 +4325,10 @@ int arbiterMonitor( ) {
                     {
                       if((_mm_uv_mvar_n_28 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
-                        _mm_gco _mm_uv_gvar_tmpstrng_59 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_59->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_59 ) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        _mm_gco _mm_uv_gvar_tmpstrng_67 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_28 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_67->data) ) ;
+                        _mm_decref ( _mm_uv_gvar_tmpstrng_67 ) ;
                         goto __mm_label_arbmon_R_ArBmOn_EQ;
                       }
                       else
@@ -4247,6 +4368,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.seen) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left1;
             }
@@ -4257,6 +4379,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left1;
             }
@@ -4279,7 +4402,14 @@ int arbiterMonitor( ) {
       {
       }
       
-      goto __mm_label_arbmon_R_ArBmOn_Left1;
+      {
+        {
+          _mm_gco _mm_uv_gvar_tmpstrng_68 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
+          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_68->data) ) ;
+          _mm_decref ( _mm_uv_gvar_tmpstrng_68 ) ;
+          goto __mm_label_arbmon_Finished_ArBmOn_Left1;
+        }
+      }
     }
     printf ( "ERROR: Monitor could not match rule in state R/Left1\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left1" ) ;
@@ -4368,6 +4498,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) == 0))
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_14) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_14) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left2;
             }
@@ -4402,6 +4533,7 @@ int arbiterMonitor( ) {
           if((_mm_uv_mvar_n_15 <= (_mm_arbiter.pre)))
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_15) ;
+            (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_15) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
             goto __mm_label_arbmon_R_ArBmOn_Left2;
           }
@@ -4442,6 +4574,7 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_29 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_29 ;
+                    (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Left3;
                   }
                   else
@@ -4474,6 +4607,7 @@ int arbiterMonitor( ) {
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_18 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
+            (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_18) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left2;
           }
@@ -4489,6 +4623,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = ((((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post)) - _mm_uv_mvar_n_19) ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = 0 ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_19) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_arbiter.seen)) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
@@ -4513,6 +4649,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = 0 ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) - (_mm_uv_mvar_n_20 - (_mm_arbiter.pre))) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_20) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_uv_mvar_n_20 - (_mm_arbiter.pre))) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_uv_mvar_n_20 - (_mm_arbiter.pre)) ;
@@ -4563,6 +4701,7 @@ int arbiterMonitor( ) {
                       if((_mm_uv_mvar_n_30 == ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left1;
                       }
                       else
@@ -4573,9 +4712,10 @@ int arbiterMonitor( ) {
                           if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                           {
                             ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                            _mm_gco _mm_uv_gvar_tmpstrng_60 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_60->data) ) ;
-                            _mm_decref ( _mm_uv_gvar_tmpstrng_60 ) ;
+                            (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                            _mm_gco _mm_uv_gvar_tmpstrng_69 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_69->data) ) ;
+                            _mm_decref ( _mm_uv_gvar_tmpstrng_69 ) ;
                             goto __mm_label_arbmon_R_ArBmOn_Left1;
                           }
                           else
@@ -4598,9 +4738,10 @@ int arbiterMonitor( ) {
                         if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_61 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_61->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_61 ) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_70 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_70->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_70 ) ;
                           goto __mm_label_arbmon_R_ArBmOn_Left1;
                         }
                         else
@@ -4640,6 +4781,7 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_30 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left1;
                     }
                     else
@@ -4650,9 +4792,10 @@ int arbiterMonitor( ) {
                         if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_62 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_62->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_62 ) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_71 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_71->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_71 ) ;
                           goto __mm_label_arbmon_R_ArBmOn_Left1;
                         }
                         else
@@ -4675,9 +4818,10 @@ int arbiterMonitor( ) {
                       if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_63 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_63->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_63 ) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        _mm_gco _mm_uv_gvar_tmpstrng_72 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_72->data) ) ;
+                        _mm_decref ( _mm_uv_gvar_tmpstrng_72 ) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left1;
                       }
                       else
@@ -4711,6 +4855,7 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_30 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left1;
                     }
                     else
@@ -4721,9 +4866,10 @@ int arbiterMonitor( ) {
                         if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_64 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_64->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_64 ) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_73 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_73->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_73 ) ;
                           goto __mm_label_arbmon_R_ArBmOn_Left1;
                         }
                         else
@@ -4746,9 +4892,10 @@ int arbiterMonitor( ) {
                       if((_mm_uv_mvar_n_31 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_65 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_65->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_65 ) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        _mm_gco _mm_uv_gvar_tmpstrng_74 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_31 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_74->data) ) ;
+                        _mm_decref ( _mm_uv_gvar_tmpstrng_74 ) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left1;
                       }
                       else
@@ -4788,6 +4935,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.seen) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left2;
             }
@@ -4798,6 +4946,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left2;
             }
@@ -4820,7 +4969,14 @@ int arbiterMonitor( ) {
       {
       }
       
-      goto __mm_label_arbmon_R_ArBmOn_Left2;
+      {
+        {
+          _mm_gco _mm_uv_gvar_tmpstrng_75 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
+          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_75->data) ) ;
+          _mm_decref ( _mm_uv_gvar_tmpstrng_75 ) ;
+          goto __mm_label_arbmon_Finished_ArBmOn_Left2;
+        }
+      }
     }
     printf ( "ERROR: Monitor could not match rule in state R/Left2\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left2" ) ;
@@ -4909,6 +5065,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) == 0))
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_14) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_14) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left3;
             }
@@ -4943,6 +5100,7 @@ int arbiterMonitor( ) {
           if((_mm_uv_mvar_n_15 <= (_mm_arbiter.pre)))
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_15) ;
+            (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_15) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
             goto __mm_label_arbmon_R_ArBmOn_Left3;
           }
@@ -5005,6 +5163,7 @@ int arbiterMonitor( ) {
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_18 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
+            (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_18) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
             goto __mm_label_arbmon_L_ArBmOn_Left3;
           }
@@ -5020,6 +5179,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = ((((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post)) - _mm_uv_mvar_n_19) ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = 0 ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_19) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_arbiter.seen)) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
@@ -5044,6 +5205,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = 0 ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) - (_mm_uv_mvar_n_20 - (_mm_arbiter.pre))) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_20) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_uv_mvar_n_20 - (_mm_arbiter.pre))) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_uv_mvar_n_20 - (_mm_arbiter.pre)) ;
@@ -5095,6 +5258,7 @@ int arbiterMonitor( ) {
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left2;
                       }
                       else
@@ -5106,9 +5270,10 @@ int arbiterMonitor( ) {
                           {
                             ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                             ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                            _mm_gco _mm_uv_gvar_tmpstrng_66 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_66->data) ) ;
-                            _mm_decref ( _mm_uv_gvar_tmpstrng_66 ) ;
+                            (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                            _mm_gco _mm_uv_gvar_tmpstrng_76 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                            printf ( "%s\n",(_mm_uv_gvar_tmpstrng_76->data) ) ;
+                            _mm_decref ( _mm_uv_gvar_tmpstrng_76 ) ;
                             goto __mm_label_arbmon_R_ArBmOn_Left2;
                           }
                           else
@@ -5132,9 +5297,10 @@ int arbiterMonitor( ) {
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_67 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_67->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_67 ) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_77 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_77->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_77 ) ;
                           goto __mm_label_arbmon_R_ArBmOn_Left2;
                         }
                         else
@@ -5175,6 +5341,7 @@ int arbiterMonitor( ) {
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left2;
                     }
                     else
@@ -5186,9 +5353,10 @@ int arbiterMonitor( ) {
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_68 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_68->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_68 ) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_78 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_78->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_78 ) ;
                           goto __mm_label_arbmon_R_ArBmOn_Left2;
                         }
                         else
@@ -5212,9 +5380,10 @@ int arbiterMonitor( ) {
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_69 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_69->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_69 ) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        _mm_gco _mm_uv_gvar_tmpstrng_79 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_79->data) ) ;
+                        _mm_decref ( _mm_uv_gvar_tmpstrng_79 ) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left2;
                       }
                       else
@@ -5249,6 +5418,7 @@ int arbiterMonitor( ) {
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left2;
                     }
                     else
@@ -5260,9 +5430,10 @@ int arbiterMonitor( ) {
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_70 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_70->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_70 ) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_80 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_80->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_80 ) ;
                           goto __mm_label_arbmon_R_ArBmOn_Left2;
                         }
                         else
@@ -5286,9 +5457,10 @@ int arbiterMonitor( ) {
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_71 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_71->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_71 ) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        _mm_gco _mm_uv_gvar_tmpstrng_81 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_33 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_81->data) ) ;
+                        _mm_decref ( _mm_uv_gvar_tmpstrng_81 ) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left2;
                       }
                       else
@@ -5328,6 +5500,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.seen) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left3;
             }
@@ -5338,6 +5511,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Left3;
             }
@@ -5360,7 +5534,14 @@ int arbiterMonitor( ) {
       {
       }
       
-      goto __mm_label_arbmon_R_ArBmOn_Left3;
+      {
+        {
+          _mm_gco _mm_uv_gvar_tmpstrng_82 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
+          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_82->data) ) ;
+          _mm_decref ( _mm_uv_gvar_tmpstrng_82 ) ;
+          goto __mm_label_arbmon_Finished_ArBmOn_Left3;
+        }
+      }
     }
     printf ( "ERROR: Monitor could not match rule in state R/Left3\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Left3" ) ;
@@ -5449,6 +5630,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) == 0))
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_14) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_14) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right1;
             }
@@ -5483,6 +5665,7 @@ int arbiterMonitor( ) {
           if((_mm_uv_mvar_n_15 <= (_mm_arbiter.pre)))
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_15) ;
+            (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_15) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
             goto __mm_label_arbmon_R_ArBmOn_Right1;
           }
@@ -5524,6 +5707,7 @@ int arbiterMonitor( ) {
                   {
                     if((_mm_uv_mvar_n_35 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_EQ;
                     }
                     else
@@ -5533,9 +5717,10 @@ int arbiterMonitor( ) {
                       {
                         if((_mm_uv_mvar_n_36 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
-                          _mm_gco _mm_uv_gvar_tmpstrng_72 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_36 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_72->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_72 ) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_83 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_36 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_83->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_83 ) ;
                           goto __mm_label_arbmon_R_ArBmOn_EQ;
                         }
                         else
@@ -5557,9 +5742,10 @@ int arbiterMonitor( ) {
                     {
                       if((_mm_uv_mvar_n_36 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
-                        _mm_gco _mm_uv_gvar_tmpstrng_73 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_36 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_73->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_73 ) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                        _mm_gco _mm_uv_gvar_tmpstrng_84 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_36 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_84->data) ) ;
+                        _mm_decref ( _mm_uv_gvar_tmpstrng_84 ) ;
                         goto __mm_label_arbmon_R_ArBmOn_EQ;
                       }
                       else
@@ -5599,6 +5785,7 @@ int arbiterMonitor( ) {
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_18 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
+            (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_18) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right1;
           }
@@ -5614,6 +5801,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = ((((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post)) - _mm_uv_mvar_n_19) ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = 0 ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_19) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_arbiter.seen)) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
@@ -5646,6 +5835,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = 0 ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) - (_mm_uv_mvar_n_20 - (_mm_arbiter.pre))) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_20) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_uv_mvar_n_20 - (_mm_arbiter.pre))) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_uv_mvar_n_20 - (_mm_arbiter.pre)) ;
@@ -5702,6 +5893,7 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_34 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_34 ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right2;
                     }
                     else
@@ -5732,6 +5924,7 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_34 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_34 ;
+                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right2;
                   }
                   else
@@ -5756,6 +5949,7 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_34 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_34 ;
+                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right2;
                   }
                   else
@@ -5788,6 +5982,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.seen) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right1;
             }
@@ -5798,6 +5993,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right1;
             }
@@ -5820,7 +6016,14 @@ int arbiterMonitor( ) {
       {
       }
       
-      goto __mm_label_arbmon_R_ArBmOn_Right1;
+      {
+        {
+          _mm_gco _mm_uv_gvar_tmpstrng_85 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
+          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_85->data) ) ;
+          _mm_decref ( _mm_uv_gvar_tmpstrng_85 ) ;
+          goto __mm_label_arbmon_Finished_ArBmOn_Right1;
+        }
+      }
     }
     printf ( "ERROR: Monitor could not match rule in state R/Right1\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right1" ) ;
@@ -5909,6 +6112,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) == 0))
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_14) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_14) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right2;
             }
@@ -5943,6 +6147,7 @@ int arbiterMonitor( ) {
           if((_mm_uv_mvar_n_15 <= (_mm_arbiter.pre)))
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_15) ;
+            (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_15) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
             goto __mm_label_arbmon_R_ArBmOn_Right2;
           }
@@ -5985,7 +6190,8 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_38 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                      goto __mm_label_arbmon_R_ArBmOn_Left1;
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                      goto __mm_label_arbmon_R_ArBmOn_Right1;
                     }
                     else
                     {
@@ -5995,10 +6201,11 @@ int arbiterMonitor( ) {
                         if((_mm_uv_mvar_n_39 != ((_mm_monitor.pbuf) [ 0 ])))
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_74 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_39 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_74->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_74 ) ;
-                          goto __mm_label_arbmon_R_ArBmOn_Left1;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_86 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_39 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_86->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_86 ) ;
+                          goto __mm_label_arbmon_R_ArBmOn_Right1;
                         }
                         else
                         {
@@ -6020,10 +6227,11 @@ int arbiterMonitor( ) {
                       if((_mm_uv_mvar_n_39 != ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_75 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_39 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_75->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_75 ) ;
-                        goto __mm_label_arbmon_R_ArBmOn_Left1;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                        _mm_gco _mm_uv_gvar_tmpstrng_87 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_39 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_87->data) ) ;
+                        _mm_decref ( _mm_uv_gvar_tmpstrng_87 ) ;
+                        goto __mm_label_arbmon_R_ArBmOn_Right1;
                       }
                       else
                       {
@@ -6062,6 +6270,7 @@ int arbiterMonitor( ) {
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_18 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
+            (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_18) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right2;
           }
@@ -6077,6 +6286,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = ((((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post)) - _mm_uv_mvar_n_19) ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = 0 ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_19) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_arbiter.seen)) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
@@ -6090,7 +6301,7 @@ int arbiterMonitor( ) {
                     if((__mm_arbiter_yieldvar_x == 1))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                      goto __mm_label_arbmon_R_ArBmOn_Left1;
+                      goto __mm_label_arbmon_R_ArBmOn_Right1;
                     }
                     else
                     {
@@ -6118,6 +6329,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = 0 ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) - (_mm_uv_mvar_n_20 - (_mm_arbiter.pre))) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_20) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_uv_mvar_n_20 - (_mm_arbiter.pre))) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_uv_mvar_n_20 - (_mm_arbiter.pre)) ;
@@ -6131,7 +6344,7 @@ int arbiterMonitor( ) {
                     if((__mm_arbiter_yieldvar_x == 1))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
-                      goto __mm_label_arbmon_L_ArBmOn_Left1;
+                      goto __mm_label_arbmon_L_ArBmOn_Right1;
                     }
                     else
                     {
@@ -6183,6 +6396,7 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_37 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_37 ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right3;
                     }
                     else
@@ -6213,6 +6427,7 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_37 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_37 ;
+                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right3;
                   }
                   else
@@ -6237,6 +6452,7 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_37 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_37 ;
+                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right3;
                   }
                   else
@@ -6269,6 +6485,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.seen) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right2;
             }
@@ -6279,6 +6496,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right2;
             }
@@ -6301,7 +6519,14 @@ int arbiterMonitor( ) {
       {
       }
       
-      goto __mm_label_arbmon_R_ArBmOn_Right2;
+      {
+        {
+          _mm_gco _mm_uv_gvar_tmpstrng_88 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
+          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_88->data) ) ;
+          _mm_decref ( _mm_uv_gvar_tmpstrng_88 ) ;
+          goto __mm_label_arbmon_Finished_ArBmOn_Right2;
+        }
+      }
     }
     printf ( "ERROR: Monitor could not match rule in state R/Right2\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right2" ) ;
@@ -6390,6 +6615,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) == 0))
             {
               (_mm_arbiter.pre) = ((_mm_arbiter.pre) + _mm_uv_mvar_n_14) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_14) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right3;
             }
@@ -6424,6 +6650,7 @@ int arbiterMonitor( ) {
           if((_mm_uv_mvar_n_15 <= (_mm_arbiter.pre)))
           {
             (_mm_arbiter.pre) = ((_mm_arbiter.pre) - _mm_uv_mvar_n_15) ;
+            (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_15) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
             goto __mm_label_arbmon_R_ArBmOn_Right3;
           }
@@ -6467,6 +6694,7 @@ int arbiterMonitor( ) {
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right2;
                     }
                     else
@@ -6478,9 +6706,10 @@ int arbiterMonitor( ) {
                         {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                          _mm_gco _mm_uv_gvar_tmpstrng_76 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_41 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_76->data) ) ;
-                          _mm_decref ( _mm_uv_gvar_tmpstrng_76 ) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          _mm_gco _mm_uv_gvar_tmpstrng_89 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_41 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_89->data) ) ;
+                          _mm_decref ( _mm_uv_gvar_tmpstrng_89 ) ;
                           goto __mm_label_arbmon_R_ArBmOn_Right2;
                         }
                         else
@@ -6504,9 +6733,10 @@ int arbiterMonitor( ) {
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
-                        _mm_gco _mm_uv_gvar_tmpstrng_77 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_41 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
-                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_77->data) ) ;
-                        _mm_decref ( _mm_uv_gvar_tmpstrng_77 ) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                        _mm_gco _mm_uv_gvar_tmpstrng_90 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "ERROR! " ),_mm_lib_int_to_string ( _mm_uv_mvar_n_41 ) ),_mm_lib_make_string ( " is not equal to " ) ),_mm_lib_int_to_string ( ((_mm_monitor.pbuf) [ 0 ]) ) ) ;
+                        printf ( "%s\n",(_mm_uv_gvar_tmpstrng_90->data) ) ;
+                        _mm_decref ( _mm_uv_gvar_tmpstrng_90 ) ;
                         goto __mm_label_arbmon_R_ArBmOn_Right2;
                       }
                       else
@@ -6546,6 +6776,7 @@ int arbiterMonitor( ) {
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_18 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
+            (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_18) ;
             __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
             goto __mm_label_arbmon_L_ArBmOn_Right3;
           }
@@ -6561,6 +6792,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = ((((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post)) - _mm_uv_mvar_n_19) ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = 0 ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_19) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_arbiter.seen)) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
@@ -6612,6 +6845,8 @@ int arbiterMonitor( ) {
               (_mm_arbiter.pre) = 0 ;
               (_mm_arbiter.post) = 0 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) - (_mm_uv_mvar_n_20 - (_mm_arbiter.pre))) ;
+              (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_20) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_uv_mvar_n_20 - (_mm_arbiter.pre))) ;
               __MM_BUFDROP ( __mma_strm_buf_Left,1,__mma_strm_tlen_Left,__mma_strm_flen_Left,__mma_strm_ilen_Left,__mma_strm_istrt_Left,__mma_strm_blen_Left,__mma_strm_bstrt_Left ) ;
               {
                 int __mm_arbiter_yieldvar_x = (_mm_uv_mvar_n_20 - (_mm_arbiter.pre)) ;
@@ -6743,6 +6978,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.seen) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right3;
             }
@@ -6753,6 +6989,7 @@ int arbiterMonitor( ) {
             if(((_mm_arbiter.post) > 0))
             {
               (_mm_arbiter.post) = ((_mm_arbiter.post) + _mm_uv_mvar_n_23) ;
+              (_mm_arbiter.dr) = ((_mm_arbiter.dr) + _mm_uv_mvar_n_23) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               goto __mm_label_arbmon_R_ArBmOn_Right3;
             }
@@ -6775,10 +7012,71 @@ int arbiterMonitor( ) {
       {
       }
       
-      goto __mm_label_arbmon_R_ArBmOn_Right3;
+      {
+        {
+          _mm_gco _mm_uv_gvar_tmpstrng_91 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
+          printf ( "%s\n",(_mm_uv_gvar_tmpstrng_91->data) ) ;
+          _mm_decref ( _mm_uv_gvar_tmpstrng_91 ) ;
+          goto __mm_label_arbmon_Finished_ArBmOn_Right3;
+        }
+      }
     }
     printf ( "ERROR: Monitor could not match rule in state R/Right3\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"R","Right3" ) ;
+    break;
+    __mm_label_arbmon_Finished_ArBmOn_ERROR:
+    printf ( "ERROR: Monitor moved to error state\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"Finished","ERROR" ) ;
+    exit ( 1 ) ;
+    break;
+    __mm_label_arbmon_Finished_ArBmOn_EQ:
+    {
+      return 0 ;
+    }
+    printf ( "ERROR: Monitor could not match rule in state Finished/EQ\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"Finished","EQ" ) ;
+    break;
+    __mm_label_arbmon_Finished_ArBmOn_Left1:
+    {
+      return 0 ;
+    }
+    printf ( "ERROR: Monitor could not match rule in state Finished/Left1\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"Finished","Left1" ) ;
+    break;
+    __mm_label_arbmon_Finished_ArBmOn_Left2:
+    {
+      return 0 ;
+    }
+    printf ( "ERROR: Monitor could not match rule in state Finished/Left2\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"Finished","Left2" ) ;
+    break;
+    __mm_label_arbmon_Finished_ArBmOn_Left3:
+    {
+      return 0 ;
+    }
+    printf ( "ERROR: Monitor could not match rule in state Finished/Left3\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"Finished","Left3" ) ;
+    break;
+    __mm_label_arbmon_Finished_ArBmOn_Right1:
+    {
+      return 0 ;
+    }
+    printf ( "ERROR: Monitor could not match rule in state Finished/Right1\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"Finished","Right1" ) ;
+    break;
+    __mm_label_arbmon_Finished_ArBmOn_Right2:
+    {
+      return 0 ;
+    }
+    printf ( "ERROR: Monitor could not match rule in state Finished/Right2\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"Finished","Right2" ) ;
+    break;
+    __mm_label_arbmon_Finished_ArBmOn_Right3:
+    {
+      return 0 ;
+    }
+    printf ( "ERROR: Monitor could not match rule in state Finished/Right3\n" ) ;
+    _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"Finished","Right3" ) ;
     break;
   }
   return 1 ;
