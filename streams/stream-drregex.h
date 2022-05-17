@@ -5,11 +5,15 @@
 #include "stream.h"
 #include "buffer.h"
 
+#define DRREGEX_ONLY_ARGS
+
 typedef struct _shm_event_drregex {
     shm_event base;
+#ifndef DRREGEX_ONLY_ARGS
     bool write; /* true = write, false = read */
     int fd;
     size_t thread;
+#endif
     /* the event arguments */
     unsigned char args[];
 } shm_event_drregex;
