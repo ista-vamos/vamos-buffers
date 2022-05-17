@@ -2,6 +2,7 @@ add_library(shamon-streams STATIC
             streams.c
             stream-regex.c
             stream-drregex.c
+            stream-generic.c
             #stream-fds.c
             stream-funs.c)
 target_link_libraries(shamon-streams PUBLIC shamon-signature)

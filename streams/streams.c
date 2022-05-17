@@ -6,6 +6,7 @@
 #include "stream-funs.h"
 #include "stream-regex.h"
 #include "stream-drregex.h"
+#include "stream-generic.h"
 
 /*
 static const char *get_arg(const char *name, size_t len,
@@ -138,6 +139,18 @@ shm_stream *shm_stream_create(const char *stream_name,
         }
 
         return shm_create_drregex_stream(key, control);
+    }  else if (strncmp(source, "generic", 7) == 0) {
+        if (!next || *next == 0) {
+            fprintf(stderr, "error: source 'generic' needs the key to SHM as parameter\n");
+            return NULL;
+        }
+        char key[256];
+        next = get_next_part(next, key, ';');
+        if (next) {
+            fprintf(stderr, "warning: source 'generic' ignoring further parameter (FOR NOW)\n");
+        }
+
+        return shm_create_generic_stream(key, control);
     }
 #if 0
     else if (strncmp(name, "files", 5) == 0) {
