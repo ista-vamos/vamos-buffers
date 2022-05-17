@@ -72,7 +72,7 @@ static int default_buffer_manager_thrd(void *data) {
 
 
 static
-shm_event *default_process_events(shm_vector *buffers, void *data) {
+shm_event *default_process_events(shm_vector *buffers, void *data, shm_stream **streamret) {
     assert(buffers);
     assert(data);
     shamon *shmn = (shamon *)data;
@@ -113,6 +113,7 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
                 shm_stream_get_dropped_event(stream, &dropped, id, c/4);
                 assert(shmn->_ev_size >= sizeof(dropped));
                 memcpy(shmn->_ev, &dropped, sizeof(dropped));
+                *streamret = stream;
                 return shmn->_ev;
             }
 
@@ -123,6 +124,7 @@ shm_event *default_process_events(shm_vector *buffers, void *data) {
 #endif
             shm_arbiter_buffer_drop(buffer, 1);
             assert(n == 1);
+            *streamret = stream;
             return shmn->_ev;
         }
     }
@@ -190,8 +192,8 @@ bool shamon_is_ready(shamon *shmn) {
     return false;
 }
 
-shm_event *shamon_get_next_ev(shamon *shmn) {
-    return shmn->process_events(&shmn->buffers, shmn->process_events_data);
+shm_event *shamon_get_next_ev(shamon *shmn, shm_stream **streamret) {
+    return shmn->process_events(&shmn->buffers, shmn->process_events_data, streamret);
 }
 
 void shamon_add_stream(shamon *shmn, shm_stream *stream, size_t buffer_capacity) {

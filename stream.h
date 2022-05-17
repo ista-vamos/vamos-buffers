@@ -40,6 +40,7 @@ void shm_stream_init(shm_stream *stream,
 
 const char *shm_stream_get_name(shm_stream *);
 size_t shm_stream_event_size(shm_stream *);
+size_t shm_stream_id(shm_stream *);
 
 void *shm_stream_read_events(shm_stream *, size_t *);
 bool shm_stream_consume(shm_stream *stream, size_t num);

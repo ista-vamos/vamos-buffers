@@ -32,6 +32,10 @@ void shm_stream_init(shm_stream *stream,
         stream->name = name;
 }
 
+size_t shm_stream_id(shm_stream *stream) {
+    return stream->id;
+}
+
 // not thread safe!
 void shm_stream_get_dropped_event(shm_stream *stream,
                                   shm_event_dropped *dropped_ev,
