@@ -494,7 +494,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_27 ;
-                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_L_ArBmOn_Right1;
                   }
                   else
@@ -646,7 +645,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_26 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_26 ;
-                    (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                     goto __mm_label_arbmon_L_ArBmOn_Left1;
                   }
                   else
@@ -681,7 +679,6 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_26 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_26 ;
-                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left1;
                     }
                     else
@@ -813,6 +810,7 @@ int arbiterMonitor( ) {
               _mm_gco _mm_uv_gvar_tmpstrng_45 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); ignored " ) ),_mm_lib_int_to_string ( (_mm_arbiter.il) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.ir) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
               printf ( "%s\n",(_mm_uv_gvar_tmpstrng_45->data) ) ;
               _mm_decref ( _mm_uv_gvar_tmpstrng_45 ) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + 1) ;
               goto __mm_label_arbmon_Finished_ArBmOn_Left1;
             }
           }
@@ -973,6 +971,7 @@ int arbiterMonitor( ) {
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                       (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_EQ;
                     }
                     else
@@ -987,6 +986,7 @@ int arbiterMonitor( ) {
                           _mm_decref ( _mm_uv_gvar_tmpstrng_46 ) ;
                           ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_L_ArBmOn_EQ;
                         }
                         else
@@ -1013,6 +1013,7 @@ int arbiterMonitor( ) {
                         _mm_decref ( _mm_uv_gvar_tmpstrng_47 ) ;
                         ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_L_ArBmOn_EQ;
                       }
                       else
@@ -1195,7 +1196,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_28 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_28 ;
-                    (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                     goto __mm_label_arbmon_L_ArBmOn_Left2;
                   }
                   else
@@ -1230,7 +1230,6 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_28 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_28 ;
-                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left2;
                     }
                     else
@@ -1362,6 +1361,7 @@ int arbiterMonitor( ) {
               _mm_gco _mm_uv_gvar_tmpstrng_48 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); ignored " ) ),_mm_lib_int_to_string ( (_mm_arbiter.il) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.ir) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
               printf ( "%s\n",(_mm_uv_gvar_tmpstrng_48->data) ) ;
               _mm_decref ( _mm_uv_gvar_tmpstrng_48 ) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + 2) ;
               goto __mm_label_arbmon_Finished_ArBmOn_Left2;
             }
           }
@@ -1523,6 +1523,7 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                       (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left1;
                     }
                     else
@@ -1538,6 +1539,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_L_ArBmOn_Left1;
                         }
                         else
@@ -1565,6 +1567,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_L_ArBmOn_Left1;
                       }
                       else
@@ -1777,7 +1780,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_31 ;
-                    (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                     goto __mm_label_arbmon_L_ArBmOn_Left3;
                   }
                   else
@@ -1812,7 +1814,6 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_31 ;
-                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left3;
                     }
                     else
@@ -1944,6 +1945,7 @@ int arbiterMonitor( ) {
               _mm_gco _mm_uv_gvar_tmpstrng_51 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); ignored " ) ),_mm_lib_int_to_string ( (_mm_arbiter.il) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.ir) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
               printf ( "%s\n",(_mm_uv_gvar_tmpstrng_51->data) ) ;
               _mm_decref ( _mm_uv_gvar_tmpstrng_51 ) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + 3) ;
               goto __mm_label_arbmon_Finished_ArBmOn_Left3;
             }
           }
@@ -2106,6 +2108,7 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                       ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                       (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_Left2;
                     }
                     else
@@ -2122,6 +2125,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                           ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_L_ArBmOn_Left2;
                         }
                         else
@@ -2150,6 +2154,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                         ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_L_ArBmOn_Left2;
                       }
                       else
@@ -2543,6 +2548,7 @@ int arbiterMonitor( ) {
               _mm_gco _mm_uv_gvar_tmpstrng_54 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); ignored " ) ),_mm_lib_int_to_string ( (_mm_arbiter.il) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.ir) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
               printf ( "%s\n",(_mm_uv_gvar_tmpstrng_54->data) ) ;
               _mm_decref ( _mm_uv_gvar_tmpstrng_54 ) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + 1) ;
               goto __mm_label_arbmon_Finished_ArBmOn_Right1;
             }
           }
@@ -2700,7 +2706,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_36 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_36 ;
-                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_L_ArBmOn_Right2;
                   }
                   else
@@ -2830,6 +2835,7 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_37 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_EQ;
                     }
@@ -2845,6 +2851,7 @@ int arbiterMonitor( ) {
                           _mm_decref ( _mm_uv_gvar_tmpstrng_55 ) ;
                           ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                           (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                           goto __mm_label_arbmon_L_ArBmOn_EQ;
                         }
                         else
@@ -2871,6 +2878,7 @@ int arbiterMonitor( ) {
                         _mm_decref ( _mm_uv_gvar_tmpstrng_56 ) ;
                         ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                         (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                         goto __mm_label_arbmon_L_ArBmOn_EQ;
                       }
                       else
@@ -2914,6 +2922,7 @@ int arbiterMonitor( ) {
                       if((_mm_uv_mvar_n_37 == ((_mm_monitor.pbuf) [ 0 ])))
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                         (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_L_ArBmOn_EQ;
                       }
@@ -2929,6 +2938,7 @@ int arbiterMonitor( ) {
                             _mm_decref ( _mm_uv_gvar_tmpstrng_57 ) ;
                             ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                             (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                            (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                             goto __mm_label_arbmon_L_ArBmOn_EQ;
                           }
                           else
@@ -2955,6 +2965,7 @@ int arbiterMonitor( ) {
                           _mm_decref ( _mm_uv_gvar_tmpstrng_58 ) ;
                           ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                           (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                           goto __mm_label_arbmon_L_ArBmOn_EQ;
                         }
                         else
@@ -3093,6 +3104,7 @@ int arbiterMonitor( ) {
               _mm_gco _mm_uv_gvar_tmpstrng_59 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); ignored " ) ),_mm_lib_int_to_string ( (_mm_arbiter.il) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.ir) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
               printf ( "%s\n",(_mm_uv_gvar_tmpstrng_59->data) ) ;
               _mm_decref ( _mm_uv_gvar_tmpstrng_59 ) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + 2) ;
               goto __mm_label_arbmon_Finished_ArBmOn_Right2;
             }
           }
@@ -3250,7 +3262,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_39 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_39 ;
-                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_L_ArBmOn_Right3;
                   }
                   else
@@ -3382,6 +3393,7 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                       (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_Right1;
                     }
                     else
@@ -3397,6 +3409,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                           (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                           goto __mm_label_arbmon_L_ArBmOn_Right1;
                         }
                         else
@@ -3424,6 +3437,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                         (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                         goto __mm_label_arbmon_L_ArBmOn_Right1;
                       }
                       else
@@ -3469,6 +3483,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                         (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                         goto __mm_label_arbmon_L_ArBmOn_Right1;
                       }
                       else
@@ -3484,6 +3499,7 @@ int arbiterMonitor( ) {
                             ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                             ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                             (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                            (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                             goto __mm_label_arbmon_L_ArBmOn_Right1;
                           }
                           else
@@ -3511,6 +3527,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                           (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                           goto __mm_label_arbmon_L_ArBmOn_Right1;
                         }
                         else
@@ -3649,6 +3666,7 @@ int arbiterMonitor( ) {
               _mm_gco _mm_uv_gvar_tmpstrng_64 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); ignored " ) ),_mm_lib_int_to_string ( (_mm_arbiter.il) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.ir) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
               printf ( "%s\n",(_mm_uv_gvar_tmpstrng_64->data) ) ;
               _mm_decref ( _mm_uv_gvar_tmpstrng_64 ) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + 3) ;
               goto __mm_label_arbmon_Finished_ArBmOn_Right3;
             }
           }
@@ -3928,6 +3946,7 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                       ((_mm_monitor.pbuf) [ 2 ]) = (- 2) ;
                       (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_L_ArBmOn_Right2;
                     }
                     else
@@ -3944,6 +3963,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                           ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                           (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                           goto __mm_label_arbmon_L_ArBmOn_Right2;
                         }
                         else
@@ -3972,6 +3992,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                         ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                         (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                         goto __mm_label_arbmon_L_ArBmOn_Right2;
                       }
                       else
@@ -4018,6 +4039,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                         ((_mm_monitor.pbuf) [ 2 ]) = (- 2) ;
                         (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                         goto __mm_label_arbmon_L_ArBmOn_Right2;
                       }
                       else
@@ -4034,6 +4056,7 @@ int arbiterMonitor( ) {
                             ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                             ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                             (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                            (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                             goto __mm_label_arbmon_L_ArBmOn_Right2;
                           }
                           else
@@ -4062,6 +4085,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                           ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                           (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                           goto __mm_label_arbmon_L_ArBmOn_Right2;
                         }
                         else
@@ -4362,7 +4386,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_26 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_26 ;
-                    (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Left1;
                   }
                   else
@@ -4394,6 +4417,7 @@ int arbiterMonitor( ) {
           {
             int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_19 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
+            (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_arbiter.seen)) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
             (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_19) ;
@@ -4505,7 +4529,6 @@ int arbiterMonitor( ) {
             {
               int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) + 1) ;
-              (_mm_arbiter.ir) = ((_mm_arbiter.ir) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 {
@@ -4513,7 +4536,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_27 ;
-                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right1;
                   }
                   else
@@ -4548,7 +4570,6 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_27 ;
-                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right1;
                     }
                     else
@@ -4586,7 +4607,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_27 ;
-                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right1;
                   }
                   else
@@ -4613,7 +4633,6 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_27 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = _mm_uv_mvar_n_27 ;
-                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right1;
                     }
                     else
@@ -4708,6 +4727,7 @@ int arbiterMonitor( ) {
               _mm_gco _mm_uv_gvar_tmpstrng_70 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); ignored " ) ),_mm_lib_int_to_string ( (_mm_arbiter.il) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.ir) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
               printf ( "%s\n",(_mm_uv_gvar_tmpstrng_70->data) ) ;
               _mm_decref ( _mm_uv_gvar_tmpstrng_70 ) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + 1) ;
               goto __mm_label_arbmon_Finished_ArBmOn_Left1;
             }
           }
@@ -4865,7 +4885,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_28 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_28 ;
-                    (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Left2;
                   }
                   else
@@ -4897,6 +4916,7 @@ int arbiterMonitor( ) {
           {
             int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_19 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
+            (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_arbiter.seen)) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
             (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_19) ;
@@ -4984,7 +5004,6 @@ int arbiterMonitor( ) {
             {
               int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) + 1) ;
-              (_mm_arbiter.ir) = ((_mm_arbiter.ir) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 {
@@ -4995,6 +5014,7 @@ int arbiterMonitor( ) {
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                       (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_EQ;
                     }
                     else
@@ -5009,6 +5029,7 @@ int arbiterMonitor( ) {
                           _mm_decref ( _mm_uv_gvar_tmpstrng_71 ) ;
                           ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_EQ;
                         }
                         else
@@ -5035,6 +5056,7 @@ int arbiterMonitor( ) {
                         _mm_decref ( _mm_uv_gvar_tmpstrng_72 ) ;
                         ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_EQ;
                       }
                       else
@@ -5079,6 +5101,7 @@ int arbiterMonitor( ) {
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_EQ;
                       }
                       else
@@ -5093,6 +5116,7 @@ int arbiterMonitor( ) {
                             _mm_decref ( _mm_uv_gvar_tmpstrng_73 ) ;
                             ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                             (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                            (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                             goto __mm_label_arbmon_R_ArBmOn_EQ;
                           }
                           else
@@ -5119,6 +5143,7 @@ int arbiterMonitor( ) {
                           _mm_decref ( _mm_uv_gvar_tmpstrng_74 ) ;
                           ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_EQ;
                         }
                         else
@@ -5166,6 +5191,7 @@ int arbiterMonitor( ) {
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                       (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_EQ;
                     }
                     else
@@ -5180,6 +5206,7 @@ int arbiterMonitor( ) {
                           _mm_decref ( _mm_uv_gvar_tmpstrng_75 ) ;
                           ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_EQ;
                         }
                         else
@@ -5206,6 +5233,7 @@ int arbiterMonitor( ) {
                         _mm_decref ( _mm_uv_gvar_tmpstrng_76 ) ;
                         ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_EQ;
                       }
                       else
@@ -5242,6 +5270,7 @@ int arbiterMonitor( ) {
                       {
                         ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_EQ;
                       }
                       else
@@ -5256,6 +5285,7 @@ int arbiterMonitor( ) {
                             _mm_decref ( _mm_uv_gvar_tmpstrng_77 ) ;
                             ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                             (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                            (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                             goto __mm_label_arbmon_R_ArBmOn_EQ;
                           }
                           else
@@ -5282,6 +5312,7 @@ int arbiterMonitor( ) {
                           _mm_decref ( _mm_uv_gvar_tmpstrng_78 ) ;
                           ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_EQ;
                         }
                         else
@@ -5383,6 +5414,7 @@ int arbiterMonitor( ) {
               _mm_gco _mm_uv_gvar_tmpstrng_79 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); ignored " ) ),_mm_lib_int_to_string ( (_mm_arbiter.il) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.ir) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
               printf ( "%s\n",(_mm_uv_gvar_tmpstrng_79->data) ) ;
               _mm_decref ( _mm_uv_gvar_tmpstrng_79 ) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + 2) ;
               goto __mm_label_arbmon_Finished_ArBmOn_Left2;
             }
           }
@@ -5540,7 +5572,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_31 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_31 ;
-                    (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Left3;
                   }
                   else
@@ -5572,6 +5603,7 @@ int arbiterMonitor( ) {
           {
             int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_19 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
+            (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_arbiter.seen)) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
             (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_19) ;
@@ -5659,7 +5691,6 @@ int arbiterMonitor( ) {
             {
               int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) + 1) ;
-              (_mm_arbiter.ir) = ((_mm_arbiter.ir) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 {
@@ -5671,6 +5702,7 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                       (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left1;
                     }
                     else
@@ -5686,6 +5718,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_Left1;
                         }
                         else
@@ -5713,6 +5746,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left1;
                       }
                       else
@@ -5758,6 +5792,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left1;
                       }
                       else
@@ -5773,6 +5808,7 @@ int arbiterMonitor( ) {
                             ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                             ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                             (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                            (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                             goto __mm_label_arbmon_R_ArBmOn_Left1;
                           }
                           else
@@ -5800,6 +5836,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_Left1;
                         }
                         else
@@ -5848,6 +5885,7 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                       (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left1;
                     }
                     else
@@ -5863,6 +5901,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_Left1;
                         }
                         else
@@ -5890,6 +5929,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left1;
                       }
                       else
@@ -5927,6 +5967,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left1;
                       }
                       else
@@ -5942,6 +5983,7 @@ int arbiterMonitor( ) {
                             ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                             ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                             (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                            (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                             goto __mm_label_arbmon_R_ArBmOn_Left1;
                           }
                           else
@@ -5969,6 +6011,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_Left1;
                         }
                         else
@@ -6070,6 +6113,7 @@ int arbiterMonitor( ) {
               _mm_gco _mm_uv_gvar_tmpstrng_88 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); ignored " ) ),_mm_lib_int_to_string ( (_mm_arbiter.il) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.ir) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
               printf ( "%s\n",(_mm_uv_gvar_tmpstrng_88->data) ) ;
               _mm_decref ( _mm_uv_gvar_tmpstrng_88 ) ;
+              (_mm_arbiter.sl) = ((_mm_arbiter.sl) + 3) ;
               goto __mm_label_arbmon_Finished_ArBmOn_Left3;
             }
           }
@@ -6248,6 +6292,7 @@ int arbiterMonitor( ) {
           {
             int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_19 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
+            (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_arbiter.seen)) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
             (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_19) ;
@@ -6335,7 +6380,6 @@ int arbiterMonitor( ) {
             {
               int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) + 1) ;
-              (_mm_arbiter.ir) = ((_mm_arbiter.ir) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 {
@@ -6348,6 +6392,7 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                       ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                       (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left2;
                     }
                     else
@@ -6364,6 +6409,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                           ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_Left2;
                         }
                         else
@@ -6392,6 +6438,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                         ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left2;
                       }
                       else
@@ -6438,6 +6485,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                         ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left2;
                       }
                       else
@@ -6454,6 +6502,7 @@ int arbiterMonitor( ) {
                             ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                             ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                             (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                            (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                             goto __mm_label_arbmon_R_ArBmOn_Left2;
                           }
                           else
@@ -6482,6 +6531,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                           ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_Left2;
                         }
                         else
@@ -6531,6 +6581,7 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                       ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                       (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                      (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Left2;
                     }
                     else
@@ -6547,6 +6598,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                           ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_Left2;
                         }
                         else
@@ -6575,6 +6627,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                         ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left2;
                       }
                       else
@@ -6613,6 +6666,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                         ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                         (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                        (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_Left2;
                       }
                       else
@@ -6629,6 +6683,7 @@ int arbiterMonitor( ) {
                             ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                             ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                             (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                            (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                             goto __mm_label_arbmon_R_ArBmOn_Left2;
                           }
                           else
@@ -6657,6 +6712,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                           ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                           (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
+                          (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_Left2;
                         }
                         else
@@ -6758,6 +6814,7 @@ int arbiterMonitor( ) {
               _mm_gco _mm_uv_gvar_tmpstrng_97 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); ignored " ) ),_mm_lib_int_to_string ( (_mm_arbiter.il) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.ir) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
               printf ( "%s\n",(_mm_uv_gvar_tmpstrng_97->data) ) ;
               _mm_decref ( _mm_uv_gvar_tmpstrng_97 ) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + 1) ;
               goto __mm_label_arbmon_Finished_ArBmOn_Right1;
             }
           }
@@ -6917,6 +6974,7 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_37 == ((_mm_monitor.pbuf) [ 0 ])))
                     {
                       ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_EQ;
                     }
@@ -6932,6 +6990,7 @@ int arbiterMonitor( ) {
                           _mm_decref ( _mm_uv_gvar_tmpstrng_98 ) ;
                           ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                           (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_EQ;
                         }
                         else
@@ -6958,6 +7017,7 @@ int arbiterMonitor( ) {
                         _mm_decref ( _mm_uv_gvar_tmpstrng_99 ) ;
                         ((_mm_monitor.pbuf) [ 0 ]) = (- 1) ;
                         (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_EQ;
                       }
                       else
@@ -6996,6 +7056,7 @@ int arbiterMonitor( ) {
           {
             int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_19 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
+            (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_arbiter.seen)) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
             (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_19) ;
@@ -7131,7 +7192,6 @@ int arbiterMonitor( ) {
             {
               int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) + 1) ;
-              (_mm_arbiter.ir) = ((_mm_arbiter.ir) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 {
@@ -7139,7 +7199,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_36 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_36 ;
-                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right2;
                   }
                   else
@@ -7174,7 +7233,6 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_36 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_36 ;
-                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right2;
                     }
                     else
@@ -7212,7 +7270,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_36 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_36 ;
-                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right2;
                   }
                   else
@@ -7239,7 +7296,6 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_36 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 1 ]) = _mm_uv_mvar_n_36 ;
-                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right2;
                     }
                     else
@@ -7334,6 +7390,7 @@ int arbiterMonitor( ) {
               _mm_gco _mm_uv_gvar_tmpstrng_100 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); ignored " ) ),_mm_lib_int_to_string ( (_mm_arbiter.il) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.ir) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
               printf ( "%s\n",(_mm_uv_gvar_tmpstrng_100->data) ) ;
               _mm_decref ( _mm_uv_gvar_tmpstrng_100 ) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + 2) ;
               goto __mm_label_arbmon_Finished_ArBmOn_Right2;
             }
           }
@@ -7495,6 +7552,7 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                       ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                       (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right1;
                     }
                     else
@@ -7510,6 +7568,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                           ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                           (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_Right1;
                         }
                         else
@@ -7537,6 +7596,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 0 ]) = ((_mm_monitor.pbuf) [ 1 ]) ;
                         ((_mm_monitor.pbuf) [ 1 ]) = (- 1) ;
                         (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_Right1;
                       }
                       else
@@ -7575,6 +7635,7 @@ int arbiterMonitor( ) {
           {
             int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_19 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
+            (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_arbiter.seen)) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
             (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_19) ;
@@ -7740,7 +7801,6 @@ int arbiterMonitor( ) {
             {
               int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) + 1) ;
-              (_mm_arbiter.ir) = ((_mm_arbiter.ir) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 {
@@ -7748,7 +7808,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_39 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_39 ;
-                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right3;
                   }
                   else
@@ -7783,7 +7842,6 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_39 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_39 ;
-                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right3;
                     }
                     else
@@ -7821,7 +7879,6 @@ int arbiterMonitor( ) {
                   if((_mm_uv_mvar_n_39 == __mm_arbiter_yieldvar_n))
                   {
                     ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_39 ;
-                    (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                     goto __mm_label_arbmon_R_ArBmOn_Right3;
                   }
                   else
@@ -7848,7 +7905,6 @@ int arbiterMonitor( ) {
                     if((_mm_uv_mvar_n_39 == __mm_arbiter_yieldvar_n))
                     {
                       ((_mm_monitor.pbuf) [ 2 ]) = _mm_uv_mvar_n_39 ;
-                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right3;
                     }
                     else
@@ -7943,6 +7999,7 @@ int arbiterMonitor( ) {
               _mm_gco _mm_uv_gvar_tmpstrng_103 = _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_string_concat ( _mm_lib_make_string ( "Done! Dropped " ),_mm_lib_int_to_string ( (_mm_arbiter.dl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.dr) ) ),_mm_lib_make_string ( " (Right); skipped " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.sr) ) ),_mm_lib_make_string ( " (Right); ignored " ) ),_mm_lib_int_to_string ( (_mm_arbiter.il) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_arbiter.ir) ) ),_mm_lib_make_string ( " (Right); processed " ) ),_mm_lib_int_to_string ( (_mm_monitor.pl) ) ),_mm_lib_make_string ( " (Left) and " ) ),_mm_lib_int_to_string ( (_mm_monitor.pr) ) ),_mm_lib_make_string ( " (Right)" ) ) ;
               printf ( "%s\n",(_mm_uv_gvar_tmpstrng_103->data) ) ;
               _mm_decref ( _mm_uv_gvar_tmpstrng_103 ) ;
+              (_mm_arbiter.sr) = ((_mm_arbiter.sr) + 3) ;
               goto __mm_label_arbmon_Finished_ArBmOn_Right3;
             }
           }
@@ -8105,6 +8162,7 @@ int arbiterMonitor( ) {
                       ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                       ((_mm_monitor.pbuf) [ 2 ]) = (- 2) ;
                       (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                      (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                       goto __mm_label_arbmon_R_ArBmOn_Right2;
                     }
                     else
@@ -8121,6 +8179,7 @@ int arbiterMonitor( ) {
                           ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                           ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                           (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                          (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                           goto __mm_label_arbmon_R_ArBmOn_Right2;
                         }
                         else
@@ -8149,6 +8208,7 @@ int arbiterMonitor( ) {
                         ((_mm_monitor.pbuf) [ 1 ]) = ((_mm_monitor.pbuf) [ 2 ]) ;
                         ((_mm_monitor.pbuf) [ 2 ]) = (- 1) ;
                         (_mm_monitor.pl) = ((_mm_monitor.pl) + 1) ;
+                        (_mm_monitor.pr) = ((_mm_monitor.pr) + 1) ;
                         goto __mm_label_arbmon_R_ArBmOn_Right2;
                       }
                       else
@@ -8187,6 +8247,7 @@ int arbiterMonitor( ) {
           {
             int __mm_arbiter_yieldvar_x = (_mm_arbiter.seen) ;
             (_mm_arbiter.pre) = (_mm_uv_mvar_n_19 - (((_mm_arbiter.pre) + (_mm_arbiter.seen)) + (_mm_arbiter.post))) ;
+            (_mm_arbiter.sr) = ((_mm_arbiter.sr) + (_mm_arbiter.seen)) ;
             (_mm_arbiter.post) = 0 ;
             (_mm_arbiter.seen) = 0 ;
             (_mm_arbiter.dl) = ((_mm_arbiter.dl) + _mm_uv_mvar_n_19) ;
@@ -8388,7 +8449,6 @@ int arbiterMonitor( ) {
             {
               int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_22 ;
               (_mm_arbiter.seen) = ((_mm_arbiter.seen) + 1) ;
-              (_mm_arbiter.ir) = ((_mm_arbiter.ir) + 1) ;
               __MM_BUFDROP ( __mma_strm_buf_Right,1,__mma_strm_tlen_Right,__mma_strm_flen_Right,__mma_strm_ilen_Right,__mma_strm_istrt_Right,__mma_strm_blen_Right,__mma_strm_bstrt_Right ) ;
               {
                 {
