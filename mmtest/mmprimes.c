@@ -145,6 +145,7 @@ int _mm_strm_fun_Left(void * arg) {
         int _mm_uv_mvar_n_0 = (((inevent->cases).Prime).n) ;
         int _mm_uv_mvar_p_1 = (((inevent->cases).Prime).p) ;
         outevent = shm_arbiter_buffer_write_ptr ( buffer ) ;
+        /* NOTE: this copies also 'kind' which is then overwritten */
         memcpy ( outevent,inevent,sizeof ( shm_event ) ) ;
         ((outevent->head).kind) = __MM_EVENTCONST_ENUM_LPrime ;
         (((outevent->cases).LPrime).n) = _mm_uv_mvar_p_1 ;
