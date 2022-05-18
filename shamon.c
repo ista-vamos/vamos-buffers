@@ -102,15 +102,15 @@ shm_event *default_process_events(shm_vector *buffers, void *data, shm_stream **
         qsize = shm_arbiter_buffer_peek1(buffer, (void**)&inevent);
         if (qsize > 0) {
             assert(shmn->_ev);
-            uint64_t c = shm_arbiter_buffer_capacity(buffer);
+            const uint64_t c = shm_arbiter_buffer_capacity(buffer);
             /* is the buffer full from 75 or more percent? */
-            if (false && qsize > 0.75*c) {
+            if (qsize > 0.8*c) {
                 /* drop half of the buffer */
                 shm_eventid id = shm_event_id(inevent);
-                if (!shm_arbiter_buffer_drop(buffer, c/4)) {
+                if (!shm_arbiter_buffer_drop(buffer, c/2)) {
                     assert(0 && "Failed dropping events");
                 }
-                shm_stream_get_dropped_event(stream, &dropped, id, c/4);
+                shm_stream_get_dropped_event(stream, &dropped, id, c/2);
                 assert(shmn->_ev_size >= sizeof(dropped));
                 memcpy(shmn->_ev, &dropped, sizeof(dropped));
                 *streamret = stream;
@@ -169,13 +169,15 @@ void shamon_destroy(shamon *shmn) {
 
     assert(VEC_SIZE(shmn->buffer_threads) == shm_vector_size(&shmn->buffers));
     for (size_t i = 0; i < VEC_SIZE(shmn->buffer_threads); ++i) {
-	/*
+        thrd_join(shmn->buffer_threads[i], NULL);
+        /*
         shm_arbiter_buffer *buff
             = *((shm_arbiter_buffer **)shm_vector_at(&shmn->buffers, i));
         shm_arbiter_buffer_set_active(buff, false);
-	*/
-        thrd_join(shmn->buffer_threads[i], NULL);
-        //shm_arbiter_buffer_destroy(buff);
+        assert(shm_arbiter_buffer_size(buff) == 0 &&
+               "Not all items were consumed");
+        shm_arbiter_buffer_destroy(buff);
+               */
     }
     VEC_DESTROY(shmn->buffer_threads);
     shm_vector_destroy(&shmn->buffers);
