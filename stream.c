@@ -30,6 +30,9 @@ void shm_stream_init(shm_stream *stream,
         stream->alter = alter;
         stream->destroy = destroy;
         stream->name = name;
+#ifndef NDEBUG
+        stream->last_event_id = 0;
+#endif
 }
 
 size_t shm_stream_id(shm_stream *stream) {

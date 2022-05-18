@@ -26,7 +26,10 @@ typedef struct _shm_stream {
     shm_stream_filter_fn filter;
     shm_stream_alter_fn alter;
     shm_stream_destroy_fn destroy;
-    /* shm_stream_get_next_event_fn get_next_event; */
+#ifndef NDEBUG
+    /* for checking consistency */
+    size_t last_event_id;
+#endif
 } shm_stream;
 
 void shm_stream_init(shm_stream *stream,
