@@ -19,6 +19,7 @@ bool shamon_is_ready(shamon *);
 void shamon_add_stream(shamon *shmn, shm_stream *stream, size_t buffer_capacity);
 shm_event *shamon_get_next_ev(shamon *, shm_stream **);
 shm_vector *shamon_get_buffers(shamon *);
+shm_stream **shamon_get_streams(shamon *, size_t *);
 
 
 

@@ -65,4 +65,10 @@ void shm_stream_notify_dropped(shm_stream *stream,
                                uint64_t begin_id,
                                uint64_t end_id);
 void shm_stream_destroy(shm_stream *stream);
+
+#ifndef NDEBUG
+inline size_t shm_stream_last_event_id(shm_stream *s) {
+    return s->last_event_id;
+}
+#endif
 #endif // SHAMON_STREAMS_H
