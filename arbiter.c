@@ -269,7 +269,6 @@ void *stream_fetch(shm_stream *stream,
     void *ev;
     while (1) {
         ev = get_event(stream);
-        fprintf(stderr, "Got event %lu\n", shm_event_id(ev));
         if (!ev)
             return NULL; /* stream ended */
 
