@@ -162,11 +162,6 @@ shm_stream **shamon_get_streams(shamon *shmn, size_t *size) {
 }
 
 void shamon_destroy(shamon *shmn) {
-    for (size_t i = 0; i < VEC_SIZE(shmn->streams); ++i) {
-        shm_stream_destroy(shmn->streams[i]);
-    }
-    VEC_DESTROY(shmn->streams);
-
     assert(VEC_SIZE(shmn->buffer_threads) == shm_vector_size(&shmn->buffers));
     for (size_t i = 0; i < VEC_SIZE(shmn->buffer_threads); ++i) {
         thrd_join(shmn->buffer_threads[i], NULL);
@@ -179,6 +174,11 @@ void shamon_destroy(shamon *shmn) {
         shm_arbiter_buffer_destroy(buff);
                */
     }
+
+    for (size_t i = 0; i < VEC_SIZE(shmn->streams); ++i) {
+        shm_stream_destroy(shmn->streams[i]);
+    }
+    VEC_DESTROY(shmn->streams);
     VEC_DESTROY(shmn->buffer_threads);
     shm_vector_destroy(&shmn->buffers);
     free(shmn->_ev);
