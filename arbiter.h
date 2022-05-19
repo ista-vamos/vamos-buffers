@@ -59,9 +59,11 @@ void *stream_fetch(shm_stream *stream,
                    shm_arbiter_buffer *buffer);
 
 size_t shm_arbiter_buffer_dropped_num(shm_arbiter_buffer *buffer);
+size_t shm_arbiter_buffer_written_num(shm_arbiter_buffer *buffer);
 
 void shm_arbiter_buffer_notify_dropped(shm_arbiter_buffer *buffer,
                                        uint64_t begin_id,
                                        uint64_t end_id);
 
+void shm_arbiter_buffer_dump_stats(shm_arbiter_buffer *buffer);
 #endif /* SHAMON_ARBITER_H_ */

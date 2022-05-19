@@ -14,6 +14,8 @@ typedef void (*shm_stream_destroy_fn)(struct _shm_stream *);
 typedef bool (*shm_stream_filter_fn)(shm_stream *, shm_event *);
 typedef void (*shm_stream_alter_fn)(shm_stream *, shm_event *, shm_event *);
 
+#define DUMP_STATS
+
 // TODO: make this opaque
 typedef struct _shm_stream {
     uint64_t id;
@@ -29,6 +31,12 @@ typedef struct _shm_stream {
 #ifndef NDEBUG
     /* for checking consistency */
     size_t last_event_id;
+#endif
+#ifdef DUMP_STATS
+   size_t fetched_events;
+   size_t consumed_events;
+   size_t dropped_events;
+   size_t slept_waiting_for_ev;
 #endif
 } shm_stream;
 

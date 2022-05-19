@@ -33,6 +33,12 @@ void shm_stream_init(shm_stream *stream,
 #ifndef NDEBUG
         stream->last_event_id = 0;
 #endif
+#ifdef DUMP_STATS
+        stream->fetched_events = 0;
+        stream->consumed_events = 0;
+        stream->dropped_events = 0;
+        stream->slept_waiting_for_ev = 0;
+#endif
 }
 
 size_t shm_stream_id(shm_stream *stream) {
@@ -48,6 +54,9 @@ void shm_stream_get_dropped_event(shm_stream *stream,
     dropped_ev->base.kind = shm_get_dropped_kind();
     dropped_ev->stream = stream;
     dropped_ev->n = n;
+#ifdef DUMP_STATS
+    stream->dropped_events += n;
+#endif
 }
 
 bool shm_stream_is_ready(shm_stream *s) {
@@ -62,6 +71,7 @@ void *shm_stream_read_events(shm_stream *s, size_t *num) {
 }
 
 bool shm_stream_consume(shm_stream *stream, size_t num) {
+    stream->consumed_events += num;
     return buffer_drop_k(stream->incoming_events, num);
 }
 
