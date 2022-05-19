@@ -15,4 +15,8 @@ struct source_control {
     struct event_record events[];
 };
 
+
+size_t source_control_get_records_num(struct source_control *sc);
+
+
 #endif  /* SHAMON_SOURCE_H_ */

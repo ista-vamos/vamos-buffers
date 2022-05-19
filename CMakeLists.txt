@@ -35,6 +35,7 @@ endif()
 add_library(shamon-list OBJECT list.c)
 add_library(shamon-vector OBJECT vector.c)
 add_library(shamon-queue OBJECT queue.c)
+add_library(shamon-source OBJECT source.c)
 
 add_library(shamon-utils STATIC utils.c)
 target_compile_definitions(shamon-utils PUBLIC -D_POSIX_C_SOURCE=200809L)

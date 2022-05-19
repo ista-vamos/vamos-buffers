@@ -47,7 +47,7 @@ shm_stream *shm_create_funs_stream(const char *key,
     ss->base.control = *control;
     ss->events = ss->base.control->events;
     assert(ss->events);
-    size_t evs_num = ((ss->base.control->size - sizeof(struct source_control))/sizeof(struct event_record));
+    size_t evs_num = source_control_get_records_num(*control);
     size_t ev_size, max_size = 0;
 
     for (size_t i = 0; i < evs_num; ++i) {
