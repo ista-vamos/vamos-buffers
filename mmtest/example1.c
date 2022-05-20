@@ -233,6 +233,14 @@ int arbiterMonitor( ) {
       {
       }
       
+      if((__mma_strm_tlen_S == 0))
+      {
+        goto __mm_label_arbmon_X_ArBmOn_X;
+      }
+      else
+      {
+      }
+      
     }
     printf ( "ERROR: Monitor could not match rule in state X/X\n" ) ;
     _mm_print_state ( (&_mm_arbiter),(&_mm_monitor),"X","X" ) ;
@@ -290,6 +298,14 @@ int arbiterMonitor( ) {
       if(((__mma_strm_tlen_S == 0) && (atomic_load_explicit ( (&__mm_strm_done_S),memory_order_acquire ) && (shm_arbiter_buffer_peek ( __mma_strm_buf_S,0,((void * *)(&__mma_strm_istrt_S)),(&__mma_strm_ilen_S),((void * *)(&__mma_strm_bstrt_S)),(&__mma_strm_blen_S) ) == 0))))
       {
         return 0 ;
+      }
+      else
+      {
+      }
+      
+      if((__mma_strm_tlen_S == 0))
+      {
+        goto __mm_label_arbmon_X_ArBmOn_M;
       }
       else
       {
