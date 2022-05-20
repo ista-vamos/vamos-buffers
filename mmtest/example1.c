@@ -154,6 +154,7 @@ int arbiterMonitor( ) {
           int __mm_evfref_S_0_n = (((__mm_evref_S_0->cases).E).n) ;
           int _mm_uv_mvar_n_0 = __mm_evfref_S_0_n ;
           int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_0 ;
+          __MM_BUFDROP ( __mma_strm_buf_S,1,__mma_strm_tlen_S,__mma_strm_flen_S,__mma_strm_ilen_S,__mma_strm_istrt_S,__mma_strm_blen_S,__mma_strm_bstrt_S ) ;
           {
             {
               int _mm_uv_mvar_n_2 = __mm_arbiter_yieldvar_n ;
@@ -210,6 +211,7 @@ int arbiterMonitor( ) {
         {
           int __mm_evfref_S_0_n = (((__mm_evref_S_0->cases).hole).n) ;
           int _mm_uv_mvar_n_1 = __mm_evfref_S_0_n ;
+          __MM_BUFDROP ( __mma_strm_buf_S,1,__mma_strm_tlen_S,__mma_strm_flen_S,__mma_strm_ilen_S,__mma_strm_istrt_S,__mma_strm_blen_S,__mma_strm_bstrt_S ) ;
           {
             {
               goto __mm_label_arbmon_X_ArBmOn_M;
@@ -257,6 +259,7 @@ int arbiterMonitor( ) {
           int __mm_evfref_S_0_n = (((__mm_evref_S_0->cases).E).n) ;
           int _mm_uv_mvar_n_0 = __mm_evfref_S_0_n ;
           int __mm_arbiter_yieldvar_n = _mm_uv_mvar_n_0 ;
+          __MM_BUFDROP ( __mma_strm_buf_S,1,__mma_strm_tlen_S,__mma_strm_flen_S,__mma_strm_ilen_S,__mma_strm_istrt_S,__mma_strm_blen_S,__mma_strm_bstrt_S ) ;
           {
             {
               int _mm_uv_mvar_n_4 = __mm_arbiter_yieldvar_n ;
@@ -280,6 +283,7 @@ int arbiterMonitor( ) {
         {
           int __mm_evfref_S_0_n = (((__mm_evref_S_0->cases).hole).n) ;
           int _mm_uv_mvar_n_1 = __mm_evfref_S_0_n ;
+          __MM_BUFDROP ( __mma_strm_buf_S,1,__mma_strm_tlen_S,__mma_strm_flen_S,__mma_strm_ilen_S,__mma_strm_istrt_S,__mma_strm_blen_S,__mma_strm_bstrt_S ) ;
           {
             {
               goto __mm_label_arbmon_X_ArBmOn_M;
