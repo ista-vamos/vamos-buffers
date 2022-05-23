@@ -130,6 +130,8 @@ int _mm_strm_fun_S1(void * arg) {
     }
     else
     {
+	    fprintf(stderr, "S1 fetched {kind = %lu, id = %lu}\n",
+	            shm_event_kind(inevent), shm_event_id(inevent));
     }
     
     switch (((inevent->head).kind)) {
@@ -221,6 +223,8 @@ int _mm_strm_fun_S2(void * arg) {
     }
     else
     {
+	    fprintf(stderr, "S2 fetched {kind = %lu, id = %lu}\n",
+	            shm_event_kind(inevent), shm_event_id(inevent));
     }
     
     switch (((inevent->head).kind)) {
@@ -347,6 +351,10 @@ int arbiterMonitor( ) {
       
       if((__mma_strm_tlen_S1 == 0))
       {
+	if (atomic_load_explicit (&__mm_strm_done_S1,memory_order_acquire) &&
+	    atomic_load_explicit (&__mm_strm_done_S2,memory_order_acquire)) {
+		break;
+	}
         goto __mm_label_arbmon_X2_ArBmOn_X;
       }
       else
@@ -1042,6 +1050,8 @@ int main(int argc,char * * argv) {
   thrd_create ( (&__mm_strm_thread_S2),(&_mm_strm_fun_S2),0 ) ;
   shm_arbiter_buffer_set_active ( __mma_strm_buf_S2,1 ) ;
   arbiterMonitor ( ) ;
+  shm_arbiter_buffer_dump_stats(__mma_strm_buf_S1);
+  shm_arbiter_buffer_dump_stats(__mma_strm_buf_S2);
   shm_stream_destroy ( __mma_strm_strm_S1 ) ;
   shm_stream_destroy ( __mma_strm_strm_S2 ) ;
   deinitialize_events ( ) ;
