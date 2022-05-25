@@ -7,16 +7,13 @@ SET (CMAKE_VERBOSE_MAKEFILE 1)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
-# we need POSIX
 
-cmake_policy(SET CMP0069 NEW)
-include(CheckIPOSupported)
-check_ipo_supported()
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-
-#if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-#    check_ipo_supported(RESULT IPO)
-#endif()
+if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+	cmake_policy(SET CMP0069 NEW)
+	include(CheckIPOSupported)
+	check_ipo_supported()
+	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
 
 OPTION(DUMP_STATS "Collect and allow dumping statistics" OFF)
 OPTION(DYNAMORIO_SOURCES "Build sources based on DynamoRIO" ON)
