@@ -19,7 +19,8 @@
 #include "vector-macro.h"
 
 #define SLEEP_TIME_NS 10000
-#define MEM_SIZE (1024*1024)
+//#define MEM_SIZE (1024*1024)
+#define MEM_SIZE (512)
 
 #define MAX_AUX_BUF_KEY_SIZE 16
 #define DROPPED_RANGES_NUM 5
