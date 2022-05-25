@@ -18,8 +18,13 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 #    check_ipo_supported(RESULT IPO)
 #endif()
 
+OPTION(DUMP_STATS "Collect and allow dumping statistics" OFF)
 OPTION(DYNAMORIO_SOURCES "Build sources based on DynamoRIO" ON)
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
+if (DUMP_STATS)
+	add_compile_definitions(DUMP_STATS)
+endif()
 
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wpedantic -Werror")

@@ -72,7 +72,9 @@ void *shm_stream_read_events(shm_stream *s, size_t *num) {
 }
 
 bool shm_stream_consume(shm_stream *stream, size_t num) {
+#ifdef DUMP_STATS
     stream->consumed_events += num;
+#endif
     return buffer_drop_k(stream->incoming_events, num);
 }
 

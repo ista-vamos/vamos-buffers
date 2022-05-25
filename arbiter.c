@@ -13,10 +13,12 @@ typedef struct _shm_arbiter_buffer {
     shm_stream *stream;     // the source for the buffer
     shm_par_queue buffer;   // the buffer itself
     size_t dropped_num;     // the number of dropped events
+#ifdef DUMP_STATS
     size_t total_dropped_times;     // the number of dropped events
     size_t total_dropped_num;     // the number of dropped events
     size_t volunt_dropped_num;     // the number of events dropped via drop() calls
     size_t written_num;     // the number of calls to write_finish
+#endif
     shm_eventid drop_begin_id; // the id of the next 'dropped' event
     bool active;            // true while the events are being queued
 } shm_arbiter_buffer;
@@ -30,7 +32,9 @@ void *shm_arbiter_buffer_write_ptr(shm_arbiter_buffer *q) {
 }
 
 void shm_arbiter_buffer_write_finish(shm_arbiter_buffer *q) {
+#ifdef DUMP_STATS
     ++q->written_num;
+#endif
     shm_par_queue_write_finish(&q->buffer);
 }
 
@@ -65,7 +69,9 @@ size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t k) {
     shm_par_queue_drop(&buffer->buffer, k);
     assert(n == k && "Something changed the queue in between");
     shm_stream_notify_last_processed_id(buffer->stream, last_id);
+#ifdef DUMP_STATS
     buffer->volunt_dropped_num += k;
+#endif
     return k;
 }
 
@@ -83,6 +89,7 @@ shm_stream *shm_arbiter_buffer_stream(shm_arbiter_buffer *buffer)
     return buffer->stream;
 }
 
+#ifdef DUMP_STATS
 size_t shm_arbiter_buffer_dropped_num(shm_arbiter_buffer *buffer)
 {
     return buffer->total_dropped_num;
@@ -92,6 +99,7 @@ size_t shm_arbiter_buffer_written_num(shm_arbiter_buffer *buffer)
 {
     return buffer->written_num;
 }
+#endif
 
 void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
                              shm_stream *stream,
@@ -109,10 +117,12 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
     buffer->stream = stream;
     buffer->active = false;
     buffer->dropped_num = 0;
+#ifdef DUMP_STATS
     buffer->total_dropped_times = 0;
     buffer->total_dropped_num = 0;
     buffer->written_num = 0;
     buffer->volunt_dropped_num = 0;
+#endif
 }
 
 shm_arbiter_buffer *shm_arbiter_buffer_create(shm_stream *stream,
@@ -159,9 +169,11 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem, size_
 #endif
             shm_par_queue_push(&buffer->buffer, elem, size);
             assert(ret && "BUG: queue has not enough free space");
+#ifdef DUMP_STATS
             buffer->total_dropped_num += buffer->dropped_num;
-            buffer->dropped_num = 0;
             ++buffer->total_dropped_times;
+#endif
+            buffer->dropped_num = 0;
             /* the end id may not be precise, but we need just the upper bound */
             shm_arbiter_buffer_notify_dropped(buffer, buffer->drop_begin_id,
                                               shm_event_id((shm_event*)elem) - 1);
@@ -197,8 +209,10 @@ void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
             assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
             assert(shm_par_queue_free_num(queue) > 1);
             shm_par_queue_push(queue, &dropped, sizeof(dropped));
+#ifdef DUMP_STATS
             buffer->total_dropped_num += buffer->dropped_num;
             ++buffer->total_dropped_times;
+#endif
 
             /* the end id may not be precise, but we need just the upper bound */
             shm_arbiter_buffer_notify_dropped(buffer, buffer->drop_begin_id,
@@ -255,7 +269,9 @@ static void *get_event(shm_stream *stream) {
         ev = shm_stream_read_events(stream, &num);
         if (ev) {
             sleep_time = SLEEP_TIME_NS_INIT;
+#ifdef DUMP_STATS
             ++stream->read_events;
+#endif
             return ev;
         }
 
@@ -269,7 +285,9 @@ static void *get_event(shm_stream *stream) {
             if (!shm_stream_is_ready(stream))
                 return NULL;
         }
+#ifdef DUMP_STATS
         stream->slept_waiting_for_ev += sleep_time;
+#endif
         sleep_ns(sleep_time);
     }
 
@@ -284,8 +302,10 @@ static void push_dropped_event(shm_stream *stream,
     shm_stream_get_dropped_event(stream, &dropped_ev,
                                  buffer->drop_begin_id, buffer->dropped_num);
     shm_par_queue_push(&buffer->buffer, &dropped_ev, sizeof(dropped_ev));
+#ifdef DUMP_STATS
     buffer->total_dropped_num += buffer->dropped_num;
     ++buffer->total_dropped_times;
+#endif
     shm_arbiter_buffer_notify_dropped(buffer,
                                       buffer->drop_begin_id,
 				      notify_id);
@@ -365,7 +385,9 @@ void *stream_fetch(shm_stream *stream,
             continue;
         }
 
+#ifdef DUMP_STATS
 	++stream->fetched_events;
+#endif
         return ev;
     }
 }
@@ -376,7 +398,7 @@ void shm_arbiter_buffer_notify_dropped(shm_arbiter_buffer *buffer,
     shm_stream_notify_dropped(buffer->stream, begin_id, end_id);
 }
 
-
+#ifdef DUMP_STATS
 void shm_arbiter_buffer_dump_stats(shm_arbiter_buffer *buffer) {
     shm_stream *s = buffer->stream;
     fprintf(stderr, "-- Buffer for stream %lu (%s) --\n", s->id, s->name);
@@ -393,3 +415,4 @@ void shm_arbiter_buffer_dump_stats(shm_arbiter_buffer *buffer) {
     fprintf(stderr, "   Buffer slept waiting for events %lu ns (%lf sec)\n",
             s->slept_waiting_for_ev, s->slept_waiting_for_ev / (double)1000000000);
 }
+#endif
