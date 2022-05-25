@@ -34,6 +34,7 @@ void shm_stream_init(shm_stream *stream,
         stream->last_event_id = 0;
 #endif
 #ifdef DUMP_STATS
+        stream->read_events = 0;
         stream->fetched_events = 0;
         stream->consumed_events = 0;
         stream->dropped_events = 0;

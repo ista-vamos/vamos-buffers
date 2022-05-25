@@ -255,7 +255,7 @@ static void *get_event(shm_stream *stream) {
         ev = shm_stream_read_events(stream, &num);
         if (ev) {
             sleep_time = SLEEP_TIME_NS_INIT;
-            ++stream->fetched_events;
+            ++stream->read_events;
             return ev;
         }
 
@@ -276,20 +276,53 @@ static void *get_event(shm_stream *stream) {
     assert(0 && "Unreachable");
 }
 
+static void push_dropped_event(shm_stream *stream,
+                               shm_arbiter_buffer *buffer,
+	 		       size_t notify_id) {
+    static shm_event_dropped dropped_ev;
+
+    shm_stream_get_dropped_event(stream, &dropped_ev,
+                                 buffer->drop_begin_id, buffer->dropped_num);
+    shm_par_queue_push(&buffer->buffer, &dropped_ev, sizeof(dropped_ev));
+    buffer->total_dropped_num += buffer->dropped_num;
+    ++buffer->total_dropped_times;
+    shm_arbiter_buffer_notify_dropped(buffer,
+                                      buffer->drop_begin_id,
+				      notify_id);
+    assert(shm_arbiter_buffer_free_space(buffer) > 0);
+}
+
 /* wait for an event on the 'stream' and return a pointer for it
  * in 'in' param. Also set 'out' to point where this event should be
  * written if it is not dropped. 'pushed' means that the lastly
  * fetched event was pushed to the arbiter buffer*/
 void *stream_fetch(shm_stream *stream,
                    shm_arbiter_buffer *buffer) {
-    static shm_event_dropped dropped_ev;
     void *ev;
+    size_t last_ev_id = 1;
     while (1) {
         ev = get_event(stream);
-        if (!ev)
+        if (!ev) {
+	    uint64_t sleep_time = SLEEP_TIME_NS_INIT;
+            while (buffer->dropped_num > 0) {
+                assert(DROP_SPACE_THRESHOLD < shm_arbiter_buffer_capacity(buffer));
+                if (shm_arbiter_buffer_free_space(buffer) > DROP_SPACE_THRESHOLD) {
+                    /* the end id may not be precise, but we need just the upper bound */
+                    push_dropped_event(stream, buffer, last_ev_id);
+                    assert(shm_arbiter_buffer_free_space(buffer) > 0);
+                    buffer->dropped_num = 0;
+                } else {
+		    sleep_ns(sleep_time);
+		    if (sleep_time < SLEEP_TIME_NS_THRES)
+			sleep_time *= 10;
+                    assert(buffer->dropped_num > 0);
+		}
+	    }
             return NULL; /* stream ended */
+	}
 
-        assert(shm_event_id(ev) == ++stream->last_event_id &&
+	last_ev_id = shm_event_id(ev);
+        assert(last_ev_id == ++stream->last_event_id &&
                "IDs are inconsistent");
         /*
         printf("FETCH: read event { kind = %lu, id = %lu}\n",
@@ -302,16 +335,9 @@ void *stream_fetch(shm_stream *stream,
         if (buffer->dropped_num > 0) {
             assert(DROP_SPACE_THRESHOLD < shm_arbiter_buffer_capacity(buffer));
             if (shm_arbiter_buffer_free_space(buffer) > DROP_SPACE_THRESHOLD) {
-                shm_stream_get_dropped_event(stream, &dropped_ev,
-                                             buffer->drop_begin_id, buffer->dropped_num);
-                shm_par_queue_push(&buffer->buffer, &dropped_ev, sizeof(dropped_ev));
-                buffer->total_dropped_num += buffer->dropped_num;
-                buffer->dropped_num = 0;
-                ++buffer->total_dropped_times;
                 /* the end id may not be precise, but we need just the upper bound */
-                shm_arbiter_buffer_notify_dropped(buffer,
-                                                  buffer->drop_begin_id,
-                                                  shm_event_id(ev) - 1);
+                push_dropped_event(stream, buffer, shm_event_id(ev) - 1);
+                buffer->dropped_num = 0;
                 assert(shm_arbiter_buffer_free_space(buffer) > 0);
                 return ev;
             }
@@ -339,6 +365,7 @@ void *stream_fetch(shm_stream *stream,
             continue;
         }
 
+	++stream->fetched_events;
         return ev;
     }
 }
@@ -353,6 +380,7 @@ void shm_arbiter_buffer_notify_dropped(shm_arbiter_buffer *buffer,
 void shm_arbiter_buffer_dump_stats(shm_arbiter_buffer *buffer) {
     shm_stream *s = buffer->stream;
     fprintf(stderr, "-- Buffer for stream %lu (%s) --\n", s->id, s->name);
+    fprintf(stderr, "   Stream read %lu events\n", s->read_events);
     fprintf(stderr, "   Stream fetched %lu events\n", s->fetched_events);
 #ifndef NDEBUG
     fprintf(stderr, "   acc. to IDs had %lu events\n", s->last_event_id);

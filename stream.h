@@ -33,6 +33,7 @@ typedef struct _shm_stream {
     size_t last_event_id;
 #endif
 #ifdef DUMP_STATS
+   size_t read_events;
    size_t fetched_events;
    size_t consumed_events;
    size_t dropped_events;
