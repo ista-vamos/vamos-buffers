@@ -19,8 +19,7 @@
 #include "vector-macro.h"
 
 #define SLEEP_TIME_NS 10000
-//#define MEM_SIZE (1024*1024)
-#define MEM_SIZE (512)
+#define MEM_SIZE (1024*1024)
 
 #define MAX_AUX_BUF_KEY_SIZE 16
 #define DROPPED_RANGES_NUM 5
@@ -43,7 +42,7 @@ struct buffer_info {
     size_t dropped_ranges_next;
     _Atomic bool dropped_ranges_lock; /* spin lock */
     /* the monitored program exited/destroyed the buffer */
-    _Bool destroyed;
+    volatile _Bool destroyed;
     _Bool monitor_attached;
 } __attribute__((aligned(8)));
 
