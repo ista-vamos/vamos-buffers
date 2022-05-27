@@ -46,14 +46,13 @@ size_t shm_stream_id(shm_stream *stream) {
     return stream->id;
 }
 
-// not thread safe!
+/* FIXME: no longer related to stream */
 void shm_stream_get_dropped_event(shm_stream *stream,
                                   shm_event_dropped *dropped_ev,
                                   size_t id,
                                   uint64_t n) {
     dropped_ev->base.id = id;
     dropped_ev->base.kind = shm_get_dropped_kind();
-    dropped_ev->stream = stream;
     dropped_ev->n = n;
 #ifdef DUMP_STATS
     stream->dropped_events += n;
