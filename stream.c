@@ -56,6 +56,8 @@ void shm_stream_get_dropped_event(shm_stream *stream,
     dropped_ev->n = n;
 #ifdef DUMP_STATS
     stream->dropped_events += n;
+#else
+    (void)stream;
 #endif
 }
 
