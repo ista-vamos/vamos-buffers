@@ -45,7 +45,7 @@ struct buffer_info {
     _Bool monitor_attached;
 } __attribute__((aligned(8)));
 
-#define MEM_SIZE (11*4096)
+#define MEM_SIZE (4096)
 
 struct shmbuffer {
     struct buffer_info __attribute__((aligned(8))) info;
