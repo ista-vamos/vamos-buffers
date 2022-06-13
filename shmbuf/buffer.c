@@ -101,6 +101,15 @@ static inline void drop_ranges_unlock(struct buffer *buff) {
 #define BUFF_START(b) ((unsigned char*)b->data)
 #define BUFF_END(b) ((unsigned char*)b->data + MEM_SIZE - 1)
 
+static inline void elem_num_inc(struct buffer_info *info, int k) {
+    /* Do ++info->elem_num atomically. */
+    /* The increment must come after everything is done.
+       The release order makes sure that the written element
+       is visible to other threads by now. */
+    atomic_fetch_add_explicit(&info->elem_num, k,
+                              memory_order_release);
+}
+
 size_t buffer_allocation_size() {
     return sizeof(struct shmbuffer);
 }
@@ -367,12 +376,7 @@ bool buffer_push(struct buffer *buff, const void *elem, size_t size) {
         info->head = 0;
     }
 
-    /* Do ++info->elem_num atomically. */
-    /* The increment must come after everything is done.
-       The release order makes sure that the written element
-       is visible to other threads by now. */
-    atomic_fetch_add_explicit(&info->elem_num, 1,
-                              memory_order_release);
+    elem_num_inc(info, 1);
 
     return true;
 }
@@ -467,12 +471,7 @@ bool buffer_finish_push(struct buffer *buff) {
         info->head = 0;
     }
 
-    /* Do ++info->elem_num atomically. */
-    /* The increment must come after everything is done.
-       The release order makes sure that the written element
-       is visible to other threads by now. */
-    atomic_fetch_add_explicit(&info->elem_num, 1,
-                              memory_order_release);
+    elem_num_inc(info, 1);
 
     return true;
 }
