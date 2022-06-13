@@ -116,6 +116,10 @@ static inline void elem_num_dec(struct buffer_info *info, int k) {
                               memory_order_acquire);
 }
 
+static inline size_t elem_num(struct buffer_info *info) {
+    return atomic_load_explicit(&info->elem_num, memory_order_relaxed);
+}
+
 size_t buffer_allocation_size() {
     return sizeof(struct shmbuffer);
 }
@@ -137,7 +141,7 @@ size_t buffer_capacity(struct buffer *buff)
 
 size_t buffer_size(struct buffer *buff)
 {
-    return buff->shmbuffer->info.elem_num;
+    return elem_num(&buff->shmbuffer->info);
 }
 
 size_t buffer_elem_size(struct buffer *buff)
@@ -332,7 +336,7 @@ void destroy_shared_buffer(struct buffer *buff)
 void *buffer_read_pointer(struct buffer *buff, size_t *size) {
     struct buffer_info *info = &buff->shmbuffer->info;
 
-    if (info->elem_num == 0) {
+    if (elem_num(info) == 0) {
         *size = 0;
         return NULL;
     }
@@ -341,7 +345,7 @@ void *buffer_read_pointer(struct buffer *buff, size_t *size) {
     size_t end = info->tail + *size;
     if (end > info->capacity) {
         *size -= end - info->capacity;
-        assert(*size <= info->elem_num);
+        assert(*size <= elem_num(info));
     }
 
     return pos;
@@ -350,7 +354,7 @@ void *buffer_read_pointer(struct buffer *buff, size_t *size) {
 /* can be safely used only by the reader */
 bool buffer_drop_k(struct buffer *buff, size_t k) {
     struct buffer_info *info = &buff->shmbuffer->info;
-     if (info->elem_num >= k) {
+     if (elem_num(info) >= k) {
          info->tail += k;
          if (info->tail >= info->capacity)
              info->tail -= info->capacity;
@@ -364,7 +368,7 @@ bool buffer_push(struct buffer *buff, const void *elem, size_t size) {
     struct buffer_info *info = &buff->shmbuffer->info;
     assert(!info->destroyed && "Writing to a destroyed buffer");
     /* buffer full */
-    if (info->elem_num == info->capacity) {
+    if (elem_num(info) == info->capacity) {
         return false;
     }
 
@@ -405,7 +409,7 @@ void *buffer_start_push(struct buffer *buff) {
     assert(!info->destroyed && "Writing to a destroyed buffer");
 
     /* buffer full */
-    if (info->elem_num == info->capacity) {
+    if (elem_num(info) == info->capacity) {
         /* ++info->dropped; */
         return NULL;
     }
@@ -419,7 +423,7 @@ void *buffer_partial_push(struct buffer *buff, void *prev_push,
                           const void *elem, size_t size) {
     assert(buffer_is_ready(buff) && "Writing to a destroyed buffer");
     /* buffer full */
-    assert(buff->shmbuffer->info.elem_num < buff->shmbuffer->info.capacity);
+    assert(elem_num(&buff->shmbuffer->info) < buff->shmbuffer->info.capacity);
 
     /* all ok, copy the data */
     assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
@@ -435,7 +439,7 @@ void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
                               uint64_t evid, const char *str) {
     assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
     /* buffer full */
-    assert(buff->shmbuffer->info.elem_num < buff->shmbuffer->info.capacity);
+    assert(elem_num(&buff->shmbuffer->info) < buff->shmbuffer->info.capacity);
 
     /* all ok, copy the data */
     assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
@@ -450,7 +454,7 @@ void *buffer_partial_push_str_n(struct buffer *buff, void *prev_push,
                                 uint64_t evid, const char *str, size_t len) {
     assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
     /* buffer full */
-    assert(buff->shmbuffer->info.elem_num < buff->shmbuffer->info.capacity);
+    assert(elem_num(&buff->shmbuffer->info) < buff->shmbuffer->info.capacity);
 
     /* all ok, copy the data */
     assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
@@ -465,7 +469,7 @@ bool buffer_finish_push(struct buffer *buff) {
     struct buffer_info *info = &buff->shmbuffer->info;
     assert(!info->destroyed && "Writing to a destroyed buffer");
     /* buffer full */
-    assert(info->elem_num != info->capacity);
+    assert(elem_num(info) != info->capacity);
 
     ++info->head;
 
@@ -482,7 +486,7 @@ bool buffer_finish_push(struct buffer *buff) {
 bool buffer_pop(struct buffer *buff, void *dst) {
     struct buffer_info *info = &buff->shmbuffer->info;
     assert(!info->destroyed && "Reading from a destroyed buffer");
-    if (info->elem_num == 0) {
+    if (elem_num(info) == 0) {
         return false;
     }
 
@@ -492,7 +496,7 @@ bool buffer_pop(struct buffer *buff, void *dst) {
     if (info->tail == info->capacity)
         info->tail = 0;
 
-    assert(info->elem_num > 0);
+    assert(elem_num(info) > 0);
     elem_num_dec(info, 1);
 
     return true;
@@ -502,7 +506,7 @@ bool buffer_pop(struct buffer *buff, void *dst) {
 bool buffer_pop_k(struct buffer *buff, void *dst, size_t k) {
     struct buffer_info *info = &buff->shmbuffer->info;
     assert(!info->destroyed && "Reading from a destroyed buffer");
-    if (info->elem_num < k) {
+    if (elem_num(info) < k) {
         return false;
     }
 
@@ -518,7 +522,7 @@ bool buffer_pop_k(struct buffer *buff, void *dst, size_t k) {
         info->tail = end;
     }
 
-    assert(info->elem_num > 0);
+    assert(elem_num(info) > 0);
     elem_num_dec(info, k);
     return true;
 }
