@@ -110,6 +110,12 @@ static inline void elem_num_inc(struct buffer_info *info, int k) {
                               memory_order_release);
 }
 
+static inline void elem_num_dec(struct buffer_info *info, int k) {
+    /* Do info->elem_num -= k atomically. */
+    atomic_fetch_sub_explicit(&info->elem_num, k,
+                              memory_order_acquire);
+}
+
 size_t buffer_allocation_size() {
     return sizeof(struct shmbuffer);
 }
@@ -348,10 +354,7 @@ bool buffer_drop_k(struct buffer *buff, size_t k) {
          info->tail += k;
          if (info->tail >= info->capacity)
              info->tail -= info->capacity;
-         /* Do info->elem_num -= k atomically. */
-         atomic_fetch_sub_explicit(&info->elem_num, k,
-                                   memory_order_relaxed);
-
+	 elem_num_dec(info, k);
          return true;
      }
      return false;
@@ -490,9 +493,7 @@ bool buffer_pop(struct buffer *buff, void *dst) {
         info->tail = 0;
 
     assert(info->elem_num > 0);
-    /* Do  --info->elem_num atomically */
-    atomic_fetch_sub_explicit(&info->elem_num, 1,
-                              memory_order_relaxed);
+    elem_num_dec(info, 1);
 
     return true;
 }
@@ -518,14 +519,7 @@ bool buffer_pop_k(struct buffer *buff, void *dst, size_t k) {
     }
 
     assert(info->elem_num > 0);
-    /* Do info->elem_num -= k atomically.
-     * The decrement must come after everything is done.
-       The order may be 'relaxed' as we have only one reader
-       and thus the writes to shared variables will be
-       up to date for this thread. */
-    atomic_fetch_sub_explicit(&info->elem_num, k,
-                              memory_order_relaxed);
-
+    elem_num_dec(info, k);
     return true;
 }
 
