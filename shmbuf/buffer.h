@@ -12,6 +12,7 @@ struct buffer *get_shared_buffer(const char *key);
 struct buffer *initialize_shared_buffer(const char *key,
                                         size_t elem_size,
                                         struct source_control *control);
+/* FIXME: do this from initialize_shared_buffer */
 void *initialize_shared_control_buffer(const char *buff_key, size_t size);
 void *get_shared_control_buffer(const char *buff_key);
 

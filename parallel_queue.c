@@ -145,7 +145,7 @@ bool shm_par_queue_pop(shm_par_queue *q, void *buff) {
     assert(q->elem_num > 0);
     /* Do  --info->elem_num atomically */
     atomic_fetch_sub_explicit(&q->elem_num, 1,
-                              memory_order_relaxed);
+                              memory_order_acquire);
 
     return true;
 }
@@ -163,7 +163,7 @@ size_t shm_par_queue_drop(shm_par_queue *q, size_t k) {
     assert(q->elem_num >= k);
     /* Do info->elem_num -= k atomically. */
     atomic_fetch_sub_explicit(&q->elem_num, k,
-                              memory_order_relaxed);
+                              memory_order_acquire);
 
     return k;
 }

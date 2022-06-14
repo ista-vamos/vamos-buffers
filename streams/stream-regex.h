@@ -3,7 +3,7 @@
 
 #include "event.h"
 #include "stream.h"
-#include "buffer.h"
+#include "shmbuf/buffer.h"
 
 typedef struct _shm_event_regex {
 	shm_event base;

@@ -13,9 +13,9 @@ typedef struct _shm_arbiter_buffer {
     shm_stream *stream;     // the source for the buffer
     shm_par_queue buffer;   // the buffer itself
     size_t dropped_num;     // the number of dropped events
-#ifdef DUMP_STATS
     size_t total_dropped_times;     // the number of dropped events
     size_t total_dropped_num;     // the number of dropped events
+#ifdef DUMP_STATS
     size_t volunt_dropped_num;     // the number of events dropped via drop() calls
     size_t written_num;     // the number of calls to write_finish
 #endif
@@ -89,12 +89,17 @@ shm_stream *shm_arbiter_buffer_stream(shm_arbiter_buffer *buffer)
     return buffer->stream;
 }
 
-#ifdef DUMP_STATS
 size_t shm_arbiter_buffer_dropped_num(shm_arbiter_buffer *buffer)
 {
     return buffer->total_dropped_num;
 }
 
+size_t shm_arbiter_buffer_dropped_times(shm_arbiter_buffer *buffer)
+{
+    return buffer->total_dropped_times;
+}
+
+#ifdef DUMP_STATS
 size_t shm_arbiter_buffer_written_num(shm_arbiter_buffer *buffer)
 {
     return buffer->written_num;
@@ -117,9 +122,9 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
     buffer->stream = stream;
     buffer->active = false;
     buffer->dropped_num = 0;
-#ifdef DUMP_STATS
     buffer->total_dropped_times = 0;
     buffer->total_dropped_num = 0;
+#ifdef DUMP_STATS
     buffer->written_num = 0;
     buffer->volunt_dropped_num = 0;
 #endif
@@ -169,10 +174,8 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem, size_
 #endif
             shm_par_queue_push(&buffer->buffer, elem, size);
             assert(ret && "BUG: queue has not enough free space");
-#ifdef DUMP_STATS
             buffer->total_dropped_num += buffer->dropped_num;
             ++buffer->total_dropped_times;
-#endif
             buffer->dropped_num = 0;
             /* the end id may not be precise, but we need just the upper bound */
             shm_arbiter_buffer_notify_dropped(buffer, buffer->drop_begin_id,
@@ -209,10 +212,8 @@ void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
             assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
             assert(shm_par_queue_free_num(queue) > 1);
             shm_par_queue_push(queue, &dropped, sizeof(dropped));
-#ifdef DUMP_STATS
             buffer->total_dropped_num += buffer->dropped_num;
             ++buffer->total_dropped_times;
-#endif
 
             /* the end id may not be precise, but we need just the upper bound */
             shm_arbiter_buffer_notify_dropped(buffer, buffer->drop_begin_id,
@@ -302,10 +303,8 @@ static void push_dropped_event(shm_stream *stream,
     shm_stream_get_dropped_event(stream, &dropped_ev,
                                  buffer->drop_begin_id, buffer->dropped_num);
     shm_par_queue_push(&buffer->buffer, &dropped_ev, sizeof(dropped_ev));
-#ifdef DUMP_STATS
     buffer->total_dropped_num += buffer->dropped_num;
     ++buffer->total_dropped_times;
-#endif
     shm_arbiter_buffer_notify_dropped(buffer,
                                       buffer->drop_begin_id,
 				      notify_id);
@@ -338,6 +337,8 @@ void *stream_fetch(shm_stream *stream,
                     assert(buffer->dropped_num > 0);
 		}
 	    }
+            assert(!shm_stream_is_ready(stream));
+            assert(buffer->dropped_num == 0);
             return NULL; /* stream ended */
 	}
 

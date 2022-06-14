@@ -3,7 +3,7 @@
 
 #include "event.h"
 #include "stream.h"
-#include "buffer.h"
+#include "shmbuf/buffer.h"
 
 #define DRREGEX_ONLY_ARGS
 

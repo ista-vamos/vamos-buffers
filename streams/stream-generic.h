@@ -6,7 +6,8 @@
 
 #include "event.h"
 #include "stream.h"
-#include "buffer.h"
+
+struct buffer;
 
 /* A generic stream for events stored in shared memory buffer,
    no filter nor modification of events supported (unless done manually). */
