@@ -256,7 +256,8 @@ size_t shm_arbiter_buffer_peek1(shm_arbiter_buffer *buffer, void **data) {
 
 
 #define SLEEP_TIME_NS_INIT 10
-#define SLEEP_TIME_NS_THRES 10000
+#define BUSY_WAIT_TIMES 1000
+#define SLEEP_TIME_NS_THRES 1000000
 
 static void *get_event(shm_stream *stream) {
     /* TODO: if there is no filtering and modifications, we can push multiple events forward.
@@ -264,16 +265,24 @@ static void *get_event(shm_stream *stream) {
              to handle the load of data if we copy them in chunks */
     size_t num = 1;
     size_t sleep_time = SLEEP_TIME_NS_INIT;
+    size_t spinned = 0;
     void *ev;
     while (1) {
         /* wait for the event */
         ev = shm_stream_read_events(stream, &num);
         if (ev) {
             sleep_time = SLEEP_TIME_NS_INIT;
+            spinned = 0;
 #ifdef DUMP_STATS
             ++stream->read_events;
 #endif
             return ev;
+        }
+
+        /* before sleeping, try just to busy wait some time */
+        if (spinned < BUSY_WAIT_TIMES) {
+            ++spinned;
+            continue;
         }
 
         /* no event read, sleep a while */
