@@ -14,8 +14,9 @@
 #include <stdbool.h>
 #include <unistd.h>
 
+#include "stream.h"
+
 typedef struct _shm_arbiter_buffer shm_arbiter_buffer;
-typedef struct _shm_stream shm_stream;
 typedef struct _shm_event shm_event;
 
 void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
@@ -57,6 +58,10 @@ bool shm_arbiter_buffer_pop(shm_arbiter_buffer *q, void *buff);
 
 void *stream_fetch(shm_stream *stream,
                    shm_arbiter_buffer *buffer);
+
+void *stream_filter_fetch(shm_stream *stream,
+                          shm_arbiter_buffer *buffer,
+                          shm_stream_filter_fn filter);
 
 size_t shm_arbiter_buffer_dropped_num(shm_arbiter_buffer *buffer);
 size_t shm_arbiter_buffer_dropped_times(shm_arbiter_buffer *buffer);
