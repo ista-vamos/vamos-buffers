@@ -1,6 +1,7 @@
 add_library(shamon-streams STATIC
             streams.c
             stream-regex.c
+            stream-regexrw.c
             stream-drregex.c
             stream-generic.c
             #stream-fds.c

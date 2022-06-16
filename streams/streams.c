@@ -5,6 +5,7 @@
 
 #include "stream-funs.h"
 #include "stream-regex.h"
+#include "stream-regexrw.h"
 #include "stream-drregex.h"
 #include "stream-generic.h"
 
@@ -102,7 +103,7 @@ shm_stream *shm_stream_create(const char *stream_name,
         return NULL;
     }
 
-    if (strncmp(source, "calls", 5) == 0) {
+    if (strncmp(source, "calls", 6) == 0) {
         if (!next || *next == 0) {
             fprintf(stderr, "error: source 'calls' needs the key to SHM as parameter\n");
             return NULL;
@@ -115,7 +116,7 @@ shm_stream *shm_stream_create(const char *stream_name,
         }
 
         return shm_create_funs_stream(key, control);
-    } else if (strncmp(source, "regex", 5) == 0) {
+    } else if (strncmp(source, "regex", 6) == 0) {
         if (!next || *next == 0) {
             fprintf(stderr, "error: source 'regex' needs the key to SHM as parameter\n");
             return NULL;
@@ -127,7 +128,19 @@ shm_stream *shm_stream_create(const char *stream_name,
         }
 
         return shm_create_sregex_stream(key, control);
-    } else if (strncmp(source, "drregex", 7) == 0) {
+    } else if (strncmp(source, "regexrw", 8) == 0) {
+        if (!next || *next == 0) {
+            fprintf(stderr, "error: source 'regexrw' needs the key to SHM as parameter\n");
+            return NULL;
+        }
+        char key[256];
+        next = get_next_part(next, key, ';');
+        if (next) {
+            fprintf(stderr, "warning: source 'regexrw' ignoring further parameter (FOR NOW)\n");
+        }
+
+        return shm_create_sregexrw_stream(key, control);
+    } else if (strncmp(source, "drregex", 8) == 0) {
         if (!next || *next == 0) {
             fprintf(stderr, "error: source 'drregex' needs the key to SHM as parameter\n");
             return NULL;
@@ -139,7 +152,7 @@ shm_stream *shm_stream_create(const char *stream_name,
         }
 
         return shm_create_drregex_stream(key, control);
-    }  else if (strncmp(source, "generic", 7) == 0) {
+    }  else if (strncmp(source, "generic", 8) == 0) {
         if (!next || *next == 0) {
             fprintf(stderr, "error: source 'generic' needs the key to SHM as parameter\n");
             return NULL;
