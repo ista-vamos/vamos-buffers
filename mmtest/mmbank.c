@@ -1091,7 +1091,7 @@ int main(int argc, char **argv)
 	shm_stream_destroy(__mma_strm_strm_Out);
 	shm_stream_destroy(__mma_strm_strm_In);
 	deinitialize_events();
-	printf("Found %li errors!\nSkipped %li events\nProcessed In %li / Out %li", errorCount, skippedEvents, processedIn, processedOut);
+	printf("DONE!\nFound %li errors!\nSkipped %li events\nProcessed In %li / Out %li", errorCount, skippedEvents, processedIn, processedOut);
 	return 0;
 }
 void _mm_print_streams()

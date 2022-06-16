@@ -6,3 +6,10 @@
 *.so
 .vscode
 *.a
+*/CMakeFiles/
+*.cmake
+*.ldscript
+CMakeCache.txt
+CMakeFiles
+__pycache__
+

@@ -334,8 +334,7 @@ int arbiterMonitor( ) {
                   shm_arbiter_buffer_drop(__mma_strm_buf_Right, tmp2);
           }
           __mm_monitor_running
-                = !(__mm_strm_done_Right && __mm_strm_done_Left &&
-                    tmp1 == 0 && tmp2 == 0);
+                = !(tmp1 == 0 && tmp2 == 0 && atomic_load_explicit(&__mm_strm_done_Right, memory_order_acquire) && atomic_load_explicit(&__mm_strm_done_Left, memory_order_acquire));
   }
   return 1 ;
 }
