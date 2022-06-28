@@ -18,6 +18,8 @@
 #include "source.h"
 #include "vector-macro.h"
 
+#include "buffer-size.h"
+
 #define SLEEP_TIME_NS 10000
 
 #define MAX_AUX_BUF_KEY_SIZE 16
@@ -45,7 +47,8 @@ struct buffer_info {
     _Bool monitor_attached;
 } __attribute__((aligned(8)));
 
-#define MEM_SIZE (8*4096)
+/* TODO: not all systems have the size of page 4kB */
+#define MEM_SIZE (SHM_BUFFER_SIZE_PAGES*4096)
 
 struct shmbuffer {
     struct buffer_info __attribute__((aligned(8))) info;
