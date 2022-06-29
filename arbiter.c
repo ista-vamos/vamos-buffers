@@ -370,6 +370,8 @@ void *stream_fetch(shm_stream *stream,
             assert(DROP_SPACE_THRESHOLD < shm_arbiter_buffer_capacity(buffer));
             if (shm_arbiter_buffer_free_space(buffer) > DROP_SPACE_THRESHOLD) {
                 /* the end id may not be precise, but we need just the upper bound */
+                assert(last_ev_id == buffer->dropped_num + buffer->drop_begin_id
+                       && "Drop IDs are wrong");
                 push_dropped_event(stream, buffer, last_ev_id - 1);
                 buffer->dropped_num = 0;
                 assert(shm_arbiter_buffer_free_space(buffer) > 0);
