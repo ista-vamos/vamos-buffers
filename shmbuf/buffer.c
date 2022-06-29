@@ -351,12 +351,16 @@ void *buffer_read_pointer(struct buffer *buff, size_t *size) {
         return NULL;
     }
 
-    unsigned char *pos = buff->shmbuffer->data + info->tail*info->elem_size;
-    size_t end = info->tail + *size;
+    size_t tail = info->tail;
+    unsigned char *pos = buff->shmbuffer->data + tail*info->elem_size;
+    size_t end = tail + *size;
     if (end > info->capacity) {
         *size -= end - info->capacity;
         assert(*size <= elem_num(info));
     }
+
+    /* should not happen with one reader */
+    assert(tail == info->tail && "Something changed tail");
 
     return pos;
 }

@@ -307,10 +307,10 @@ static void *get_event(shm_stream *stream) {
 static void push_dropped_event(shm_stream *stream,
                                shm_arbiter_buffer *buffer,
 	 		       size_t notify_id) {
-    static shm_event_dropped dropped_ev;
-
+    shm_event_dropped dropped_ev;
     shm_stream_get_dropped_event(stream, &dropped_ev,
-                                 buffer->drop_begin_id, buffer->dropped_num);
+                                 notify_id,
+                                 buffer->dropped_num);
     shm_par_queue_push(&buffer->buffer, &dropped_ev, sizeof(dropped_ev));
     buffer->total_dropped_num += buffer->dropped_num;
     ++buffer->total_dropped_times;
@@ -318,10 +318,12 @@ static void push_dropped_event(shm_stream *stream,
                                       buffer->drop_begin_id,
 				      notify_id);
     assert(shm_arbiter_buffer_free_space(buffer) > 0);
+
     /*
-    printf("PUSHED DROPPED event { kind = %lu, id = %lu}\n",
+    printf("PUSHED DROPPED event { kind = %lu, id = %lu, n = %lu}\n",
             ((shm_event*)&dropped_ev)->kind,
-            ((shm_event*)&dropped_ev)->id);
+            ((shm_event*)&dropped_ev)->id,
+            dropped_ev.n);
     */
 }
 
@@ -338,7 +340,7 @@ void *stream_fetch(shm_stream *stream,
                 assert(DROP_SPACE_THRESHOLD < shm_arbiter_buffer_capacity(buffer));
                 if (shm_arbiter_buffer_free_space(buffer) > DROP_SPACE_THRESHOLD) {
                     /* the end id may not be precise, but we need just the upper bound */
-                    push_dropped_event(stream, buffer, last_ev_id);
+                    push_dropped_event(stream, buffer, last_ev_id - 1);
                     assert(shm_arbiter_buffer_free_space(buffer) > 0);
                     buffer->dropped_num = 0;
                 } else {
@@ -431,7 +433,7 @@ void *stream_filter_fetch(shm_stream *stream,
                 assert(DROP_SPACE_THRESHOLD < shm_arbiter_buffer_capacity(buffer));
                 if (shm_arbiter_buffer_free_space(buffer) > DROP_SPACE_THRESHOLD) {
                     /* the end id may not be precise, but we need just the upper bound */
-                    push_dropped_event(stream, buffer, last_ev_id);
+                    push_dropped_event(stream, buffer, last_ev_id - 1);
                     assert(shm_arbiter_buffer_free_space(buffer) > 0);
                     buffer->dropped_num = 0;
                 } else {
@@ -465,7 +467,9 @@ void *stream_filter_fetch(shm_stream *stream,
             assert(DROP_SPACE_THRESHOLD < shm_arbiter_buffer_capacity(buffer));
             if (shm_arbiter_buffer_free_space(buffer) > DROP_SPACE_THRESHOLD) {
                 /* the end id may not be precise, but we need just the upper bound */
-                push_dropped_event(stream, buffer, shm_event_id(ev) - 1);
+                assert(last_ev_id == buffer->dropped_num + buffer->drop_begin_id
+                       && "Drop IDs are wrong");
+                push_dropped_event(stream, buffer, last_ev_id - 1);
                 buffer->dropped_num = 0;
                 assert(shm_arbiter_buffer_free_space(buffer) > 0);
                 return ev;
@@ -497,6 +501,8 @@ void *stream_filter_fetch(shm_stream *stream,
 #ifdef DUMP_STATS
 	++stream->fetched_events;
 #endif
+        assert(shm_arbiter_buffer_free_space(buffer) > 0);
+        assert(buffer->dropped_num == 0);
         return ev;
     }
 }
