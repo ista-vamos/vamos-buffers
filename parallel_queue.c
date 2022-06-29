@@ -5,6 +5,24 @@
 #include <assert.h>
 #include "parallel_queue.h"
 
+static inline void elem_num_inc(shm_par_queue *q, int k) {
+    /* Do ++q->elem_num atomically. */
+    /* The increment must come after everything is done.
+       The release order makes sure that the written element
+       is visible to other threads by now. */
+    atomic_fetch_add_explicit(&q->elem_num, k,
+                              memory_order_release);
+}
+
+static inline void elem_num_dec(shm_par_queue *q, int k) {
+    /* Do q->elem_num -= k atomically. */
+    atomic_fetch_sub_explicit(&q->elem_num, k,
+                              memory_order_acquire);
+}
+
+static inline size_t elem_num(shm_par_queue *q) {
+    return atomic_load_explicit(&q->elem_num, memory_order_relaxed);
+}
 
 void shm_par_queue_init(shm_par_queue *q, size_t capacity, size_t elem_size) {
     assert(q);
@@ -29,7 +47,7 @@ bool shm_par_queue_push(shm_par_queue *q,
                         const void *elem,
                         size_t size) {
     // queue is full
-    if (q->elem_num == q->capacity) {
+    if (elem_num(q) == q->capacity) {
         return false;
     }
 
@@ -45,19 +63,14 @@ bool shm_par_queue_push(shm_par_queue *q,
     assert(q->elem_size >= size && "Size does not fit the slot");
     memcpy(pos, elem, size);
 
-    /* Do ++info->elem_num atomically. */
-    /* The increment must come after everything is done.
-       The release order makes sure that the written element
-       is visible to other threads by now. */
-    atomic_fetch_add_explicit(&q->elem_num, 1,
-                              memory_order_release);
+    elem_num_inc(q, 1);
 
     return true;
 }
 
 void *shm_par_queue_write_ptr(shm_par_queue *q) {
     /* queue is full */
-    if (q->elem_num == q->capacity) {
+    if (elem_num(q) == q->capacity) {
         return NULL;
     }
 #ifndef NDEBUG
@@ -78,12 +91,7 @@ bool shm_par_queue_write_finish(shm_par_queue *q) {
         q->head = 0;
     }
 
-    /* Do ++info->elem_num atomically. */
-    /* The increment must come after everything is done.
-       The release order makes sure that the written element
-       is visible to other threads by now. */
-    atomic_fetch_add_explicit(&q->elem_num, 1,
-                              memory_order_release);
+    elem_num_inc(q, 1);
 
     return true;
 }
@@ -93,7 +101,7 @@ size_t shm_par_queue_push_k(shm_par_queue *q,
                             const void *elems,
                             size_t k) {
     /* how many elements can we actually fit in? */
-    size_t freen = q->capacity - q->elem_num;
+    size_t freen = q->capacity - elem_num(q);
     size_t ret = 0;
     if (freen < k) {
         ret = k - freen;
@@ -120,19 +128,14 @@ size_t shm_par_queue_push_k(shm_par_queue *q,
         }
     }
 
-    /* Do info->elem_num += k atomically.
-     * The increment must come after everything is done.
-       The release order makes sure that the written element
-       is visible to other threads by now. */
-    atomic_fetch_add_explicit(&q->elem_num, k,
-                              memory_order_release);
+    elem_num_inc(q, k);
 
     return ret;
 }
 
 
 bool shm_par_queue_pop(shm_par_queue *q, void *buff) {
-    if (q->elem_num == 0) {
+    if (elem_num(q) == 0) {
         return false;
     }
 
@@ -142,34 +145,31 @@ bool shm_par_queue_pop(shm_par_queue *q, void *buff) {
     if (q->tail == q->capacity)
         q->tail = 0;
 
-    assert(q->elem_num > 0);
-    /* Do  --info->elem_num atomically */
-    atomic_fetch_sub_explicit(&q->elem_num, 1,
-                              memory_order_acquire);
+    assert(elem_num(q) > 0);
+    elem_num_dec(q, 1);
 
     return true;
 }
 
 size_t shm_par_queue_drop(shm_par_queue *q, size_t k) {
     assert(k > 0);
-    if (q->elem_num < k) {
-        k = q->elem_num;
+    size_t num = elem_num(q);
+    if (num < k) {
+        k = num;
     }
 
     q->tail += k;
     if (q->tail >= q->capacity)
         q->tail -= q->capacity;
 
-    assert(q->elem_num >= k);
-    /* Do info->elem_num -= k atomically. */
-    atomic_fetch_sub_explicit(&q->elem_num, k,
-                              memory_order_acquire);
+    assert(elem_num(q) >= k);
+    elem_num_dec(q, k);
 
     return k;
 }
 
 size_t shm_par_queue_free_num(shm_par_queue *q) {
-    return q->capacity - q->elem_num;
+    return q->capacity - elem_num(q);
 }
 
 size_t shm_par_queue_capacity(shm_par_queue *q) {
@@ -177,7 +177,7 @@ size_t shm_par_queue_capacity(shm_par_queue *q) {
 }
 
 size_t shm_par_queue_size(shm_par_queue *q) {
-    return q->elem_num;
+    return elem_num(q);
 }
 
 size_t shm_par_queue_elem_size(shm_par_queue *q) {
@@ -185,7 +185,7 @@ size_t shm_par_queue_elem_size(shm_par_queue *q) {
 }
 
 shm_event *shm_par_queue_top(shm_par_queue *q) {
-    if (q->elem_num > 0)
+    if (elem_num(q) > 0)
         return (shm_event *)(q->data + q->tail*q->elem_size);
     return (shm_event *)0;
 }
@@ -193,7 +193,7 @@ shm_event *shm_par_queue_top(shm_par_queue *q) {
 size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
                           void **ptr1, size_t *len1,
                           void **ptr2, size_t *len2) {
-    size_t cur_elem_num = q->elem_num;
+    size_t cur_elem_num = elem_num(q);
     if (n > cur_elem_num)
         n = cur_elem_num;
     size_t end = n + q->tail;
@@ -214,7 +214,7 @@ size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
 
 /* peak1 -- it is like top + return the number of elements */
 size_t shm_par_queue_peek1(shm_par_queue *q, void **data) {
-    size_t cur_elem_num = q->elem_num;
+    size_t cur_elem_num = elem_num(q);
     if (cur_elem_num > 0) {
         *data = (unsigned char *)(q->data + q->tail*q->elem_size);
     }
@@ -222,7 +222,7 @@ size_t shm_par_queue_peek1(shm_par_queue *q, void **data) {
 }
 
 shm_event *shm_par_queue_peek_at(shm_par_queue *q, size_t k) {
-    size_t cur_elem_num = q->elem_num;
+    size_t cur_elem_num = elem_num(q);
     if (k >= cur_elem_num)
         return NULL;
 
@@ -235,7 +235,7 @@ shm_event *shm_par_queue_peek_at(shm_par_queue *q, size_t k) {
 }
 
 shm_event *shm_par_queue_peek_atmost_at(shm_par_queue *q, size_t *want_k) {
-    size_t k = q->elem_num;
+    size_t k = elem_num(q);
     if (k == 0)
         return NULL;
     if (*want_k >= k) {
