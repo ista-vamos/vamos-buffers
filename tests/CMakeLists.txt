@@ -55,7 +55,10 @@ add_test(NAME queue-par-cbmc
 add_test(NAME queue-par-cbmc-2
          COMMAND cbmc -I${CMAKE_SOURCE_DIR} --c11 --unwind 2 queue-par-cbmc_2.c ../parallel_queue.c)
 
-
-
-
+add_executable(fetch-test fetch-test.c)
+target_link_libraries(fetch-test shamon-shmbuf shamon-arbiter shamon-parallel-queue pthread)
+target_include_directories(fetch-test PRIVATE ${CMAKE_SOURCE_DIR})
+add_test(NAME fetch-test
+         COMMAND sh -c -e "for i in `seq 1 20`;do ./fetch-test; done"
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests)
 

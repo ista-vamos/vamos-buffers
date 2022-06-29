@@ -208,13 +208,19 @@ struct buffer *initialize_shared_buffer(const char *key,
     return buff;
 }
 
-#if 0
-struct buffer *initialize_local_buffer(size_t elem_size)
+/* FOR TESTING */
+struct buffer *initialize_local_buffer(const char *key,
+                                       size_t elem_size,
+                                       struct source_control *control)
 {
-    printf("Initializing _local_ buffer with elem size '%lu'\n", elem_size);
-
+    assert(elem_size > 0 && "Element size is 0");
+    printf("Initializing LOCAL buffer '%s' with elem size '%lu'\n", key, elem_size);
     void *mem = malloc(buffer_allocation_size());
-    assert(mem && "Memory allocation failed");
+    if (mem == NULL) {
+        perror("malloc failure");
+        return NULL;
+    }
+
     struct buffer *buff = malloc(sizeof(struct buffer));
     assert(buff && "Memory allocation failed");
 
@@ -226,19 +232,20 @@ struct buffer *initialize_local_buffer(size_t elem_size)
            buffer_allocation_size(), buff->shmbuffer->info.capacity);
     buff->shmbuffer->info.elem_size = elem_size;
     buff->shmbuffer->info.last_processed_id = 0;
-    /* buff->shmbuffer->info.last_processed_id = 0; */
+    buff->shmbuffer->info.dropped_ranges_next = 0;
+    buff->shmbuffer->info.dropped_ranges_lock = false;
 
-    /* local buffers do not support aux buffers */
+    buff->key = strdup(key);
+    VEC_INIT(buff->aux_buffers);
+    shm_list_init(&buff->aux_buffers_age);
+    buff->aux_buf_idx = 0;
+    buff->cur_aux_buff = NULL;
+    buff->fd = -1;
+    buff->control = control;
 
     puts("Done");
     return buff;
 }
-
-void free_local_buffer(struct buffer *buff) {
-    free(buff->shmbuffer);
-    free(buff);
-}
-#endif
 
 struct buffer *get_shared_buffer(const char *key)
 {
