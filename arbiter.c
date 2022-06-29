@@ -348,6 +348,9 @@ void *stream_fetch(shm_stream *stream,
             return NULL; /* stream ended */
 	}
 
+        assert(ev && "Dont have event");
+        assert(!shm_event_is_dropped((shm_event*)ev) && "Got dropped event");
+
 	last_ev_id = shm_event_id(ev);
         assert(last_ev_id == ++stream->last_event_id &&
                "IDs are inconsistent");
@@ -395,6 +398,8 @@ void *stream_fetch(shm_stream *stream,
 #ifdef DUMP_STATS
 	++stream->fetched_events;
 #endif
+        assert(shm_arbiter_buffer_free_space(buffer) > 0);
+        assert(buffer->dropped_num == 0);
         return ev;
     }
 }
