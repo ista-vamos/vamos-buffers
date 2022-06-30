@@ -216,7 +216,8 @@ int arbiterMonitor( ) {
            }
         }
 
-        if (evL && evR) {
+        /* compare as much elements as you can at once */
+        while (evL && evR) {
             assert(skip_1 == 0 && skip_2 == 0);
             ++compared;
             if (evR->cases.Prime.n != evL->cases.Prime.n ||
@@ -236,6 +237,16 @@ int arbiterMonitor( ) {
             */
             shm_arbiter_buffer_drop(__mma_strm_buf_Left, 1);
             shm_arbiter_buffer_drop(__mma_strm_buf_Right, 1);
+
+            if (evL = shm_arbiter_buffer_top(__mma_strm_buf_Left)) {
+                if (evL->head.kind == 1) {
+                        break;
+                } else if (evR = shm_arbiter_buffer_top(__mma_strm_buf_Right)) {
+                    if (evR->head.kind == 1) {
+                            break;
+                    }
+                }
+            }
         }
 
         __mm_monitor_running
