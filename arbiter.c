@@ -18,6 +18,7 @@ typedef struct _shm_arbiter_buffer {
 #ifdef DUMP_STATS
     size_t volunt_dropped_num;     // the number of events dropped via drop() calls
     size_t written_num;     // the number of calls to write_finish
+    int last_was_drop;     // true if the last event written was drop()
 #endif
     shm_eventid drop_begin_id; // the id of the next 'dropped' event
     bool active;            // true while the events are being queued
@@ -127,6 +128,7 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
 #ifdef DUMP_STATS
     buffer->written_num = 0;
     buffer->volunt_dropped_num = 0;
+    buffer->last_was_drop = 0;
 #endif
 }
 
@@ -342,6 +344,9 @@ void *stream_fetch(shm_stream *stream,
                     /* the end id may not be precise, but we need just the upper bound */
                     push_dropped_event(stream, buffer, last_ev_id - 1);
                     assert(shm_arbiter_buffer_free_space(buffer) > 0);
+#ifdef DUMP_STATS
+                    buffer->last_was_drop = 1;
+#endif
                     buffer->dropped_num = 0;
                 } else {
 		    sleep_ns(sleep_time);
@@ -529,18 +534,25 @@ void shm_arbiter_buffer_dump_stats(shm_arbiter_buffer *buffer) {
     fprintf(stderr, "   Stream consumed %lu events from SHM\n", s->consumed_events);
     COLOR_RESET
 #ifndef NDEBUG
+    /* NOTE: this might be specific to source */
+    COLOR_RED_IF(s->last_event_id < s->read_events)
     fprintf(stderr, "   Last event ID on the stream was %lu\n", s->last_event_id);
+    COLOR_RESET
 #endif
     fprintf(stderr, "   stream_fetch() fetched %lu events\n", s->fetched_events);
     fprintf(stderr, "   stream_fetch() totally dropped %lu events in %lu holes\n",
             buffer->total_dropped_num, buffer->total_dropped_times);
+    fprintf(stderr, "   Last event was drop: %s\n",
+            buffer->last_was_drop ? "true (adds 1 to the number of events)" : "false");
     COLOR_RED_IF(s->fetched_events + buffer->total_dropped_num +
-                 buffer->total_dropped_times != s->consumed_events)
+                 buffer->total_dropped_times - (size_t) buffer->last_was_drop
+                 != s->consumed_events)
     fprintf(stderr, "     (fetched + dropped + holes num = %lu events)\n",
             s->fetched_events + buffer->total_dropped_num + buffer->total_dropped_times);
     COLOR_RESET
     fprintf(stderr, "   The buffer was written to %lu times\n", buffer->written_num);
-    COLOR_RED_IF(s->fetched_events + buffer->total_dropped_times != buffer->written_num)
+    COLOR_RED_IF(s->fetched_events + buffer->total_dropped_times -
+                 (size_t)buffer->last_was_drop != buffer->written_num)
     fprintf(stderr, "     (fetch + num of holes = %lu)\n",
             s->fetched_events + buffer->total_dropped_times);
     COLOR_RESET
