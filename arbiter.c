@@ -386,6 +386,10 @@ void *stream_fetch(shm_stream *stream,
                        ((shm_event*)ev)->kind,
                        ((shm_event*)ev)->id);
                         */
+
+#ifdef DUMP_STATS
+	        ++stream->fetched_events;
+#endif
                 return ev;
             }
 
