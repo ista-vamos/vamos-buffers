@@ -170,11 +170,17 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem, size_
             bool ret =
 #endif
             shm_par_queue_push(queue, &dropped, sizeof(dropped));
+#ifdef DUMP_STATS
+            ++buffer->written_num;
+#endif
             assert(ret && "BUG: queue has not enough free space");
 #ifndef NDEBUG
             ret =
 #endif
             shm_par_queue_push(&buffer->buffer, elem, size);
+#ifdef DUMP_STATS
+            ++buffer->written_num;
+#endif
             assert(ret && "BUG: queue has not enough free space");
             buffer->total_dropped_num += buffer->dropped_num;
             ++buffer->total_dropped_times;
@@ -188,6 +194,11 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem, size_
             buffer->drop_begin_id = shm_event_id((shm_event*)elem);
             ++buffer->dropped_num;
         }
+#ifdef DUMP_STATS
+        else {
+            ++buffer->written_num;
+        }
+#endif
     }
 }
 
@@ -214,6 +225,9 @@ void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
             assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
             assert(shm_par_queue_free_num(queue) > 1);
             shm_par_queue_push(queue, &dropped, sizeof(dropped));
+#ifdef DUMP_STATS
+            ++buffer->written_num;
+#endif
             buffer->total_dropped_num += buffer->dropped_num;
             ++buffer->total_dropped_times;
 
@@ -223,9 +237,15 @@ void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer,
 
             assert(shm_par_queue_free_num(queue) >= 1);
             buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k); 
+#ifdef DUMP_STATS
+            buffer->written_num += k - buffer->dropped_num;
+#endif
         }
     } else {
         buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k);
+#ifdef DUMP_STATS
+            buffer->written_num += k - buffer->dropped_num;
+#endif
         if (buffer->dropped_num > 0) {
             shm_event *first_dropped_ev
                     = shm_par_queue_peek_at(&buffer->buffer, k - buffer->dropped_num);
@@ -314,6 +334,9 @@ static void push_dropped_event(shm_stream *stream,
                                  notify_id,
                                  buffer->dropped_num);
     shm_par_queue_push(&buffer->buffer, &dropped_ev, sizeof(dropped_ev));
+#ifdef DUMP_STATS
+    ++buffer->written_num;
+#endif
     buffer->total_dropped_num += buffer->dropped_num;
     ++buffer->total_dropped_times;
     shm_arbiter_buffer_notify_dropped(buffer,
@@ -566,21 +589,18 @@ void shm_arbiter_buffer_dump_stats(shm_arbiter_buffer *buffer) {
     fprintf(stderr, "   stream_fetch() totally dropped %lu events in %lu holes\n",
             buffer->total_dropped_num, buffer->total_dropped_times);
     fprintf(stderr, "   Last event was drop: %s\n",
-            buffer->last_was_drop ? "true (adds 1 to the number of events)" : "false");
-    COLOR_RED_IF(s->fetched_events + buffer->total_dropped_num +
-                 buffer->total_dropped_times - (size_t) buffer->last_was_drop
-                 != s->consumed_events)
-    fprintf(stderr, "     (fetched + dropped + holes num = %lu events)\n",
-            s->fetched_events + buffer->total_dropped_num + buffer->total_dropped_times);
+            buffer->last_was_drop ? "true" : "false");
+    COLOR_RED_IF(s->fetched_events + buffer->total_dropped_num != s->consumed_events)
+    fprintf(stderr, "     (fetched + dropped = %lu events)\n",
+            s->fetched_events + buffer->total_dropped_num);
     COLOR_RESET
     fprintf(stderr, "   The buffer was written to %lu times\n", buffer->written_num);
-    COLOR_RED_IF(s->fetched_events + buffer->total_dropped_times -
-                 (size_t)buffer->last_was_drop != buffer->written_num)
+    COLOR_RED_IF(s->fetched_events + buffer->total_dropped_times
+                 != buffer->written_num)
     fprintf(stderr, "     (fetch + num of holes = %lu)\n",
             s->fetched_events + buffer->total_dropped_times);
     COLOR_RESET
-    COLOR_RED_IF(buffer->volunt_dropped_num !=
-                 buffer->written_num + buffer->total_dropped_times)
+    COLOR_RED_IF(buffer->volunt_dropped_num != buffer->written_num )
     fprintf(stderr, "   The buffer consumed %lu events via calls to drop()\n",
             buffer->volunt_dropped_num);
     COLOR_RESET
