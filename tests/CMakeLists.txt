@@ -62,3 +62,17 @@ add_test(NAME fetch-test
          COMMAND sh -c -e "for i in `seq 1 20`;do ./fetch-test; done"
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests)
 
+add_executable(fetch-test-2 fetch-test-2.c)
+target_link_libraries(fetch-test-2 shamon-shmbuf shamon-arbiter shamon-parallel-queue pthread)
+target_include_directories(fetch-test-2 PRIVATE ${CMAKE_SOURCE_DIR})
+add_test(NAME fetch-test-2
+         COMMAND sh -c -e "for i in `seq 1 20`;do ./fetch-test-2; done"
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests)
+
+add_executable(fetch-test-3 fetch-test-3.c)
+target_link_libraries(fetch-test-3 shamon-shmbuf shamon-arbiter shamon-parallel-queue pthread)
+target_include_directories(fetch-test-3 PRIVATE ${CMAKE_SOURCE_DIR})
+add_test(NAME fetch-test-3
+         COMMAND sh -c -e "for i in `seq 1 20`;do ./fetch-test-3; done"
+         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests)
+

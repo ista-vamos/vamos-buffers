@@ -48,27 +48,31 @@ void *reader_thread(void *data) {
         struct event *ev;
         size_t num;
         size_t last_id = 0;
+        size_t total = 0;
         while (1) {
             num = shm_arbiter_buffer_peek1(arbiter_buffer_r, (void**)&ev);
             if (num > 0) {
-                    if (shm_event_is_dropped((shm_event*)ev)) {
-                            last_id += ((shm_event_dropped*)ev)->n;
-                    } else {
-                            assert(ev->n == last_id);
-                            assert(++last_id == shm_event_id((shm_event*)ev));
-                    }
-                    /*
-                    printf("Abuf Event: {{%lu, %lu}, %lu}\n",
-                            ev->base.id, ev->base.kind, ev->n);
-                    */
-                    assert(shm_arbiter_buffer_drop(arbiter_buffer_r, 1) == 1);
+                 assert(!shm_event_is_dropped((shm_event*)ev));
+                 assert(ev->n == last_id);
+                 assert(++last_id == shm_event_id((shm_event*)ev));
+                 ++total;
+                 /*
+                 printf("Abuf Event: {{%lu, %lu}, %lu}\n",
+                         ev->base.id, ev->base.kind, ev->n);
+                 */
+                 assert(shm_arbiter_buffer_drop(arbiter_buffer_r, 1) == 1);
             }
-            if (num == 0 && stream_ready == 0 && main_finished == 1)
-                    break;
+            if (stream_ready == 0 && main_finished == 1 &&
+                    shm_arbiter_buffer_size(arbiter_buffer_r) == 0)
+                break;
         }
 
+        printf("Totally received %lu events in arbiter buffer\n", total);
+        printf("Last id: %lu\n", last_id);
         pthread_exit(NULL);
 }
+
+static size_t waiting_for_arbbuf = 0;
 
 int main(void) {
         initialize_events();
@@ -98,9 +102,11 @@ int main(void) {
         pthread_create(&tida, NULL, reader_thread, arbiter_buffer_r);
 
         struct event *ev;
+        struct event *out;
         for (size_t i = 0; i < 10000; ++i) {
                 ev = stream_fetch(stream, arbiter_buffer);
-                /* there should be no dropped event generated */
+                /* there should be no dropped event generated
+                 * since we are outputing the events into another buffer */
                 assert(shm_arbiter_buffer_size(arbiter_buffer) == 0);
 
                 assert(ev);
@@ -109,7 +115,13 @@ int main(void) {
                 //printf("POP Event: {{%lu, %lu}, %lu}\n", ev->base.id, ev->base.kind, ev->n);
 
                 /* this function also automatically drops events */
-                shm_arbiter_buffer_push(arbiter_buffer_r, ev, sizeof(struct event));
+                while(!(out = shm_arbiter_buffer_write_ptr(arbiter_buffer_r))) {
+                        ++waiting_for_arbbuf;
+                }
+
+                *out = *ev;
+                shm_arbiter_buffer_write_finish(arbiter_buffer_r);
+
                 shm_stream_consume(stream, 1);
         }
 
@@ -121,5 +133,6 @@ int main(void) {
         pthread_join(tid, NULL);
         pthread_join(tida, NULL);
 
-        printf("Waited on push: %lu\n", failed_push);
+        printf("Waited on push from source: %lu\n", failed_push);
+        printf("Waited on push to arbiter buf: %lu\n", waiting_for_arbbuf);
 }

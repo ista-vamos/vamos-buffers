@@ -54,6 +54,7 @@ int main(void) {
 
         shm_arbiter_buffer *arbiter_buffer
                 = shm_arbiter_buffer_create(stream, sizeof(int), 3);
+        shm_arbiter_buffer_set_active(arbiter_buffer, 1);
 
         pthread_t tid;
         pthread_create(&tid, NULL, filler_thread, buffer);
