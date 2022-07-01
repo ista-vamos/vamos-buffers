@@ -17,6 +17,8 @@ typedef struct _shm_arbiter_buffer {
     size_t total_dropped_num;     // the number of dropped events
 #ifdef DUMP_STATS
     size_t volunt_dropped_num;     // the number of events dropped via drop() calls
+    size_t volunt_dropped_num_asked;     // the number of events attempted to
+                                         // be dropped dropped via drop() calls
     size_t written_num;     // the number of calls to write_finish
     int last_was_drop;     // true if the last event written was drop()
 #endif
@@ -58,6 +60,9 @@ size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *buffer) {
 /* drop an event and notify buffer the buffer that it may free up
  * the payload of this and older events */
 size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t k) {
+#ifdef DUMP_STATS
+    buffer->volunt_dropped_num_asked += k;
+#endif
     --k; /* peek_*_at takes index from 0 */
     shm_event *ev = shm_par_queue_peek_atmost_at(&buffer->buffer, &k);
     if (!ev)
@@ -128,6 +133,7 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer,
 #ifdef DUMP_STATS
     buffer->written_num = 0;
     buffer->volunt_dropped_num = 0;
+    buffer->volunt_dropped_num_asked = 0;
     buffer->last_was_drop = 0;
 #endif
 }
@@ -600,9 +606,13 @@ void shm_arbiter_buffer_dump_stats(shm_arbiter_buffer *buffer) {
     fprintf(stderr, "     (fetch + num of holes = %lu)\n",
             s->fetched_events + buffer->total_dropped_times);
     COLOR_RESET
-    COLOR_RED_IF(buffer->volunt_dropped_num != buffer->written_num )
+    COLOR_RED_IF(buffer->volunt_dropped_num != buffer->written_num)
     fprintf(stderr, "   The buffer consumed %lu events via calls to drop()\n",
             buffer->volunt_dropped_num);
+    COLOR_RESET
+    COLOR_RED_IF(buffer->volunt_dropped_num_asked < buffer->volunt_dropped_num)
+    fprintf(stderr, "     (user asked to consume %lu events)\n",
+            buffer->volunt_dropped_num_asked);
     COLOR_RESET
     fprintf(stderr, "   The buffer slept waiting for events %lu ns (%lf sec)\n",
             s->slept_waiting_for_ev, s->slept_waiting_for_ev / (double)1000000000);
