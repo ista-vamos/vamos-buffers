@@ -446,6 +446,9 @@ void *stream_filter_fetch(shm_stream *stream,
                     /* the end id may not be precise, but we need just the upper bound */
                     push_dropped_event(stream, buffer, last_ev_id - 1);
                     assert(shm_arbiter_buffer_free_space(buffer) > 0);
+#ifdef DUMP_STATS
+                    buffer->last_was_drop = 1;
+#endif
                     buffer->dropped_num = 0;
                 } else {
 		    sleep_ns(sleep_time);
@@ -459,6 +462,9 @@ void *stream_filter_fetch(shm_stream *stream,
             return NULL; /* stream ended */
 	}
 
+        assert(ev && "Dont have event");
+        assert(!shm_event_is_dropped((shm_event*)ev) && "Got dropped event");
+
 	last_ev_id = shm_event_id(ev);
         assert(last_ev_id == ++stream->last_event_id &&
                "IDs are inconsistent");
@@ -466,14 +472,12 @@ void *stream_filter_fetch(shm_stream *stream,
         if (filter && !filter(stream, ev)) {
             continue;
         }
+
         /*
         printf("FETCH: read event { kind = %lu, id = %lu}\n",
                ((shm_event*)ev)->kind,
-               ((shm_event*)ev)->id);*/
-        /*
-        fprintf(stderr, "%d: event = {%lu, %lu}\n", __LINE__,
-                shm_event_kind(ev), shm_event_id(ev));
-                */
+               ((shm_event*)ev)->id);
+        */
         if (buffer->dropped_num > 0) {
             assert(DROP_SPACE_THRESHOLD < shm_arbiter_buffer_capacity(buffer));
             if (shm_arbiter_buffer_free_space(buffer) > DROP_SPACE_THRESHOLD) {
@@ -483,6 +487,16 @@ void *stream_filter_fetch(shm_stream *stream,
                 push_dropped_event(stream, buffer, last_ev_id - 1);
                 buffer->dropped_num = 0;
                 assert(shm_arbiter_buffer_free_space(buffer) > 0);
+
+                /*
+                printf("FETCH: stopped dropping { kind = %lu, id = %lu}\n",
+                       ((shm_event*)ev)->kind,
+                       ((shm_event*)ev)->id);
+                        */
+
+#ifdef DUMP_STATS
+	        ++stream->fetched_events;
+#endif
                 return ev;
             }
 
@@ -493,7 +507,7 @@ void *stream_filter_fetch(shm_stream *stream,
             if (buffer->dropped_num % 10000 == 0) {
                 shm_arbiter_buffer_notify_dropped(buffer,
                                                   buffer->drop_begin_id,
-                                                  shm_event_id(ev) - 1);
+                                                  last_ev_id - 1);
             }
             /* consume the dropped event */
             shm_stream_consume(stream, 1);
@@ -502,10 +516,15 @@ void *stream_filter_fetch(shm_stream *stream,
 
         assert(buffer->dropped_num == 0);
         if (shm_arbiter_buffer_free_space(buffer) == 0) {
-            buffer->drop_begin_id = shm_event_id(ev);
+            buffer->drop_begin_id = last_ev_id;
             assert(buffer->dropped_num == 0);
             ++buffer->dropped_num;
             shm_stream_consume(stream, 1);
+            /*
+            printf("FETCH: start dropping { kind = %lu, id = %lu}\n",
+                   ((shm_event*)ev)->kind,
+                   ((shm_event*)ev)->id);
+                */
             continue;
         }
 
