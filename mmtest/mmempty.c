@@ -322,20 +322,6 @@ void _mm_print_state(_MMARBTP * arbiter,_MMMONTP * monitor,char * arbstate,char 
   _mm_print_streams ( ) ;
 }
 int arbiterMonitor( ) {
-  _MMARBTP _mm_arbiter ;
-  _MMMONTP _mm_monitor ;
-  (_mm_arbiter.pre) = 0 ;
-  (_mm_arbiter.seen) = 0 ;
-  (_mm_arbiter.post) = 0 ;
-  (_mm_arbiter.sl) = 0 ;
-  (_mm_arbiter.sr) = 0 ;
-  (_mm_arbiter.dl) = 0 ;
-  (_mm_arbiter.dr) = 0 ;
-  (_mm_arbiter.il) = 0 ;
-  (_mm_arbiter.ir) = 0 ;
-  (_mm_monitor.pbuf) = (int *) malloc(sizeof(int) * 3) ;
-  (_mm_monitor.pl) = 0 ;
-  (_mm_monitor.pr) = 0 ;
   uint64_t tmp1, tmp2;
   while(__mm_monitor_running)
   {
