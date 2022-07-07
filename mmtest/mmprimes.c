@@ -8674,8 +8674,10 @@ int main(int argc,char * * argv) {
   shm_arbiter_buffer_set_active ( __mma_strm_buf_Right,1 ) ;
   arbiterMonitor ( ) ;
 
+  /*
   shm_arbiter_buffer_dump_stats ( __mma_strm_buf_Left) ;
   shm_arbiter_buffer_dump_stats ( __mma_strm_buf_Right) ;
+  */
 
   shm_stream_destroy ( __mma_strm_strm_Left ) ;
   shm_stream_destroy ( __mma_strm_strm_Right ) ;
