@@ -644,7 +644,7 @@ int main(int argc, char **argv)
   atomic_init((&__mm_strm_done_Left), 0);
   fprintf(logfile, "Connecting to left stream...");
   fflush(logfile);
-  shm_stream *__mma_strm_strm_Left = mm_stream_create("Left", (&__mm_strm_sourcecontrol_Left), argc, argv, 1000);
+  shm_stream *__mma_strm_strm_Left = shm_stream_create("Left", (&__mm_strm_sourcecontrol_Left), argc, argv);
   fprintf(logfile, "connected...creating arbiter buffer...");
   fflush(logfile);
   __mma_strm_buf_Left = shm_arbiter_buffer_create(__mma_strm_strm_Left, sizeof(_mm_strm_out), SHMBUF_ARBITER_BUFSIZE);
@@ -659,7 +659,7 @@ int main(int argc, char **argv)
   _mm_source_control *__mm_strm_sourcecontrol_Right;
   atomic_init((&__mm_strm_done_Right), 0);
   fprintf(logfile, "Connecting to right stream...");
-  shm_stream *__mma_strm_strm_Right = mm_stream_create("Right", (&__mm_strm_sourcecontrol_Right), argc, argv, 1000);
+  shm_stream *__mma_strm_strm_Right = shm_stream_create("Right", (&__mm_strm_sourcecontrol_Right), argc, argv);
   fprintf(logfile, "connected...creating arbiter buffer...");
   fflush(logfile);
   __mma_strm_buf_Right = shm_arbiter_buffer_create(__mma_strm_strm_Right, sizeof(_mm_strm_out), SHMBUF_ARBITER_BUFSIZE);
