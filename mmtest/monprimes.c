@@ -7,9 +7,7 @@
 #include<signal.h>
 #include "../gen/shamon.h"
 #include "../gen/mmlib.h"
-#ifndef SHMBUF_ARBITER_BUFSIZE
-#define SHMBUF_ARBITER_BUFSIZE 64
-#endif
+
 typedef enum __MM_STREAMCONST_ENUM
 {
   __MM_STREAMCONST_ENUM_Left,
@@ -380,7 +378,9 @@ void _mm_print_state(_MMARBTP *arbiter, _MMMONTP *monitor, char *arbstate, char 
 #ifndef MM_MONITORBUFSIZE
 #define MM_MONITORBUFSIZE 10
 #endif
+#ifdef LOGGING
 static FILE* logfile;
+#endif
 int arbiterMonitor()
 {
   _MMARBTP _mm_arbiter;
@@ -455,8 +455,10 @@ int arbiterMonitor()
         if (curev->head.kind == __MM_EVENTCONST_ENUM_hole)
         {
           int holesize = curev->cases.hole.n;
+#ifdef LOGGING
           fprintf(logfile, "%s: hole of size %i @ %i\n", cur->name, holesize, (cur->posn+1));
           fflush(logfile);
+#endif
           cur->lastholesize=holesize;
           cur->posn+=holesize;
           cur->dropped += holesize;
@@ -528,8 +530,11 @@ int arbiterMonitor()
           cur->posn++;
           if(cur->posn!=curev->cases.Prime.n)
           {
-            fprintf(logfile, "Mismatched position in %s stream: %i @ #%i (expected #%i) after %lu holes (last hole size %i)\n", cur->name, curev->cases.Prime.p, curev->cases.Prime.n, cur->posn, cur->holes,cur->lastholesize);
+#ifdef LOGGING
+            fprintf(logfile, "Mismatched position in %s stream: %i @ #%i (expected #%i) after %lu holes (last hole size %i)\n",
+                    cur->name, curev->cases.Prime.p, curev->cases.Prime.n, cur->posn, cur->holes,cur->lastholesize);
             fflush(logfile);
+#endif
             cur->posn=curev->cases.Prime.n;
           }
           cur->lastholesize=-1;
@@ -562,8 +567,10 @@ int arbiterMonitor()
               {
                 // printf("Found error: expected %i on %s, but found %i\n", monitorbuffer[0], cur->name, curev->cases.Prime.p);
                 printf("ERROR! %i is not equal to %i\n", monitorbuffer[other->bufpos], curev->cases.Prime.p);
+#ifdef LOGGING
                 fprintf(logfile, "ERROR! %i is not equal to %i\n", monitorbuffer[other->bufpos], curev->cases.Prime.p);
                 fflush(logfile);
+#endif
               }
               other->buffered--;
               other->bufpos=(other->bufpos+1)%MM_MONITORBUFSIZE;
@@ -577,7 +584,9 @@ int arbiterMonitor()
             else
             {
               printf("COUNTING ERROR!\n");
+#ifdef LOGGING
               fprintf(logfile, "COUNTING ERROR!\n");
+#endif
               exit(-1);
             }
             if (other->pre == 0 && other->buffered == 0)
@@ -622,6 +631,8 @@ int arbiterMonitor()
     }
   }
 }
+
+#ifdef LOGGING
 void sig_handler(int signum)
 {
   if(logfile)
@@ -630,8 +641,11 @@ void sig_handler(int signum)
   }
   exit(-1);
 }
+#endif
+
 int main(int argc, char **argv)
 {
+#ifdef LOGGING
   logfile = fopen("mlog.txt","w");
   signal(SIGSEGV, sig_handler);
   signal(SIGILL, sig_handler);
@@ -639,41 +653,64 @@ int main(int argc, char **argv)
   signal(SIGKILL, sig_handler);
   fprintf(logfile, "Initializing Monitor...\n");
   fflush(logfile);
+#endif
   initialize_events();
   _mm_source_control *__mm_strm_sourcecontrol_Left;
   atomic_init((&__mm_strm_done_Left), 0);
+#ifdef LOGGING
   fprintf(logfile, "Connecting to left stream...");
   fflush(logfile);
+#endif
   shm_stream *__mma_strm_strm_Left = shm_stream_create("Left", (&__mm_strm_sourcecontrol_Left), argc, argv);
+#ifdef LOGGING
   fprintf(logfile, "connected...creating arbiter buffer...");
   fflush(logfile);
+#endif
   __mma_strm_buf_Left = shm_arbiter_buffer_create(__mma_strm_strm_Left, sizeof(_mm_strm_out), SHMBUF_ARBITER_BUFSIZE);
+#ifdef LOGGING
   fprintf(logfile, "created...starting stream processing thread...");
   fflush(logfile);
+#endif
   thrd_create((&__mm_strm_thread_Left), (&_mm_strm_fun_Left), 0);
+#ifdef LOGGING
   fprintf(logfile, "started...activating buffer...");
   fflush(logfile);
+#endif
   shm_arbiter_buffer_set_active(__mma_strm_buf_Left, 1);
+#ifdef LOGGING
   fprintf(logfile, "activated!\n");
   fflush(logfile);
+#endif
   _mm_source_control *__mm_strm_sourcecontrol_Right;
   atomic_init((&__mm_strm_done_Right), 0);
+#ifdef LOGGING
   fprintf(logfile, "Connecting to right stream...");
+#endif
   shm_stream *__mma_strm_strm_Right = shm_stream_create("Right", (&__mm_strm_sourcecontrol_Right), argc, argv);
+#ifdef LOGGING
   fprintf(logfile, "connected...creating arbiter buffer...");
   fflush(logfile);
+#endif
   __mma_strm_buf_Right = shm_arbiter_buffer_create(__mma_strm_strm_Right, sizeof(_mm_strm_out), SHMBUF_ARBITER_BUFSIZE);
+#ifdef LOGGING
   fprintf(logfile, "created...starting stream processing thread...");
   fflush(logfile);
+#endif
   thrd_create((&__mm_strm_thread_Right), (&_mm_strm_fun_Right), 0);
+#ifdef LOGGING
   fprintf(logfile, "started...activating buffer...");
   fflush(logfile);
+#endif
   shm_arbiter_buffer_set_active(__mma_strm_buf_Right, 1);
+#ifdef LOGGING
   fprintf(logfile, "activated!\nStarting monitoring...\n");
   fflush(logfile);
+#endif
   arbiterMonitor();
+#ifdef LOGGING
   fprintf(logfile, "Monitoring ended!\n");
   fflush(logfile);
+#endif
 #ifdef DUMP_STATS
   shm_arbiter_buffer_dump_stats(__mma_strm_buf_Left);
   shm_arbiter_buffer_dump_stats(__mma_strm_buf_Right);
@@ -691,20 +728,22 @@ int main(int argc, char **argv)
   size_t rskip = rightstrm.skipped + rightstrm.ignored;
   size_t lall = lcomp + ldrop + lskip;
   size_t rall = rcomp + rdrop + rskip;
+#ifdef LOGGING
   fprintf(logfile,"LEFT: processed %lu events (%lu compared, %lu dropped (in %lu holes), %lu skipped)\n", lall, lcomp, ldrop, lholes, lskip);
   fprintf(logfile,"RIGHT: processed %lu events (%lu compared, %lu dropped (in %lu holes), %lu skipped)\n", rall, rcomp, rdrop, rholes, rskip);
   fflush(logfile);
   fclose(logfile);
+#endif
   if (_mmdbg_enqueued_right != rightstrm.processed + rightstrm.ignored + rightstrm.skipped || _mmdbg_enqueued_left != leftstrm.processed + leftstrm.ignored + leftstrm.skipped)
   {
-    // LEFT : processed 100000 events (21397 compared, 52293 dropped (in 348 holes), 26310 skipped)
-    // printf("Done! Dropped %lu (Left) and %lu (Right); skipped %i (Left) and %i (Right); ignored %i (Left) and %i (Right); processed %lu (Left) and %lu (Right)\n", leftstrm.dropped+1, rightstrm.dropped, _mmdbg_enqueued_left, _mmdbg_enqueued_right, 15, 0, leftstrm.processed+23, rightstrm.processed);
     printf("LEFT: processed %lu events (%lu compared, %lu dropped (in %lu holes), %lu skipped)\n", lall, lcomp, ldrop, lholes, lskip);
     printf("RIGHT: processed %lu events (%lu compared, %lu dropped (in %lu holes), %lu skipped)\n", rall, rcomp, rdrop, rholes, rskip);
+#ifdef LOGGING
     FILE *dbgfile = fopen("xdbg.txt", "w");
     fprintf(dbgfile, "PROCESSED COUNT MISMATCH");
     fflush(dbgfile);
     fclose(dbgfile);
+#endif
     exit(-1);
   }
   if (rall != lall)
@@ -712,13 +751,14 @@ int main(int argc, char **argv)
     // printf("Done! Dropped %lu (Left) and %lu (Right); skipped %lu (Left) and %lu (Right); ignored %lu (Left) and %lu (Right); processed %lu (Left) and %lu (Right)\n", leftstrm.dropped, rightstrm.dropped, leftstrm.skipped, rightstrm.skipped, leftstrm.ignored, rightstrm.ignored, leftstrm.processed, rightstrm.processed);
     printf("LEFT: processed %lu events (%lu compared, %lu dropped (in %lu holes), %lu skipped)\n", lall, lcomp, ldrop, lholes, lskip);
     printf("RIGHT: processed %lu events (%lu compared, %lu dropped (in %lu holes), %lu skipped)\n", rall, rcomp, rdrop, rholes, rskip);
+#ifdef LOGGING
     FILE *dbgfile = fopen("xdbg.txt", "w");
     fprintf(dbgfile, "PROCESSED SUM MISMATCH");
     fflush(dbgfile);
     fclose(dbgfile);
+#endif
     exit(-1);
   }
-  // printf("Done! Dropped %lu (Left) and %lu (Right); skipped %lu (Left) and %lu (Right); ignored %lu (Left) and %lu (Right); processed %lu (Left) and %lu (Right)\n", leftstrm.dropped, rightstrm.dropped, leftstrm.skipped, rightstrm.skipped, leftstrm.ignored, rightstrm.ignored, leftstrm.processed, rightstrm.processed);
   printf("LEFT: processed %lu events (%lu compared, %lu dropped (in %lu holes), %lu skipped)\n", lall, lcomp, ldrop, lholes, lskip);
   printf("RIGHT: processed %lu events (%lu compared, %lu dropped (in %lu holes), %lu skipped)\n", rall, rcomp, rdrop, rholes, rskip);
   return 0;
