@@ -28,8 +28,7 @@ void drregex_destroy(shm_stream *s) {
     free(ss);
 }
 
-shm_stream *shm_create_drregex_stream(const char *key,
-                                     struct source_control **control) {
+shm_stream *shm_create_drregex_stream(const char *key) {
     shm_stream_drregex *ss = malloc(sizeof *ss);
     struct buffer *shmbuffer = get_shared_buffer(key);
     assert(shmbuffer && "Getting the shm buffer failed");
@@ -45,13 +44,9 @@ shm_stream *shm_create_drregex_stream(const char *key,
                     "drregex-stream");
     ss->shmbuffer = shmbuffer;
 
-    void *cntrl = get_shared_control_buffer(key);
-    *control = cntrl;
-    ss->base.control = cntrl;
-    size_t evs_num = source_control_get_records_num(cntrl);
+    size_t evs_num;
     size_t ev_size, max_size = 0;
-
-    struct event_record *events = ss->base.control->events;
+    struct event_record *events = buffer_get_avail_events(shmbuffer, &evs_num);
     for (size_t i = 0; i < evs_num; ++i) {
         ev_size = events[i].size;
         events[i].kind = shm_mk_event_kind(events[i].name,

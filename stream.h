@@ -20,7 +20,6 @@ typedef struct _shm_stream {
     const char *name;
     size_t event_size;
     struct buffer *incoming_events;
-    struct source_control *control;
     /* callbacks */
     shm_stream_is_ready_fn is_ready;
     shm_stream_filter_fn filter;
@@ -51,6 +50,7 @@ void shm_stream_init(shm_stream *stream,
 const char *shm_stream_get_name(shm_stream *);
 size_t shm_stream_event_size(shm_stream *);
 size_t shm_stream_id(shm_stream *);
+struct event_record *shm_stream_get_avail_events(shm_stream *, size_t *);
 
 void *shm_stream_read_events(shm_stream *, size_t *);
 bool shm_stream_consume(shm_stream *stream, size_t num);

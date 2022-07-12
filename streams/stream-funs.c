@@ -27,8 +27,7 @@ static void funs_destroy(shm_stream *s) {
     free(s);
 }
 
-shm_stream *shm_create_funs_stream(const char *key,
-                                   struct source_control **control) {
+shm_stream *shm_create_funs_stream(const char *key) {
     shm_stream_funs *ss = malloc(sizeof *ss);
     struct buffer *shmbuffer = get_shared_buffer(key);
     assert(shmbuffer && "Getting the shm buffer failed");
@@ -43,28 +42,21 @@ shm_stream *shm_create_funs_stream(const char *key,
                     funs_destroy,
                     "funs-stream");
     ss->shmbuffer = shmbuffer;
-    *control = get_shared_control_buffer(key);
-    ss->base.control = *control;
-    ss->events = ss->base.control->events;
-    assert(ss->events);
-    size_t evs_num = source_control_get_records_num(*control);
-    size_t ev_size, max_size = 0;
 
+    size_t evs_num;
+    size_t ev_size, max_size = 0;
+    struct event_record *events = buffer_get_avail_events(shmbuffer, &evs_num);
     for (size_t i = 0; i < evs_num; ++i) {
-        assert(ss->events[i].size == 0 ||
-               (sizeof(shm_event_funcall) +
-                      signature_get_size((unsigned char *)ss->events[i].signature))
-               <= ss->events[i].size);
-        ss->events[i].kind = shm_mk_event_kind(ss->events[i].name,
-                                               ss->events[i].size,
-                                               (const char *)ss->events[i].signature);
-        ev_size = shm_event_size_for_kind(ss->events[i].kind);
+        ev_size = events[i].size;
+        events[i].kind = shm_mk_event_kind(events[i].name,
+                                           ev_size,
+                                           (const char *)events[i].signature);
         if (ev_size > max_size)
             max_size = ev_size;
 
-        printf("[stream-funs] fun: '%s:%s', kind: '%lu', size: '%lu'\n",
-               ss->events[i].name, ss->events[i].signature,
-               ss->events[i].kind, ss->events[i].size);
+        printf("[stream-funs] event '%s', kind: '%lu', size: '%lu', signature: '%s'\n",
+               events[i].name, events[i].kind,
+               events[i].size, events[i].signature);
     }
 
     ss->spec_count = evs_num;

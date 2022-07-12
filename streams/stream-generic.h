@@ -23,7 +23,6 @@ typedef struct _shm_stream_generic {
     struct buffer *shmbuffer;
 } shm_stream_generic;
 
-shm_stream *shm_create_generic_stream(const char *key,
-                                      struct source_control **control);
+shm_stream *shm_create_generic_stream(const char *key);
 
 #endif /* SHMN_STREAM_GENERIC_H_ */

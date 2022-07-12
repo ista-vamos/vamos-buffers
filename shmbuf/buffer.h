@@ -6,17 +6,16 @@
 #include <stdbool.h>
 
 struct source_control;
+struct event_record;
 struct buffer;
 
+struct buffer *create_shared_buffer(const char *key,
+                                    size_t elem_size,
+                                    const struct source_control *control);
 struct buffer *get_shared_buffer(const char *key);
-struct buffer *initialize_shared_buffer(const char *key,
-                                        size_t elem_size,
-                                        struct source_control *control);
-/* FIXME: do this from initialize_shared_buffer */
-void *initialize_shared_control_buffer(const char *buff_key, size_t size);
-void *get_shared_control_buffer(const char *buff_key);
+struct event_record *buffer_get_avail_events(struct buffer *, size_t *);
 
-void release_shared_control_buffer(const char *buffkey, void *buffer);
+
 void release_shared_buffer(struct buffer *);
 void destroy_shared_buffer(struct buffer *);
 

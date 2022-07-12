@@ -78,12 +78,8 @@ struct stream_rec avail_streams[] = {
   {NULL, NULL} /* to mark the end */
 };
 
-struct source_control;
-
 shm_stream *shm_stream_create(const char *stream_name,
-                              struct source_control **control,
-                              int argc,
-                              char *argv[]) {
+                              int argc, char *argv[]) {
     const char *params = get_params(stream_name, argc, argv);
     if (!params) {
         fprintf(stderr, "error: did not find spec for stream '%s'\n", stream_name);
@@ -115,7 +111,7 @@ shm_stream *shm_stream_create(const char *stream_name,
             return NULL;
         }
 
-        return shm_create_funs_stream(key, control);
+        return shm_create_funs_stream(key);
     } else if (strncmp(source, "regex", 6) == 0) {
         if (!next || *next == 0) {
             fprintf(stderr, "error: source 'regex' needs the key to SHM as parameter\n");
@@ -127,7 +123,7 @@ shm_stream *shm_stream_create(const char *stream_name,
             fprintf(stderr, "warning: source 'regex' ignoring further parameter (FOR NOW)\n");
         }
 
-        return shm_create_sregex_stream(key, control);
+        return shm_create_sregex_stream(key);
     } else if (strncmp(source, "regexrw", 8) == 0) {
         if (!next || *next == 0) {
             fprintf(stderr, "error: source 'regexrw' needs the key to SHM as parameter\n");
@@ -139,7 +135,7 @@ shm_stream *shm_stream_create(const char *stream_name,
             fprintf(stderr, "warning: source 'regexrw' ignoring further parameter (FOR NOW)\n");
         }
 
-        return shm_create_sregexrw_stream(key, control);
+        return shm_create_sregexrw_stream(key);
     } else if (strncmp(source, "drregex", 8) == 0) {
         if (!next || *next == 0) {
             fprintf(stderr, "error: source 'drregex' needs the key to SHM as parameter\n");
@@ -151,7 +147,7 @@ shm_stream *shm_stream_create(const char *stream_name,
             fprintf(stderr, "warning: source 'drregex' ignoring further parameter (FOR NOW)\n");
         }
 
-        return shm_create_drregex_stream(key, control);
+        return shm_create_drregex_stream(key);
     }  else if (strncmp(source, "generic", 8) == 0) {
         if (!next || *next == 0) {
             fprintf(stderr, "error: source 'generic' needs the key to SHM as parameter\n");
@@ -163,7 +159,7 @@ shm_stream *shm_stream_create(const char *stream_name,
             fprintf(stderr, "warning: source 'generic' ignoring further parameter (FOR NOW)\n");
         }
 
-        return shm_create_generic_stream(key, control);
+        return shm_create_generic_stream(key);
     }
 #if 0
     else if (strncmp(name, "files", 5) == 0) {

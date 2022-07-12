@@ -16,7 +16,6 @@ typedef struct _shm_stream_sregexrw {
     struct buffer *shmbuffer;
 } shm_stream_sregexrw;
 
-shm_stream *shm_create_sregexrw_stream(const char *key,
-                                     struct source_control **control);
+shm_stream *shm_create_sregexrw_stream(const char *key);
 void shm_destroy_sregexrw_stream(shm_stream_sregexrw *ss);
 

@@ -152,7 +152,7 @@ size_t buffer_elem_size(struct buffer *buff)
     return buff->shmbuffer->info.elem_size;
 }
 
-struct buffer *initialize_shared_buffer(const char *key,
+static struct buffer *initialize_shared_buffer(const char *key,
                                         size_t elem_size,
                                         struct source_control *control)
 {
@@ -208,6 +208,21 @@ struct buffer *initialize_shared_buffer(const char *key,
     return buff;
 }
 
+static struct source_control *create_shared_control_buffer(const char *buff_key, const struct source_control *control);
+
+struct buffer *create_shared_buffer(const char *key,
+                                    size_t elem_size,
+                                    const struct source_control *control) {
+        struct source_control *ctrl = create_shared_control_buffer(key, control);
+        if (!ctrl) {
+            fprintf(stderr, "Failed creating control buffer\n");
+            return NULL;
+        }
+
+        return initialize_shared_buffer(key, elem_size, ctrl);
+}
+
+
 /* FOR TESTING */
 struct buffer *initialize_local_buffer(const char *key,
                                        size_t elem_size,
@@ -247,6 +262,8 @@ struct buffer *initialize_local_buffer(const char *key,
     return buff;
 }
 
+static struct source_control *get_shared_control_buffer(const char *buff_key);
+
 struct buffer *get_shared_buffer(const char *key)
 {
     printf("Getting shared buffer '%s'\n", key);
@@ -256,30 +273,69 @@ struct buffer *get_shared_buffer(const char *key)
         return NULL;
     }
 
-    void *mem = mmap(0, buffer_allocation_size(),
-                     PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-    if (mem == MAP_FAILED) {
+    void *shmmem = mmap(0, buffer_allocation_size(),
+                        PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+    if (shmmem == MAP_FAILED) {
         perror("mmap failure");
-        if (close(fd) == -1) {
-            perror("closing fd after mmap failure");
-        }
-        if (shamon_shm_unlink(key) != 0) {
-            perror("shm_unlink after mmap failure");
-        }
-        return NULL;
+        goto before_mmap_clean;
     }
 
     struct buffer *buff = malloc(sizeof(*buff));
-    assert(buff && "Memory allocation failed");
+    if (!buff) {
+        fprintf(stderr, "Memory allocation failed");
+        goto mmap_clean;
+    }
 
-    buff->shmbuffer = (struct shmbuffer *)mem;
     buff->key = strdup(key);
+    if (!buff->key) {
+        fprintf(stderr, "Memory allocation failed");
+        goto buff_clean_key;
+    }
+
     VEC_INIT(buff->aux_buffers);
+    if (!buff->aux_buffers) {
+        fprintf(stderr, "Memory allocation failed");
+        goto buff_clean_vec;
+    }
+
+    buff->control = get_shared_control_buffer(key);
+    if (!buff->control) {
+        fprintf(stderr, "Failed getting control buffer\n");
+        goto buff_clean_all;
+    }
+
+    buff->shmbuffer = (struct shmbuffer *)shmmem;
     buff->aux_buf_idx = 0;
     buff->cur_aux_buff = NULL;
     buff->fd = fd;
 
     return buff;
+
+buff_clean_all:
+    VEC_DESTROY(buff->aux_buffers);
+buff_clean_vec:
+    free(buff->key);
+buff_clean_key:
+    free(buff);
+mmap_clean:
+    munmap(shmmem, buffer_allocation_size());
+before_mmap_clean:
+    if (close(fd) == -1) {
+        perror("closing fd after mmap failure");
+    }
+    if (shamon_shm_unlink(key) != 0) {
+        perror("shm_unlink after mmap failure");
+    }
+    return NULL;
+}
+
+struct event_record *buffer_get_avail_events(struct buffer *buff, size_t *evs_num) {
+    assert(buff);
+    assert(evs_num);
+    assert(buff->control);
+
+    *evs_num = source_control_get_records_num(buff->control);
+    return buff->control->events;
 }
 
 void buffer_set_attached(struct buffer *buff, bool val) {
@@ -543,10 +599,11 @@ bool buffer_pop_k(struct buffer *buff, void *dst, size_t k) {
 
 /*** CONTROL BUFFER ****/
 
-void *initialize_shared_control_buffer(const char *buff_key, size_t size)
+struct source_control *create_shared_control_buffer(const char *buff_key, const struct source_control *control)
 {
     char key[SHM_NAME_MAXLEN];
     shamon_map_ctrl_key(buff_key, key);
+    size_t size = control->size;
 
     printf("Initializing control buffer '%s' of size '%lu'\n", key, size);
     int fd = shamon_shm_open(key, O_RDWR|O_CREAT, S_IRWXU);
@@ -555,12 +612,20 @@ void *initialize_shared_control_buffer(const char *buff_key, size_t size)
         return NULL;
     }
 
-    if((ftruncate(fd, size + 2*sizeof(size_t))) == -1) {
+    /* The user does not want a control buffer, but we expect to have it,
+     * event if it is empty. Make the size be at least such that it can
+     * hold the size variable */
+    if (size == 0) {
+        size = sizeof(control->size);
+    }
+    assert(size >= sizeof(control->size));
+
+    if((ftruncate(fd, size)) == -1) {
         perror("ftruncate");
         return NULL;
     }
 
-    void *mem = mmap(0, size + 2*sizeof(size_t),
+    void *mem = mmap(0, size,
                      PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
     if (mem == MAP_FAILED) {
         perror("mmap failure");
@@ -573,16 +638,12 @@ void *initialize_shared_control_buffer(const char *buff_key, size_t size)
         return NULL;
     }
 
-    memset(mem, 0, size);
-    size_t *smem = (size_t *)mem;
-    *smem++ = size;
-    *smem++ = (size_t) fd;
+    memcpy(mem, control, size);
 
-    assert(control_buffer_size((void*)smem) == size);
-    return (void*) smem;
+    return (struct source_control*) mem;
 }
 
-void *get_shared_control_buffer(const char *buff_key)
+struct source_control *get_shared_control_buffer(const char *buff_key)
 {
     char key[SHM_NAME_MAXLEN];
     shamon_map_ctrl_key(buff_key, key);
@@ -601,7 +662,7 @@ void *get_shared_control_buffer(const char *buff_key)
     }
     printf("   ... its size is %lu\n", size);
 
-    void *mem = mmap(0, size + 2*sizeof(size_t),
+    void *mem = mmap(0, size,
                      PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
     if (mem == MAP_FAILED) {
         perror("mmap failure");
@@ -615,7 +676,7 @@ void *get_shared_control_buffer(const char *buff_key)
     }
 
     /* FIXME: we leak fd */
-    return (unsigned char *)mem + 2*sizeof(size_t);
+    return (struct source_control *)mem;
 }
 
 size_t control_buffer_size(void *buffer)

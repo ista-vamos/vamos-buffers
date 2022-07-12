@@ -16,7 +16,6 @@ typedef struct _shm_stream_sregex {
     struct buffer *shmbuffer;
 } shm_stream_sregex;
 
-shm_stream *shm_create_sregex_stream(const char *key,
-                                     struct source_control **control);
+shm_stream *shm_create_sregex_stream(const char *key);
 void shm_destroy_sregex_stream(shm_stream_sregex *ss);
 

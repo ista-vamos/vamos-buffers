@@ -23,7 +23,6 @@ typedef struct _shm_stream_drregex {
     struct buffer *shmbuffer;
 } shm_stream_drregex;
 
-shm_stream *shm_create_drregex_stream(const char *key,
-                                     struct source_control **control);
+shm_stream *shm_create_drregex_stream(const char *key);
 void shm_destroy_drregex_stream(shm_stream_drregex *ss);
 

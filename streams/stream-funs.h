@@ -26,8 +26,7 @@ bool funs_has_event(shm_stream *stream);
 
 shm_event_funcall *funs_get_next_event(shm_stream *stream);
 
-shm_stream *shm_create_funs_stream(const char *key,
-                                   struct source_control **control);
+shm_stream *shm_create_funs_stream(const char *key);
 
 struct event_record *shm_funs_stream_get_event_spec(shm_stream_funs *stream, shm_kind kind);
 
