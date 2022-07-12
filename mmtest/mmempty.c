@@ -341,15 +341,13 @@ int arbiterMonitor( ) {
 int main(int argc,char * * argv) {
   fprintf(stderr, "Reading and dropping events (empty monitor)\n");
   initialize_events ( ) ;
-  _mm_source_control * __mm_strm_sourcecontrol_Left ;
   atomic_init ( (&__mm_strm_done_Left),0 ) ;
-  shm_stream * __mma_strm_strm_Left = shm_stream_create ( "Left",(&__mm_strm_sourcecontrol_Left),argc,argv ) ;
+  shm_stream * __mma_strm_strm_Left = shm_stream_create ( "Left",argc,argv ) ;
   __mma_strm_buf_Left = shm_arbiter_buffer_create ( __mma_strm_strm_Left,sizeof ( _mm_strm_out_Left ), SHMBUF_ARBITER_BUFSIZE) ;
   thrd_create ( (&__mm_strm_thread_Left),(&_mm_strm_fun_Left),0 ) ;
   shm_arbiter_buffer_set_active ( __mma_strm_buf_Left,1 ) ;
-  _mm_source_control * __mm_strm_sourcecontrol_Right ;
   atomic_init ( (&__mm_strm_done_Right),0 ) ;
-  shm_stream * __mma_strm_strm_Right = shm_stream_create ( "Right",(&__mm_strm_sourcecontrol_Right),argc,argv ) ;
+  shm_stream * __mma_strm_strm_Right = shm_stream_create ( "Right",argc,argv ) ;
   __mma_strm_buf_Right = shm_arbiter_buffer_create ( __mma_strm_strm_Right,sizeof ( _mm_strm_out_Right ), SHMBUF_ARBITER_BUFSIZE) ;
   thrd_create ( (&__mm_strm_thread_Right),(&_mm_strm_fun_Right),0 ) ;
   shm_arbiter_buffer_set_active ( __mma_strm_buf_Right,1 ) ;

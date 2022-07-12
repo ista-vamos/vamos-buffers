@@ -21,7 +21,6 @@ typedef enum __MM_EVENTCONST_ENUM
   __MM_EVENTCONST_ENUM_hole,
   __MM_EVENTCONST_ENUM_Prime
 } _MM_EVENTCONST_ENUM;
-typedef struct source_control _mm_source_control;
 void _mm_print_streams();
 typedef struct __MMEV_Prime _MMEV_Prime;
 typedef struct __MMEV_LSkip _MMEV_LSkip;
@@ -640,11 +639,10 @@ int main(int argc, char **argv)
   fprintf(logfile, "Initializing Monitor...\n");
   fflush(logfile);
   initialize_events();
-  _mm_source_control *__mm_strm_sourcecontrol_Left;
   atomic_init((&__mm_strm_done_Left), 0);
   fprintf(logfile, "Connecting to left stream...");
   fflush(logfile);
-  shm_stream *__mma_strm_strm_Left = shm_stream_create("Left", (&__mm_strm_sourcecontrol_Left), argc, argv);
+  shm_stream *__mma_strm_strm_Left = shm_stream_create("Left", argc, argv);
   fprintf(logfile, "connected...creating arbiter buffer...");
   fflush(logfile);
   __mma_strm_buf_Left = shm_arbiter_buffer_create(__mma_strm_strm_Left, sizeof(_mm_strm_out), SHMBUF_ARBITER_BUFSIZE);
@@ -656,10 +654,9 @@ int main(int argc, char **argv)
   shm_arbiter_buffer_set_active(__mma_strm_buf_Left, 1);
   fprintf(logfile, "activated!\n");
   fflush(logfile);
-  _mm_source_control *__mm_strm_sourcecontrol_Right;
   atomic_init((&__mm_strm_done_Right), 0);
   fprintf(logfile, "Connecting to right stream...");
-  shm_stream *__mma_strm_strm_Right = shm_stream_create("Right", (&__mm_strm_sourcecontrol_Right), argc, argv);
+  shm_stream *__mma_strm_strm_Right = shm_stream_create("Right", argc, argv);
   fprintf(logfile, "connected...creating arbiter buffer...");
   fflush(logfile);
   __mma_strm_buf_Right = shm_arbiter_buffer_create(__mma_strm_strm_Right, sizeof(_mm_strm_out), SHMBUF_ARBITER_BUFSIZE);
