@@ -52,7 +52,7 @@ shm_stream *shm_create_generic_stream(const char *key,
     void *cntrl = get_shared_control_buffer(key);
     *control = cntrl;
     ss->base.control = cntrl;
-    size_t evs_num = source_control_get_records_num(cntrl);
+    size_t evs_num = cntrl ? source_control_get_records_num(cntrl) : 0;
     size_t ev_size, max_size = 0;
 
     struct event_record *events = ss->base.control->events;

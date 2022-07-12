@@ -56,7 +56,7 @@ add_subdirectory(sources)
 add_subdirectory(shmbuf)
 add_subdirectory(fastbuf)
 
-add_library(shamon-lib SHARED arbiter.c event.c stream.c)
+add_library(shamon-lib SHARED arbiter.c event.c stream.c signatures.c)
 target_compile_definitions(shamon-lib PUBLIC -D_POSIX_C_SOURCE=200809L)
 target_link_libraries(shamon-lib PUBLIC shamon-parallel-queue
 		                        shamon-signature

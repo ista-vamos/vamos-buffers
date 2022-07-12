@@ -7,19 +7,23 @@ lib = CDLL(so_file)
 
 lib.initialize_shared_buffer.argtypes = [c_char_p, c_size_t]
 lib.initialize_shared_buffer.restype = c_void_p
-def initialize_shared_buffer(key : bytes, elem_size : int):
-    return c_void_p(lib.initialize_shared_buffer(c_char_p(key),
+def initialize_shared_buffer(key : str, elem_size : int):
+    return c_void_p(lib.initialize_shared_buffer(c_char_p(key.encode('ascii')),
                                                  c_size_t(elem_size)))
 
 lib.initialize_shared_buffer.argtypes = [c_void_p]
 def destroy_shared_buffer(buff):
     lib.destroy_shared_buffer(buff)
 
-def initialize_shared_control_buffer(key : bytes, size : int):
-    return c_void_p(lib.initialize_shared_control_buffer(c_char_p(key),
+def initialize_shared_control_buffer(key : str, size : int):
+    addr = c_void_p(lib.initialize_shared_control_buffer(
+                                c_char_p(key.encode('ascii')),
                     c_size_t(size)))
+    sz = c_size_t(addr)
+    sz = size
+    return addr
 
-def release_shared_control_buffer(key : bytes, buff):
+def release_shared_control_buffer(key : str, buff):
     lib.release_shared_control_buffer(c_char_p(key), buff)
 
 def buffer_monitor_attached(buff):
@@ -45,9 +49,14 @@ lib.buffer_finish_push.argtypes = [c_void_p]
 def buffer_finish_push(buff):
     return lib.buffer_finish_push(buff)
 
-b = initialize_shared_buffer(b"/key", 32)
-lib.buffer_push(b, b'ahoj', 4)
-a = buffer_start_push(b)
-a = buffer_partial_push_str(b, a, 1, b"string!")
-buffer_finish_push(b)
-destroy_shared_buffer(b)
+lib.signature_get_size.argtypes = [c_char_p]
+def signature_get_size(sig):
+    return lib.signature_get_size(c_char_p(sig.encode('ascii')))
+
+if __name__ == "__main__":
+    b = initialize_shared_buffer(b"/key", 32)
+    lib.buffer_push(b, b'ahoj', 4)
+    a = buffer_start_push(b)
+    a = buffer_partial_push_str(b, a, 1, b"string!")
+    buffer_finish_push(b)
+    destroy_shared_buffer(b)
