@@ -23,5 +23,6 @@ struct source_control *source_control_define_pairwise(size_t ev_nums,
                                                       const char *names[],
                                                       const char *signatures[]);
 
+size_t source_control_max_event_size(struct source_control *control);
 
 #endif  /* SHAMON_SOURCE_H_ */
