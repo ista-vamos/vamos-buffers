@@ -19,6 +19,9 @@ struct source_control {
 size_t source_control_get_records_num(struct source_control *sc);
 
 struct source_control *source_control_define(size_t ev_nums, ...);
+struct source_control *source_control_define_pairwise(size_t ev_nums,
+                                                      const char *names[],
+                                                      const char *signatures[]);
 
 
 #endif  /* SHAMON_SOURCE_H_ */
