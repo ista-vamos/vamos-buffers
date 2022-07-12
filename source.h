@@ -11,12 +11,14 @@ struct event_record {
 };
 
 struct source_control {
-    size_t size; /* size of this structure (its variable) */
+    size_t size; /* size of this structure (it's variable) */
     struct event_record events[];
 };
 
 
 size_t source_control_get_records_num(struct source_control *sc);
+
+struct source_control *source_control_define(size_t ev_nums, ...);
 
 
 #endif  /* SHAMON_SOURCE_H_ */
