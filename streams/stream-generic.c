@@ -32,6 +32,8 @@ static void generic_destroy(shm_stream *s) {
     free(s);
 }
 
+size_t stream_mk_event_kinds(const char *stream_name, struct buffer *shmbuffer, size_t *max_ev_size);
+
 shm_stream *shm_create_generic_stream(const char *key) {
     shm_stream_generic *ss = malloc(sizeof *ss);
     struct buffer *shmbuffer = get_shared_buffer(key);
@@ -48,22 +50,7 @@ shm_stream *shm_create_generic_stream(const char *key) {
                     "generic-stream");
     ss->shmbuffer = shmbuffer;
 
-    size_t evs_num;
-    size_t ev_size, max_size = 0;
-    struct event_record *events = buffer_get_avail_events(shmbuffer, &evs_num);
-    for (size_t i = 0; i < evs_num; ++i) {
-        ev_size = events[i].size;
-        events[i].kind = shm_mk_event_kind(events[i].name,
-                                           ev_size,
-                                           (const char *)events[i].signature);
-        if (ev_size > max_size)
-            max_size = ev_size;
-
-        printf("%s: event '%s', kind: '%lu', size: '%lu', signature: '%s'\n",
-               ss->base.name,
-               events[i].name, events[i].kind,
-               events[i].size, events[i].signature);
-    }
+    stream_mk_event_kinds("generic-stream", shmbuffer, NULL);
 
     buffer_set_attached(ss->shmbuffer, true);
     return (shm_stream *) ss;
