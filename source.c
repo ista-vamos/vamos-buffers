@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 
@@ -71,4 +72,80 @@ struct source_control *source_control_define_pairwise(size_t ev_nums,
     }
 
     return control;
+}
+
+struct source_control *source_control_define_str(const char *str) {
+    size_t ev_nums = 0;
+    size_t com_nums = 0;
+    /* count the number of events */
+    const char *s = str;
+    while (*s) {
+        ev_nums += (int)(*s == ':');
+        com_nums += (int)(*s++ == ',');
+    }
+
+    if (!(ev_nums > 0 && (ev_nums == com_nums || ev_nums == com_nums + 1))) {
+        fprintf(stderr, "%s:%d: wrong format of events\n", __func__, __LINE__);
+        return NULL;
+    }
+
+    size_t control_size = sizeof(size_t) + ev_nums*sizeof(struct event_record);
+    struct source_control *control = malloc(control_size);
+    assert(control);
+
+    control->size = control_size;
+
+    const size_t max_name_size = sizeof(((struct event_record*)NULL)->name) - 1;
+    const size_t max_sig_size = sizeof(((struct event_record*)NULL)->signature) - 1;
+
+    char name[max_name_size];
+    char sig[max_name_size];
+    const char *s_start, *s_end;
+    const char *n_start, *n_end;
+    size_t i = 0;
+
+    n_start = str;
+    n_end = strchr(n_start, ':');
+    if (!n_end)
+        goto err;
+    s_start = n_end + 1;
+    s_end = strchr(s_start, ',');
+    if (!s_end && ev_nums > 0)
+        goto err;
+    while (i < ev_nums) {
+        assert((size_t)(n_end - n_start) <= max_name_size);
+        strncpy(name, n_start, n_end - n_start);
+        name[n_end - n_start] = 0;
+        assert((size_t)(s_end - s_start) <= max_sig_size);
+        strncpy(sig, s_start, s_end - s_start);
+        sig[s_end - s_start] = 0;
+
+        printf("name: '%s', sig: '%s'\n", name, sig);
+
+        init_record(control->events + i, name, sig);
+
+        ++i;
+
+        n_start = s_end + 1;
+        n_end = strchr(n_start, ':');
+        if (!n_end)
+            goto err;
+        s_start = n_end + 1;
+        s_end = strchr(s_start, ',');
+        if (!s_end) {
+            if (i == ev_nums - 1) { /* the last event may not have ; */
+                s_end = strchr(s_start, '\0');
+                assert(s_end); /* if there is no 0, we will crash anyway */
+            } else {
+                goto err;
+            }
+        }
+    }
+
+    return control;
+
+err:
+    free(control);
+    fprintf(stderr, "%s:%d: wrong format of events\n", __func__, __LINE__);
+    return NULL;
 }
