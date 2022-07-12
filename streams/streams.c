@@ -74,7 +74,9 @@ struct stream_rec avail_streams[] = {
   {"calls", "connect to dynamorio libfuns.so and track calls of a function"},
   {"files", "open given files and read from them (the files can be pipes)"},
   {"regex", "read stdin and parse it using regexes"},
+  {"regexrw", "read stdin and parse it using regexes in a separate process"},
   {"drregex", "read stdin and stdout and parse it using regexes (DynamoRIO based)"},
+  {"generic", "receive events based purely on the information from source"},
   {NULL, NULL} /* to mark the end */
 };
 
