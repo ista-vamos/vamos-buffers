@@ -282,25 +282,21 @@ struct buffer *get_shared_buffer(const char *key)
 
     struct buffer *buff = malloc(sizeof(*buff));
     if (!buff) {
-        fprintf(stderr, "Memory allocation failed");
+        fprintf(stderr, "%s:%d: memory allocation failed\n", __func__, __LINE__);
         goto mmap_clean;
     }
 
     buff->key = strdup(key);
     if (!buff->key) {
-        fprintf(stderr, "Memory allocation failed");
+        fprintf(stderr, "%s:%d: memory allocation failed\n", __func__, __LINE__);
         goto buff_clean_key;
     }
 
     VEC_INIT(buff->aux_buffers);
-    if (!buff->aux_buffers) {
-        fprintf(stderr, "Memory allocation failed");
-        goto buff_clean_vec;
-    }
 
     buff->control = get_shared_control_buffer(key);
     if (!buff->control) {
-        fprintf(stderr, "Failed getting control buffer\n");
+        fprintf(stderr, "%s:%d: failed getting control buffer\n", __func__, __LINE__);
         goto buff_clean_all;
     }
 
@@ -313,7 +309,6 @@ struct buffer *get_shared_buffer(const char *key)
 
 buff_clean_all:
     VEC_DESTROY(buff->aux_buffers);
-buff_clean_vec:
     free(buff->key);
 buff_clean_key:
     free(buff);
