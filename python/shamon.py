@@ -5,26 +5,19 @@ so_file = abspath(pathjoin(dirname(__file__), "..", "libshamon-lib.so"))
 
 lib = CDLL(so_file)
 
-lib.initialize_shared_buffer.argtypes = [c_char_p, c_size_t]
-lib.initialize_shared_buffer.restype = c_void_p
-def initialize_shared_buffer(key : str, elem_size : int):
-    return c_void_p(lib.initialize_shared_buffer(c_char_p(key.encode('ascii')),
-                                                 c_size_t(elem_size)))
+lib.source_control_define_str.argtypes = [c_char_p]
+lib.source_control_define_str.restype = c_void_p
+lib.create_shared_buffer.argtypes = [c_char_p, c_size_t, c_void_p]
+lib.create_shared_buffer.restype = c_void_p
+def create_shared_buffer(key : str, elem_size : int, events: str):
+    control = lib.source_control_define_str(c_char_p(events.encode('ascii')))
+    return c_void_p(lib.create_shared_buffer(c_char_p(key.encode('ascii')),
+                                             c_size_t(elem_size),
+                                             control))
 
-lib.initialize_shared_buffer.argtypes = [c_void_p]
+lib.destroy_shared_buffer.argtypes = [c_void_p]
 def destroy_shared_buffer(buff):
     lib.destroy_shared_buffer(buff)
-
-def initialize_shared_control_buffer(key : str, size : int):
-    addr = c_void_p(lib.initialize_shared_control_buffer(
-                                c_char_p(key.encode('ascii')),
-                    c_size_t(size)))
-    sz = c_size_t(addr)
-    sz = size
-    return addr
-
-def release_shared_control_buffer(key : str, buff):
-    lib.release_shared_control_buffer(c_char_p(key), buff)
 
 def buffer_monitor_attached(buff):
     return lib.buffer_monitor_attached(buff)

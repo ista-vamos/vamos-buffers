@@ -106,12 +106,16 @@ struct source_control *source_control_define_str(const char *str) {
 
     n_start = str;
     n_end = strchr(n_start, ':');
-    if (!n_end)
+    if (!n_end) {
         goto err;
+    }
     s_start = n_end + 1;
     s_end = strchr(s_start, ',');
-    if (!s_end && ev_nums > 0)
-        goto err;
+    if (!s_end) {
+	if (ev_nums > 1)
+            goto err;
+	s_end = strchr(s_start, '\0');
+    }
     while (i < ev_nums) {
         assert((size_t)(n_end - n_start) <= max_name_size);
         strncpy(name, n_start, n_end - n_start);
@@ -120,13 +124,15 @@ struct source_control *source_control_define_str(const char *str) {
         strncpy(sig, s_start, s_end - s_start);
         sig[s_end - s_start] = 0;
 
-        printf("name: '%s', sig: '%s'\n", name, sig);
-
         init_record(control->events + i, name, sig);
 
         ++i;
 
+	if (*s_end == '\0')
+            break; /* we're done */
         n_start = s_end + 1;
+	if (*n_start == '\0')
+            break; /* we're done */
         n_end = strchr(n_start, ':');
         if (!n_end)
             goto err;
@@ -135,7 +141,6 @@ struct source_control *source_control_define_str(const char *str) {
         if (!s_end) {
             if (i == ev_nums - 1) { /* the last event may not have ; */
                 s_end = strchr(s_start, '\0');
-                assert(s_end); /* if there is no 0, we will crash anyway */
             } else {
                 goto err;
             }
