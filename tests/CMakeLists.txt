@@ -32,21 +32,21 @@ add_executable(queue-par-test queue-par-test.c)
 target_link_libraries(queue-par-test shamon-parallel-queue pthread)
 target_include_directories(queue-par-test PRIVATE ${CMAKE_SOURCE_DIR})
 add_test(NAME queue-par-test
-         COMMAND sh -c -e "for i in `seq 1 20`;do ./queue-par-test; done"
+         COMMAND sh -c -e "for i in `seq 1 1000`;do ./queue-par-test; done"
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests)
 
 add_executable(queue-par-test-2 queue-par-test-2.c)
 target_link_libraries(queue-par-test-2 shamon-parallel-queue pthread)
 target_include_directories(queue-par-test-2 PRIVATE ${CMAKE_SOURCE_DIR})
 add_test(NAME queue-par-test-2
-         COMMAND sh -c -e "for i in `seq 1 20`;do ./queue-par-test-2; done"
+         COMMAND sh -c -e "for i in `seq 1 1000`;do ./queue-par-test-2; done"
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests)
 
 add_executable(queue-par-test-3 queue-par-cbmc_2.c)
 target_link_libraries(queue-par-test-3 shamon-parallel-queue pthread)
 target_include_directories(queue-par-test-3 PRIVATE ${CMAKE_SOURCE_DIR})
 add_test(NAME queue-par-test-3
-         COMMAND sh -c -e "for i in `seq 1 20`;do ./queue-par-test-3; done"
+         COMMAND sh -c -e "for i in `seq 1 1000`;do ./queue-par-test-3; done"
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests)
 
 add_test(NAME queue-par-cbmc
