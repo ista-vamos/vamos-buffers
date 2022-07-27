@@ -4,6 +4,21 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/*
+ * c = (unsigned) char
+ * s = (unsigned) short
+ * i = (unsigned) int
+ * l = (unsigned) long
+ * f = float
+ * d = double
+ * p = pointer
+ * S = string (0-terminated array of chars)
+ * _ = skip argument
+ * E.g.: "i_c" means track first and third arguments that have 4 bytes
+ * and 1 byte size
+ * */
+
+
 typedef union _signature_operand {
     unsigned char c;
     unsigned short h;
