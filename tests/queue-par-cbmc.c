@@ -7,9 +7,9 @@ int buffer[4];
 
 void *reader(void *data) {
     shm_par_queue *q = (shm_par_queue*)data;
-    int n = 0;
-    while (n < 3) {
-        if (shm_par_queue_pop(q, &buffer[n+1])) {
+    int n = 1;
+    while (n < 4) {
+        if (shm_par_queue_pop(q, &buffer[n])) {
             ++n;
         }
     }
