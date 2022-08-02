@@ -67,6 +67,7 @@ target_link_libraries(shamon-lib PUBLIC shamon-parallel-queue
 		                 PUBLIC shamon-signature
 		                 PUBLIC shamon-shmbuf)
 
+add_subdirectory(monitors)
 add_subdirectory(experiments)
 add_subdirectory(tests)
 
