@@ -96,7 +96,9 @@ struct source_control *source_control_define_str(const char *str) {
     control->size = control_size;
 
     const size_t max_name_size = sizeof(((struct event_record*)NULL)->name) - 1;
+#ifndef NDEBUG
     const size_t max_sig_size = sizeof(((struct event_record*)NULL)->signature) - 1;
+#endif
 
     char name[max_name_size];
     char sig[max_name_size];
