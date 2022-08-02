@@ -59,7 +59,7 @@ void initialize_events() {
 
     dropped_kind = shm_mk_event_kind("dropped",
                                      sizeof(shm_event_dropped),
-                                     "dp");
+                                     "l");
     /* FIXME */
     assert(dropped_kind == 1 && "We assume that the 'dropped_kind' is 1 for now");
 
@@ -72,7 +72,6 @@ void deinitialize_events() {
         free(events_info[i].name);
     }
     free(events_info);
-
 }
 
 bool shm_event_is_dropped(shm_event *ev) {
