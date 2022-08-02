@@ -47,10 +47,10 @@ static int default_buffer_manager_thrd(void *data) {
     printf("Running fetch & autodrop for stream %s\n", stream->name);
 
     void *ev, *out;
-    while (shm_stream_is_ready(stream)) {
+    while (1) {
         ev = stream_fetch(stream, buffer);
         if (!ev) {
-            continue;
+            break;
         }
         if (filter && !filter(stream, ev)) {
             shm_stream_consume(stream, 1);
