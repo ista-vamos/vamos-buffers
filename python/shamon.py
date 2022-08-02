@@ -32,11 +32,12 @@ lib.buffer_partial_push.restype = c_void_p
 def buffer_partial_push(buff, addr, elem, size):
     return c_void_p(lib.buffer_partial_push(buff, addr, elem, c_size_t(size)))
 
-lib.buffer_partial_push_str.argtypes = [c_void_p, c_void_p, c_size_t, c_void_p]
+lib.buffer_partial_push_str.argtypes = [c_void_p, c_void_p, c_size_t, c_char_p]
 lib.buffer_partial_push_str.restype = c_void_p
 def buffer_partial_push_str(buff, addr, evid, s):
     return c_void_p(lib.buffer_partial_push_str(buff, addr,
-                                                evid, s))
+                                                evid,
+                                                c_char_p(s.encode('ascii'))))
 
 lib.buffer_finish_push.argtypes = [c_void_p]
 def buffer_finish_push(buff):
