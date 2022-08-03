@@ -1,13 +1,13 @@
+#include <assert.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
-#include <fcntl.h>
-#include <assert.h>
 
+#include "stream-drregex.h"
 #include "stream-funs.h"
+#include "stream-generic.h"
 #include "stream-regex.h"
 #include "stream-regexrw.h"
-#include "stream-drregex.h"
-#include "stream-generic.h"
 
 /*
 static const char *get_arg(const char *name, size_t len,
@@ -53,8 +53,7 @@ const char *get_next_part(const char *params, char out[256], char delim) {
         return NULL;
     }
 }
-static const char *get_params(const char *stream_name,
-                              int argc, char *argv[]) {
+static const char *get_params(const char *stream_name, int argc, char *argv[]) {
     size_t slen = strlen(stream_name);
     for (int i = 1; i < argc; ++i) {
         if (strncmp(stream_name, argv[i], slen) == 0) {
@@ -69,28 +68,30 @@ struct stream_rec {
     const char *descr;
 };
 
-static
-struct stream_rec avail_streams[] = {
-  {"calls", "connect to dynamorio libfuns.so and track calls of a function"},
-  {"files", "open given files and read from them (the files can be pipes)"},
-  {"regex", "read stdin and parse it using regexes"},
-  {"regexrw", "read stdin and parse it using regexes in a separate process"},
-  {"drregex", "read stdin and stdout and parse it using regexes (DynamoRIO based)"},
-  {"generic", "receive events based purely on the information from source"},
-  {NULL, NULL} /* to mark the end */
+static struct stream_rec avail_streams[] = {
+    {"calls", "connect to dynamorio libfuns.so and track calls of a function"},
+    {"files", "open given files and read from them (the files can be pipes)"},
+    {"regex", "read stdin and parse it using regexes"},
+    {"regexrw", "read stdin and parse it using regexes in a separate process"},
+    {"drregex",
+     "read stdin and stdout and parse it using regexes (DynamoRIO based)"},
+    {"generic", "receive events based purely on the information from source"},
+    {NULL, NULL} /* to mark the end */
 };
 
-shm_stream *shm_stream_create(const char *stream_name,
-                              int argc, char *argv[]) {
+shm_stream *shm_stream_create(const char *stream_name, int argc, char *argv[]) {
     const char *params = get_params(stream_name, argc, argv);
     if (!params) {
-        fprintf(stderr, "error: did not find spec for stream '%s'\n", stream_name);
+        fprintf(stderr, "error: did not find spec for stream '%s'\n",
+                stream_name);
         return NULL;
     }
 
     const char *next = find_next_part(params); /* skip the name */
     if (!next) {
-        fprintf(stderr, "error: no source specified for stream with name '%s'\n", stream_name);
+        fprintf(stderr,
+                "error: no source specified for stream with name '%s'\n",
+                stream_name);
         return NULL;
     }
 
@@ -103,62 +104,77 @@ shm_stream *shm_stream_create(const char *stream_name,
 
     if (strncmp(source, "calls", 6) == 0) {
         if (!next || *next == 0) {
-            fprintf(stderr, "error: source 'calls' needs the key to SHM as parameter\n");
+            fprintf(
+                stderr,
+                "error: source 'calls' needs the key to SHM as parameter\n");
             return NULL;
         }
         char key[256];
         next = get_next_part(next, key, ';');
         if (next) {
-            fprintf(stderr, "warning: source 'calls' takes only one parameter, ignoring others\n");
+            fprintf(stderr, "warning: source 'calls' takes only one parameter, "
+                            "ignoring others\n");
             return NULL;
         }
 
         return shm_create_funs_stream(key);
     } else if (strncmp(source, "regex", 6) == 0) {
         if (!next || *next == 0) {
-            fprintf(stderr, "error: source 'regex' needs the key to SHM as parameter\n");
+            fprintf(
+                stderr,
+                "error: source 'regex' needs the key to SHM as parameter\n");
             return NULL;
         }
         char key[256];
         next = get_next_part(next, key, ';');
         if (next) {
-            fprintf(stderr, "warning: source 'regex' ignoring further parameter (FOR NOW)\n");
+            fprintf(stderr, "warning: source 'regex' ignoring further "
+                            "parameter (FOR NOW)\n");
         }
 
         return shm_create_sregex_stream(key);
     } else if (strncmp(source, "regexrw", 8) == 0) {
         if (!next || *next == 0) {
-            fprintf(stderr, "error: source 'regexrw' needs the key to SHM as parameter\n");
+            fprintf(
+                stderr,
+                "error: source 'regexrw' needs the key to SHM as parameter\n");
             return NULL;
         }
         char key[256];
         next = get_next_part(next, key, ';');
         if (next) {
-            fprintf(stderr, "warning: source 'regexrw' ignoring further parameter (FOR NOW)\n");
+            fprintf(stderr, "warning: source 'regexrw' ignoring further "
+                            "parameter (FOR NOW)\n");
         }
 
         return shm_create_sregexrw_stream(key);
     } else if (strncmp(source, "drregex", 8) == 0) {
         if (!next || *next == 0) {
-            fprintf(stderr, "error: source 'drregex' needs the key to SHM as parameter\n");
+            fprintf(
+                stderr,
+                "error: source 'drregex' needs the key to SHM as parameter\n");
             return NULL;
         }
         char key[256];
         next = get_next_part(next, key, ';');
         if (next) {
-            fprintf(stderr, "warning: source 'drregex' ignoring further parameter (FOR NOW)\n");
+            fprintf(stderr, "warning: source 'drregex' ignoring further "
+                            "parameter (FOR NOW)\n");
         }
 
         return shm_create_drregex_stream(key);
-    }  else if (strncmp(source, "generic", 8) == 0) {
+    } else if (strncmp(source, "generic", 8) == 0) {
         if (!next || *next == 0) {
-            fprintf(stderr, "error: source 'generic' needs the key to SHM as parameter\n");
+            fprintf(
+                stderr,
+                "error: source 'generic' needs the key to SHM as parameter\n");
             return NULL;
         }
         char key[256];
         next = get_next_part(next, key, ';');
         if (next) {
-            fprintf(stderr, "warning: source 'generic' ignoring further parameter (FOR NOW)\n");
+            fprintf(stderr, "warning: source 'generic' ignoring further "
+                            "parameter (FOR NOW)\n");
         }
 
         return shm_create_generic_stream(key);
@@ -210,22 +226,21 @@ shm_stream *shm_stream_create(const char *stream_name,
 }
 
 /* This is something that most of the streams do, so have it as a helper fun */
-size_t stream_mk_event_kinds(const char *stream_name, struct buffer *shmbuffer, size_t *max_ev_size) {
+size_t stream_mk_event_kinds(const char *stream_name, struct buffer *shmbuffer,
+                             size_t *max_ev_size) {
     size_t evs_num;
     size_t ev_size, max_size = 0;
     struct event_record *events = buffer_get_avail_events(shmbuffer, &evs_num);
     for (size_t i = 0; i < evs_num; ++i) {
         ev_size = events[i].size;
-        events[i].kind = shm_mk_event_kind(events[i].name,
-                                           ev_size,
+        events[i].kind = shm_mk_event_kind(events[i].name, ev_size,
                                            (const char *)events[i].signature);
         if (ev_size > max_size)
             max_size = ev_size;
 
         printf("[%s] event '%s', kind: '%lu', size: '%lu', signature: '%s'\n",
-               stream_name,
-               events[i].name, events[i].kind,
-               events[i].size, events[i].signature);
+               stream_name, events[i].name, events[i].kind, events[i].size,
+               events[i].signature);
     }
 
     if (max_ev_size)

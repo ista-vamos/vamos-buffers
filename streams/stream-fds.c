@@ -1,14 +1,13 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <time.h>
 #include <assert.h>
 #include <poll.h>
+#include <stdio.h>
+#include <time.h>
+#include <unistd.h>
 
-#include "stream-fds.h"
 #include "arbiter.h"
+#include "stream-fds.h"
 
-static size_t read_events(shm_stream_fds *ss,
-                          shm_arbiter_buffer *buffer) {
+static size_t read_events(shm_stream_fds *ss, shm_arbiter_buffer *buffer) {
     size_t read_ev = 0;
     size_t remove_num = 0;
     shm_event_fd_in ev;
@@ -32,7 +31,7 @@ static size_t read_events(shm_stream_fds *ss,
             } else {
                 assert(len > 0);
                 ev.time = clock();
-                //ev.base.stream = (shm_stream *) ss;
+                // ev.base.stream = (shm_stream *) ss;
                 ev.base.kind = ss->ev_kind_in;
                 ev.base.id = shm_stream_get_next_id((shm_stream *)ss);
                 ev.fd = pfd->fd;
@@ -76,7 +75,7 @@ static size_t read_events(shm_stream_fds *ss,
 
 static size_t fds_buffer_events(shm_stream *stream,
                                 shm_arbiter_buffer *buffer) {
-    shm_stream_fds *fs = (shm_stream_fds *) stream;
+    shm_stream_fds *fs = (shm_stream_fds *)stream;
 
     int ret = poll(fs->fds, fs->fds_num, 0);
     if (ret == -1) {
@@ -92,30 +91,29 @@ static bool fds_is_ready(shm_stream *stream) {
     return ((shm_stream_fds *)stream)->fds_num > 0;
 }
 
-
 shm_stream *shm_create_fds_stream() {
     shm_stream_fds *ss = malloc(sizeof *ss);
     shm_stream_init((shm_stream *)ss, sizeof(shm_event_fd_in),
-                     fds_buffer_events, NULL, fds_is_ready,
-                     "fds-stream");
-    ss->ev_kind_in = shm_mk_event_kind("fd-in", (shm_stream*)ss,
-                                       sizeof(shm_event_fd_in),
-                                       NULL, NULL);
+                    fds_buffer_events, NULL, fds_is_ready, "fds-stream");
+    ss->ev_kind_in = shm_mk_event_kind("fd-in", (shm_stream *)ss,
+                                       sizeof(shm_event_fd_in), NULL, NULL);
     ss->fds = NULL;
     ss->fds_size = 0;
     ss->fds_num = 0;
     ss->fds_buffer = NULL;
     shm_queue_init(&ss->pending_events, 32, sizeof(shm_event_fd_in));
 
-    return (shm_stream *) ss;
+    return (shm_stream *)ss;
 }
 
 void shm_stream_fds_add_fd(shm_stream_fds *stream, int fd) {
     size_t idx = stream->fds_num++;
     if (idx >= stream->fds_size) {
         stream->fds_size += 8;
-        stream->fds = realloc(stream->fds, sizeof(struct pollfd) * stream->fds_size);
-        stream->fds_buffer = realloc(stream->fds_buffer, sizeof(shm_string) * stream->fds_size);
+        stream->fds =
+            realloc(stream->fds, sizeof(struct pollfd) * stream->fds_size);
+        stream->fds_buffer =
+            realloc(stream->fds_buffer, sizeof(shm_string) * stream->fds_size);
     }
     assert(stream->fds_num < stream->fds_size);
 
