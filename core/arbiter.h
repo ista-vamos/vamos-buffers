@@ -28,7 +28,7 @@ void shm_arbiter_buffer_free(shm_arbiter_buffer *buffer);
 void shm_arbiter_buffer_destroy(shm_arbiter_buffer *buffer);
 void shm_arbiter_buffer_set_active(shm_arbiter_buffer *buffer, bool val);
 size_t shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q);
-shm_stream * shm_arbiter_buffer_stream(shm_arbiter_buffer *buffer);
+shm_stream *shm_arbiter_buffer_stream(shm_arbiter_buffer *buffer);
 bool shm_arbiter_buffer_active(shm_arbiter_buffer *buffer);
 size_t shm_arbiter_buffer_size(shm_arbiter_buffer *buffer);
 size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *buffer);
@@ -36,8 +36,10 @@ size_t shm_arbiter_buffer_free_space(shm_arbiter_buffer *buffer);
 size_t shm_arbiter_buffer_sizeof(void);
 
 /* writer's API */
-void shm_arbiter_buffer_push(shm_arbiter_buffer *q, const void *elem, size_t size);
-void shm_arbiter_buffer_push_k(shm_arbiter_buffer *q, const void *elems, size_t size);
+void shm_arbiter_buffer_push(shm_arbiter_buffer *q, const void *elem,
+                             size_t size);
+void shm_arbiter_buffer_push_k(shm_arbiter_buffer *q, const void *elems,
+                               size_t size);
 /* cannot be mixed with push/push_k */
 
 void *shm_arbiter_buffer_write_ptr(shm_arbiter_buffer *q);
@@ -49,18 +51,16 @@ void shm_arbiter_buffer_get_str(shm_arbiter_buffer *q, size_t elem);
  * at the time */
 shm_event *shm_arbiter_buffer_top(shm_arbiter_buffer *buffer);
 size_t shm_arbiter_buffer_peek(shm_arbiter_buffer *buffer, size_t n,
-                               void **data1, size_t *size1,
-                               void **data2, size_t *size2);
+                               void **data1, size_t *size1, void **data2,
+                               size_t *size2);
 /* peek 1 event */
 size_t shm_arbiter_buffer_peek1(shm_arbiter_buffer *buffer, void **data);
 size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t n);
 bool shm_arbiter_buffer_pop(shm_arbiter_buffer *q, void *buff);
 
-void *stream_fetch(shm_stream *stream,
-                   shm_arbiter_buffer *buffer);
+void *stream_fetch(shm_stream *stream, shm_arbiter_buffer *buffer);
 
-void *stream_filter_fetch(shm_stream *stream,
-                          shm_arbiter_buffer *buffer,
+void *stream_filter_fetch(shm_stream *stream, shm_arbiter_buffer *buffer,
                           shm_stream_filter_fn filter);
 
 size_t shm_arbiter_buffer_dropped_num(shm_arbiter_buffer *buffer);
@@ -68,8 +68,7 @@ size_t shm_arbiter_buffer_dropped_times(shm_arbiter_buffer *buffer);
 size_t shm_arbiter_buffer_written_num(shm_arbiter_buffer *buffer);
 
 void shm_arbiter_buffer_notify_dropped(shm_arbiter_buffer *buffer,
-                                       uint64_t begin_id,
-                                       uint64_t end_id);
+                                       uint64_t begin_id, uint64_t end_id);
 
 void shm_arbiter_buffer_dump_stats(shm_arbiter_buffer *buffer);
 #endif /* SHAMON_ARBITER_H_ */
