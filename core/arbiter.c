@@ -499,6 +499,8 @@ void *stream_filter_fetch(shm_stream *stream,
                "IDs are inconsistent");
 
         if (filter && !filter(stream, ev)) {
+            /* consume the filtered event */
+            shm_stream_consume(stream, 1);
             continue;
         }
 
