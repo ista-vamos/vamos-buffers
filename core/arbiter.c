@@ -356,6 +356,32 @@ static void push_dropped_event(shm_stream *stream, shm_arbiter_buffer *buffer,
     */
 }
 
+void *handle_stream_end(shm_stream *stream, shm_arbiter_buffer *buffer,
+                        size_t last_ev_id) {
+    uint64_t sleep_time = SLEEP_TIME_NS_INIT;
+    while (buffer->dropped_num > 0) {
+        assert(DROP_SPACE_THRESHOLD < shm_arbiter_buffer_capacity(buffer));
+        if (shm_arbiter_buffer_free_space(buffer) > DROP_SPACE_THRESHOLD) {
+            /* the end id may not be precise, but we need just the upper
+             * bound */
+            push_dropped_event(stream, buffer, last_ev_id - 1);
+            assert(shm_arbiter_buffer_free_space(buffer) > 0);
+#ifdef DUMP_STATS
+            buffer->last_was_drop = 1;
+#endif
+            buffer->dropped_num = 0;
+        } else {
+            sleep_ns(sleep_time);
+            if (sleep_time < SLEEP_TIME_NS_THRES)
+                sleep_time *= 10;
+            assert(buffer->dropped_num > 0);
+        }
+    }
+    assert(!shm_stream_is_ready(stream));
+    assert(buffer->dropped_num == 0);
+    return NULL; /* stream ended */
+}
+
 /* wait for an event on the 'stream' */
 void *stream_fetch(shm_stream *stream, shm_arbiter_buffer *buffer) {
     void *ev;
@@ -363,30 +389,7 @@ void *stream_fetch(shm_stream *stream, shm_arbiter_buffer *buffer) {
     while (1) {
         ev = get_event(stream);
         if (!ev) {
-            uint64_t sleep_time = SLEEP_TIME_NS_INIT;
-            while (buffer->dropped_num > 0) {
-                assert(DROP_SPACE_THRESHOLD <
-                       shm_arbiter_buffer_capacity(buffer));
-                if (shm_arbiter_buffer_free_space(buffer) >
-                    DROP_SPACE_THRESHOLD) {
-                    /* the end id may not be precise, but we need just the upper
-                     * bound */
-                    push_dropped_event(stream, buffer, last_ev_id - 1);
-                    assert(shm_arbiter_buffer_free_space(buffer) > 0);
-#ifdef DUMP_STATS
-                    buffer->last_was_drop = 1;
-#endif
-                    buffer->dropped_num = 0;
-                } else {
-                    sleep_ns(sleep_time);
-                    if (sleep_time < SLEEP_TIME_NS_THRES)
-                        sleep_time *= 10;
-                    assert(buffer->dropped_num > 0);
-                }
-            }
-            assert(!shm_stream_is_ready(stream));
-            assert(buffer->dropped_num == 0);
-            return NULL; /* stream ended */
+            return handle_stream_end(stream, buffer, last_ev_id);
         }
 
         assert(ev && "Dont have event");
@@ -467,30 +470,7 @@ void *stream_filter_fetch(shm_stream *stream, shm_arbiter_buffer *buffer,
     while (1) {
         ev = get_event(stream);
         if (!ev) {
-            uint64_t sleep_time = SLEEP_TIME_NS_INIT;
-            while (buffer->dropped_num > 0) {
-                assert(DROP_SPACE_THRESHOLD <
-                       shm_arbiter_buffer_capacity(buffer));
-                if (shm_arbiter_buffer_free_space(buffer) >
-                    DROP_SPACE_THRESHOLD) {
-                    /* the end id may not be precise, but we need just the upper
-                     * bound */
-                    push_dropped_event(stream, buffer, last_ev_id - 1);
-                    assert(shm_arbiter_buffer_free_space(buffer) > 0);
-#ifdef DUMP_STATS
-                    buffer->last_was_drop = 1;
-#endif
-                    buffer->dropped_num = 0;
-                } else {
-                    sleep_ns(sleep_time);
-                    if (sleep_time < SLEEP_TIME_NS_THRES)
-                        sleep_time *= 10;
-                    assert(buffer->dropped_num > 0);
-                }
-            }
-            assert(!shm_stream_is_ready(stream));
-            assert(buffer->dropped_num == 0);
-            return NULL; /* stream ended */
+            return handle_stream_end(stream, buffer, last_ev_id);
         }
 
         assert(ev && "Dont have event");
