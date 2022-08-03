@@ -1,11 +1,11 @@
+#include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <assert.h>
 
-#include "client.h"
-#include "utils.h"
 #include "buffer.h"
+#include "client.h"
 #include "shm.h"
+#include "utils.h"
 
 #define SLEEP_TIME 1000
 void buffer_wait_for_monitor(struct buffer *buff) {
@@ -16,4 +16,3 @@ void buffer_wait_for_monitor(struct buffer *buff) {
      * to move to monitoring code */
     sleep_ms(SLEEP_TIME);
 }
-

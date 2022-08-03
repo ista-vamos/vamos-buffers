@@ -1,20 +1,18 @@
 #ifndef SHAMON_SHM_BUFFER_H
 #define SHAMON_SHM_BUFFER_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
 
 struct source_control;
 struct event_record;
 struct buffer;
 
-struct buffer *create_shared_buffer(const char *key,
-                                    size_t elem_size,
+struct buffer *create_shared_buffer(const char *key, size_t elem_size,
                                     const struct source_control *control);
 struct buffer *get_shared_buffer(const char *key);
 struct event_record *buffer_get_avail_events(struct buffer *, size_t *);
-
 
 void release_shared_buffer(struct buffer *);
 void destroy_shared_buffer(struct buffer *);
@@ -58,11 +56,10 @@ bool buffer_finish_push(struct buffer *buff);
 struct aux_buff_ptr {
     uint32_t buffer_id;
     uint32_t offset;
-} __attribute__((packed,aligned(64)));
+} __attribute__((packed, aligned(64)));
 
 void buffer_set_last_processed_id(struct buffer *buff, uint64_t id);
-void buffer_notify_dropped(struct buffer *buffer,
-                           uint64_t begin_id,
+void buffer_notify_dropped(struct buffer *buffer, uint64_t begin_id,
                            uint64_t end_id);
 
 #endif /* SHAMON_SHM_BUFFER_H */
