@@ -301,8 +301,6 @@ static void *get_event(shm_stream *stream) {
         /* wait for the event */
         ev = shm_stream_read_events(stream, &num);
         if (ev) {
-            sleep_time = SLEEP_TIME_NS_INIT;
-            spinned = 0;
 #ifdef DUMP_STATS
             ++stream->read_events;
 #endif
