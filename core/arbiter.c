@@ -288,6 +288,8 @@ size_t shm_arbiter_buffer_peek1(shm_arbiter_buffer *buffer, void **data) {
 #define BUSY_WAIT_TIMES 1000
 #define SLEEP_TIME_NS_THRES 1000000
 
+/* get an event from the stream, block until there is some and return it
+ * or return NULL if the stream ended */
 static void *get_event(shm_stream *stream) {
     /* TODO: if there is no filtering and modifications, we can push multiple
        events forward. if there are filtering and modifications, we could have
