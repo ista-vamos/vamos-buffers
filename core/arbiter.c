@@ -397,6 +397,20 @@ static inline void send_dropped_event(shm_stream *stream,
     assert(shm_arbiter_buffer_free_space(buffer) > 0);
 }
 
+static inline void start_dropping(shm_stream *stream,
+                                  shm_arbiter_buffer *buffer,
+                                  size_t last_ev_id) {
+    buffer->drop_begin_id = last_ev_id;
+    assert(buffer->dropped_num == 0);
+    ++buffer->dropped_num;
+    shm_stream_consume(stream, 1);
+    /*
+     printf("FETCH: start dropping { kind = %lu, id = %lu}\n",
+            ((shm_event*)ev)->kind,
+            ((shm_event*)ev)->id);
+     */
+}
+
 /* wait for an event on the 'stream' */
 void *stream_fetch(shm_stream *stream, shm_arbiter_buffer *buffer) {
     void *ev;
@@ -442,15 +456,7 @@ void *stream_fetch(shm_stream *stream, shm_arbiter_buffer *buffer) {
 
         assert(buffer->dropped_num == 0);
         if (shm_arbiter_buffer_free_space(buffer) == 0) {
-            buffer->drop_begin_id = last_ev_id;
-            assert(buffer->dropped_num == 0);
-            ++buffer->dropped_num;
-            shm_stream_consume(stream, 1);
-            /*
-            printf("FETCH: start dropping { kind = %lu, id = %lu}\n",
-                   ((shm_event*)ev)->kind,
-                   ((shm_event*)ev)->id);
-                */
+            start_dropping(stream, buffer, last_ev_id);
             continue;
         }
 
@@ -516,15 +522,7 @@ void *stream_filter_fetch(shm_stream *stream, shm_arbiter_buffer *buffer,
 
         assert(buffer->dropped_num == 0);
         if (shm_arbiter_buffer_free_space(buffer) == 0) {
-            buffer->drop_begin_id = last_ev_id;
-            assert(buffer->dropped_num == 0);
-            ++buffer->dropped_num;
-            shm_stream_consume(stream, 1);
-            /*
-            printf("FETCH: start dropping { kind = %lu, id = %lu}\n",
-                   ((shm_event*)ev)->kind,
-                   ((shm_event*)ev)->id);
-                */
+            start_dropping(stream, buffer, last_ev_id);
             continue;
         }
 
