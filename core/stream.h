@@ -19,7 +19,7 @@ typedef struct _shm_stream {
     uint64_t id;
     const char *name;
     size_t event_size;
-    struct buffer *incoming_events;
+    struct buffer *incoming_events_buffer;
     /* callbacks */
     shm_stream_is_ready_fn is_ready;
     shm_stream_filter_fn filter;
@@ -38,7 +38,7 @@ typedef struct _shm_stream {
 #endif
 } shm_stream;
 
-void shm_stream_init(shm_stream *stream, struct buffer *incoming_events,
+void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
                      size_t event_size, shm_stream_is_ready_fn is_ready,
                      shm_stream_filter_fn filter, shm_stream_alter_fn alter,
                      shm_stream_destroy_fn destroy, const char *const name);
