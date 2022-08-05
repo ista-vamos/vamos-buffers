@@ -60,7 +60,6 @@ size_t shm_stream_buffer_capacity(shm_stream *s) {
     return buffer_capacity(s->incoming_events);
 }
 
-
 /* FIXME: no longer related to stream */
 void shm_stream_get_dropped_event(shm_stream *stream,
                                   shm_event_dropped *dropped_ev,
