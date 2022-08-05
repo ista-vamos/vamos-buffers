@@ -50,6 +50,17 @@ struct event_record *shm_stream_get_avail_events(shm_stream *s, size_t *sz) {
     return buffer_get_avail_events(s->incoming_events, sz);
 }
 
+/* the number of elements in the (shared memory) buffer of the stream */
+size_t shm_stream_buffer_size(shm_stream *s) {
+    return buffer_size(s->incoming_events);
+}
+
+/* the capacity the (shared memory) buffer of the stream */
+size_t shm_stream_buffer_capacity(shm_stream *s) {
+    return buffer_capacity(s->incoming_events);
+}
+
+
 /* FIXME: no longer related to stream */
 void shm_stream_get_dropped_event(shm_stream *stream,
                                   shm_event_dropped *dropped_ev,

@@ -52,6 +52,11 @@ size_t shm_stream_event_size(shm_stream *);
 size_t shm_stream_id(shm_stream *);
 struct event_record *shm_stream_get_avail_events(shm_stream *, size_t *);
 
+/* the number of elements in the (shared memory) buffer of the stream */
+size_t shm_stream_buffer_size(shm_stream *);
+/* the capacity the (shared memory) buffer of the stream */
+size_t shm_stream_buffer_capacity(shm_stream *);
+
 void *shm_stream_read_events(shm_stream *, size_t *);
 bool shm_stream_consume(shm_stream *stream, size_t num);
 const char *shm_stream_get_str(shm_stream *stream, uint64_t elem);
