@@ -15,7 +15,6 @@ struct source_control {
     struct event_record events[];
 };
 
-
 size_t source_control_get_records_num(struct source_control *sc);
 
 struct source_control *source_control_define(size_t ev_nums, ...);
@@ -28,4 +27,4 @@ struct source_control *source_control_define_str(const char *str);
 
 size_t source_control_max_event_size(struct source_control *control);
 
-#endif  /* SHAMON_SOURCE_H_ */
+#endif /* SHAMON_SOURCE_H_ */

@@ -30,22 +30,18 @@ typedef struct _shm_stream {
     size_t last_event_id;
 #endif
 #ifdef DUMP_STATS
-   size_t read_events;
-   size_t fetched_events;
-   size_t consumed_events;
-   size_t dropped_events;
-   size_t slept_waiting_for_ev;
+    size_t read_events;
+    size_t fetched_events;
+    size_t consumed_events;
+    size_t dropped_events;
+    size_t slept_waiting_for_ev;
 #endif
 } shm_stream;
 
-void shm_stream_init(shm_stream *stream,
-                     struct buffer *incoming_events,
-                     size_t event_size,
-                     shm_stream_is_ready_fn is_ready,
-                     shm_stream_filter_fn filter,
-                     shm_stream_alter_fn alter,
-                     shm_stream_destroy_fn destroy,
-                     const char * const name);
+void shm_stream_init(shm_stream *stream, struct buffer *incoming_events,
+                     size_t event_size, shm_stream_is_ready_fn is_ready,
+                     shm_stream_filter_fn filter, shm_stream_alter_fn alter,
+                     shm_stream_destroy_fn destroy, const char *const name);
 
 const char *shm_stream_get_name(shm_stream *);
 size_t shm_stream_event_size(shm_stream *);
@@ -67,14 +63,12 @@ void shm_stream_notify_last_processed_id(shm_stream *stream, shm_eventid id);
  * Fill the 'dropped' event for the given stream
  */
 void shm_stream_get_dropped_event(shm_stream *stream,
-                                  shm_event_dropped *dropped_ev,
-                                  size_t id,
+                                  shm_event_dropped *dropped_ev, size_t id,
                                   uint64_t n);
 
 bool shm_stream_is_ready(shm_stream *);
 
-void shm_stream_notify_dropped(shm_stream *stream,
-                               uint64_t begin_id,
+void shm_stream_notify_dropped(shm_stream *stream, uint64_t begin_id,
                                uint64_t end_id);
 void shm_stream_destroy(shm_stream *stream);
 

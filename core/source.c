@@ -1,13 +1,14 @@
 #include <assert.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
 
-#include "source.h"
 #include "signatures.h"
+#include "source.h"
 
 size_t source_control_get_records_num(struct source_control *sc) {
-    return ((sc->size - sizeof(struct source_control))/sizeof(struct event_record));
+    return ((sc->size - sizeof(struct source_control)) /
+            sizeof(struct event_record));
 }
 
 size_t source_control_max_event_size(struct source_control *control) {
@@ -20,7 +21,8 @@ size_t source_control_max_event_size(struct source_control *control) {
     return max_size;
 }
 
-static inline void init_record(struct event_record *ev, const char *name, const char *sig) {
+static inline void init_record(struct event_record *ev, const char *name,
+                               const char *sig) {
     const size_t max_name_size = sizeof(ev->name) - 1;
     const size_t max_sig_size = sizeof(ev->signature) - 1;
 
@@ -29,15 +31,17 @@ static inline void init_record(struct event_record *ev, const char *name, const 
     ev->name[max_name_size] = '\0';
 
     assert(strlen(sig) <= max_sig_size);
-    strncpy((char*)ev->signature, sig, max_sig_size);
+    strncpy((char *)ev->signature, sig, max_sig_size);
     ev->signature[max_sig_size] = '\0';
 
-    ev->size = signature_get_size((const unsigned char *)sig) + sizeof(shm_event);
+    ev->size =
+        signature_get_size((const unsigned char *)sig) + sizeof(shm_event);
     ev->kind = 0;
 }
 
 struct source_control *source_control_define(size_t ev_nums, ...) {
-    size_t control_size = sizeof(size_t) + ev_nums*sizeof(struct event_record);
+    size_t control_size =
+        sizeof(size_t) + ev_nums * sizeof(struct event_record);
     struct source_control *control = malloc(control_size);
     assert(control);
 
@@ -57,10 +61,11 @@ struct source_control *source_control_define(size_t ev_nums, ...) {
     return control;
 }
 
-struct source_control *source_control_define_pairwise(size_t ev_nums,
-                                                      const char *names[],
-                                                      const char *signatures[]) {
-    size_t control_size = sizeof(size_t) + ev_nums*sizeof(struct event_record);
+struct source_control *
+source_control_define_pairwise(size_t ev_nums, const char *names[],
+                               const char *signatures[]) {
+    size_t control_size =
+        sizeof(size_t) + ev_nums * sizeof(struct event_record);
     struct source_control *control = malloc(control_size);
     assert(control);
 
@@ -68,7 +73,6 @@ struct source_control *source_control_define_pairwise(size_t ev_nums,
 
     for (size_t i = 0; i < ev_nums; ++i) {
         init_record(control->events + i, names[i], signatures[i]);
-
     }
 
     return control;
@@ -89,15 +93,18 @@ struct source_control *source_control_define_str(const char *str) {
         return NULL;
     }
 
-    size_t control_size = sizeof(size_t) + ev_nums*sizeof(struct event_record);
+    size_t control_size =
+        sizeof(size_t) + ev_nums * sizeof(struct event_record);
     struct source_control *control = malloc(control_size);
     assert(control);
 
     control->size = control_size;
 
-    const size_t max_name_size = sizeof(((struct event_record*)NULL)->name) - 1;
+    const size_t max_name_size =
+        sizeof(((struct event_record *)NULL)->name) - 1;
 #ifndef NDEBUG
-    const size_t max_sig_size = sizeof(((struct event_record*)NULL)->signature) - 1;
+    const size_t max_sig_size =
+        sizeof(((struct event_record *)NULL)->signature) - 1;
 #endif
 
     char name[max_name_size];
@@ -114,9 +121,9 @@ struct source_control *source_control_define_str(const char *str) {
     s_start = n_end + 1;
     s_end = strchr(s_start, ',');
     if (!s_end) {
-	if (ev_nums > 1)
+        if (ev_nums > 1)
             goto err;
-	s_end = strchr(s_start, '\0');
+        s_end = strchr(s_start, '\0');
     }
     while (i < ev_nums) {
         assert((size_t)(n_end - n_start) <= max_name_size);
@@ -130,10 +137,10 @@ struct source_control *source_control_define_str(const char *str) {
 
         ++i;
 
-	if (*s_end == '\0')
+        if (*s_end == '\0')
             break; /* we're done */
         n_start = s_end + 1;
-	if (*n_start == '\0')
+        if (*n_start == '\0')
             break; /* we're done */
         n_end = strchr(n_start, ':');
         if (!n_end)

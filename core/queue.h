@@ -1,8 +1,8 @@
 #ifndef SHAMON_QUEUE_H
 #define SHAMON_QUEUE_H
 
-#include <unistd.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 typedef struct _shm_queue {
     size_t size;

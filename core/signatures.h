@@ -18,7 +18,6 @@
  * and 1 byte size
  * */
 
-
 typedef union _signature_operand {
     unsigned char c;
     unsigned short h;
