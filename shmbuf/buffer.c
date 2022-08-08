@@ -256,6 +256,19 @@ struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
     return buff;
 }
 
+void release_local_buffer(struct buffer *buff) {
+    free(buff->key);
+
+    size_t vecsize = VEC_SIZE(buff->aux_buffers);
+    for (size_t i = 0; i < vecsize; ++i) {
+        struct aux_buffer *ab = buff->aux_buffers[i];
+        aux_buffer_release(ab);
+    }
+    VEC_DESTROY(buff->aux_buffers);
+
+    free(buff);
+}
+
 static struct source_control *get_shared_control_buffer(const char *buff_key);
 
 struct buffer *get_shared_buffer(const char *key) {

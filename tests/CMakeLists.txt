@@ -1,6 +1,8 @@
 # use debug info in tests
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
+add_subdirectory(bench)
+
 enable_testing()
 
 include(ProcessorCount)
@@ -77,4 +79,3 @@ target_include_directories(fetch-test-3 PRIVATE ${CMAKE_SOURCE_DIR})
 add_test(NAME fetch-test-3
          COMMAND sh -c -e "for i in `seq 1 20`;do ./fetch-test-3; done"
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests)
-
