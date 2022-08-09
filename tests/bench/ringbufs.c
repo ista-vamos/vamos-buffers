@@ -6,6 +6,7 @@
 #include "core/source.h"
 #include "shmbuf/buffer.h"
 #include "core/par_queue.h"
+#include "core/queue_spsc.h"
 
 #ifdef RMIND_RINGBUF
 #include "ringbuf.h"
@@ -126,6 +127,45 @@ static void run_par_queue_push_pop_st() {
     shm_par_queue_destroy(&q);
 }
 
+static void run_queue_spsc_push_pop_st() {
+    shm_queue_spsc q;
+    shm_queue_spsc_init(&q, N);
+
+    int *buff = malloc(sizeof(int)*N);
+    assert(buff);
+
+    size_t off;
+    struct timespec start, mid, end;
+    double elapsed = 0;
+
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+    for (int i = 0; i < N; ++i) {
+        shm_queue_spsc_write_offset(&q, &off);
+        assert(off == (unsigned)i);
+        buff[off] = i;
+        memcpy(buff + off, &i, sizeof(int));
+        shm_queue_spsc_write_finish(&q);
+    }
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &mid);
+
+    elapsed += report_time("[queue-spsc] single-threaded, push", &start, &mid);
+
+    int j;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &mid);
+    for (int i = 0; i < N; ++i) {
+        shm_queue_spsc_read_offset(&q, &off);
+        assert(off == (unsigned)i);
+        memcpy(&j, buff + i, sizeof(int));
+        shm_queue_spsc_consume(&q, 1);
+    }
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+
+    elapsed += report_time("[queue-spsc], single-threaded, pop", &mid, &end);
+    printf("\033[34m[queue-spsc], single-threaded, push/pop: %lf seconds.\033[0m\n", elapsed);
+
+    free(buff);
+}
+
 #ifdef RMIND_RINGBUF
 static void run_rmind_ringbuf_push_pop_st() {
     size_t ringbuf_obj_size;
@@ -181,6 +221,8 @@ int main(void) {
     run_local_shmbuf_push_pop_st();
     puts("----------");
     run_par_queue_push_pop_st();
+    puts("----------");
+    run_queue_spsc_push_pop_st();
 #ifdef RMIND_RINGBUF
     puts("----------");
     run_rmind_ringbuf_push_pop_st();

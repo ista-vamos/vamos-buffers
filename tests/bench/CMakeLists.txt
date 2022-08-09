@@ -2,7 +2,7 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
 add_executable(ringbufs-bench ringbufs.c)
-target_link_libraries(ringbufs-bench shamon-shmbuf shamon-parallel-queue)
+target_link_libraries(ringbufs-bench shamon-shmbuf shamon-parallel-queue shamon-queue-spsc)
 target_include_directories(ringbufs-bench PRIVATE ${CMAKE_SOURCE_DIR}
 					  PRIVATE ${CMAKE_SOURCE_DIR}/core)
 
