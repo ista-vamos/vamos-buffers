@@ -14,6 +14,7 @@
 
 typedef struct _shm_monitor_buffer {
     shm_par_queue buffer; // the buffer itself
+    bool finished;        // the arbiter has finished?
 } shm_monitor_buffer;
 
 size_t shm_monitor_buffer_sizeof(void) {
@@ -34,6 +35,11 @@ size_t shm_monitor_buffer_capacity(shm_monitor_buffer *buffer) {
 void shm_monitor_buffer_init(shm_monitor_buffer *buffer, size_t event_size,
                              size_t capacity) {
     shm_par_queue_init(&buffer->buffer, capacity, event_size);
+    buffer->finished = false;
+}
+
+void shm_monitor_set_finished(shm_monitor_buffer *buffer) {
+    buffer->finished = true;
 }
 
 shm_monitor_buffer *shm_monitor_buffer_create(size_t event_size,
@@ -73,6 +79,8 @@ size_t shm_monitor_buffer_peek1(shm_monitor_buffer *buffer, void **data) {
 }
 
 void *shm_monitor_buffer_write_ptr(shm_monitor_buffer *q) {
+    assert(!q->finished && "Asking a pointer from a finished buffer");
+
     void *ptr = shm_par_queue_write_ptr(&q->buffer);
     if (ptr)
         return ptr;
@@ -89,6 +97,7 @@ void *shm_monitor_buffer_write_ptr(shm_monitor_buffer *q) {
              * of spinning/sleeping? */
         }
 
+        assert(!q->finished && "Asking a pointer from a finished buffer");
         ptr = shm_par_queue_write_ptr(&q->buffer);
     } while (!ptr);
 
@@ -97,12 +106,13 @@ void *shm_monitor_buffer_write_ptr(shm_monitor_buffer *q) {
 }
 
 void shm_monitor_buffer_write_finish(shm_monitor_buffer *q) {
+    assert(!q->finished && "Asking a pointer from a finished buffer");
     shm_par_queue_write_finish(&q->buffer);
 }
 
 /* get an event from the stream, block until there is some and return it
  * or return NULL if the stream ended */
-void *fetch_arbiter_stream(shm_monitor_buffer *buffer, uint64_t timeout) {
+void *fetch_arbiter_stream(shm_monitor_buffer *buffer) {
     size_t sleep_time = SLEEP_TIME_NS_INIT;
     size_t spinned = 0;
     void *ev;
@@ -114,6 +124,10 @@ void *fetch_arbiter_stream(shm_monitor_buffer *buffer, uint64_t timeout) {
             return ev;
         }
 
+        if (buffer->finished) {
+            return NULL;
+        }
+
         /* before sleeping, try just to busy wait some time */
         if (spinned < BUSY_WAIT_TIMES) {
             ++spinned;
@@ -123,12 +137,6 @@ void *fetch_arbiter_stream(shm_monitor_buffer *buffer, uint64_t timeout) {
         /* no event read, sleep a while */
         if (sleep_time < SLEEP_TIME_NS_THRES) {
             sleep_time *= 10;
-        }
-
-        if (timeout > 0) {
-            if (timeout < sleep_time)
-                return NULL;
-            timeout -= sleep_time;
         }
 
         sleep_ns(sleep_time);

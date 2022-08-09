@@ -17,6 +17,8 @@ void shm_monitor_buffer_init(shm_monitor_buffer *buffer, size_t event_size,
 shm_monitor_buffer *shm_monitor_buffer_create(size_t event_size,
                                               size_t capacity);
 
+void shm_monitor_set_finished(shm_monitor_buffer *buffer);
+
 void shm_monitor_buffer_free(shm_monitor_buffer *buffer);
 void shm_monitor_buffer_destroy(shm_monitor_buffer *buffer);
 
@@ -33,7 +35,7 @@ void shm_monitor_buffer_write_finish(shm_monitor_buffer *q);
 /*void shm_monitor_buffer_get_str(shm_monitor_buffer *q, size_t elem); */
 
 /* reader's API */
-void *fetch_arbiter_stream(shm_monitor_buffer *buffer, uint64_t timeout);
+void *fetch_arbiter_stream(shm_monitor_buffer *buffer);
 
 /* multiple threads can use top and peek if none of them uses drop/pop
  * at the time
