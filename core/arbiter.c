@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "arbiter.h"
-#include "parallel_queue.h"
+#include "par_queue.h"
 #include "stream.h"
 #include "utils.h"
 

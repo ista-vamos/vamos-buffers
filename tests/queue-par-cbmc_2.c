@@ -1,7 +1,7 @@
 #include <assert.h>
 // CBMC does not handle C11 threads API
 #include <pthread.h>
-#include "core/parallel_queue.h"
+#include "core/par_queue.h"
 
 int buffer[4];
 

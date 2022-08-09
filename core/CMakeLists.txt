@@ -2,7 +2,6 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 add_library(shamon-list OBJECT list.c)
 add_library(shamon-vector OBJECT vector.c)
-add_library(shamon-queue OBJECT queue.c)
 
 add_library(shamon-source OBJECT source.c)
 target_compile_options(shamon-source PRIVATE -fPIC)
@@ -19,7 +18,7 @@ add_library(shamon-signature STATIC signatures.c)
 target_compile_options(shamon-signature PRIVATE -fPIC)
 
 add_library(shamon STATIC shamon.c)
-add_library(shamon-parallel-queue STATIC parallel_queue.c)
+add_library(shamon-parallel-queue STATIC par_queue.c)
 
 add_library(shamon-lib SHARED arbiter.c event.c stream.c)
 target_compile_definitions(shamon-lib PUBLIC -D_POSIX_C_SOURCE=200809L)

@@ -6,7 +6,7 @@
 
 #include <immintrin.h> /* _mm_pause */
 
-#include "parallel_queue_mw.h"
+#include "par_queue_mw.h"
 
 void shm_par_queue_mw_init(shm_par_queue_mw *q, size_t capacity,
                            size_t elem_size) {

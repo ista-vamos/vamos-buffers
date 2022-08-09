@@ -10,7 +10,7 @@
 #include <immintrin.h> /* _mm_pause */
 
 #include "arbiter.h"
-#include "parallel_queue.h"
+#include "par_queue.h"
 #include "shamon.h"
 #include "stream.h"
 #include "utils.h"

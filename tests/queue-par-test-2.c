@@ -1,7 +1,7 @@
 #undef NDEBUG
 #include <assert.h>
 #include <stdio.h>
-#include "parallel_queue.h"
+#include "par_queue.h"
 
 int main(void) {
     int i;

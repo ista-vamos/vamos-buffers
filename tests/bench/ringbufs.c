@@ -5,7 +5,7 @@
 
 #include "core/source.h"
 #include "shmbuf/buffer.h"
-#include "core/parallel_queue.h"
+#include "core/par_queue.h"
 
 //#ifdef RMIND_RINGBUF
 #include "ringbuf.h"
@@ -95,7 +95,7 @@ static void run_local_shmbuf_push_pop_st() {
 }
 
 
-static void run_parallel_queue_push_pop_st() {
+static void run_par_queue_push_pop_st() {
     shm_par_queue q;
     shm_par_queue_init(&q, N, sizeof(int));
 
@@ -178,7 +178,7 @@ int main(void) {
     puts("----------");
     run_local_shmbuf_push_pop_st();
     puts("----------");
-    run_parallel_queue_push_pop_st();
+    run_par_queue_push_pop_st();
     puts("----------");
     run_rmind_ringbuf_push_pop_st();
 }

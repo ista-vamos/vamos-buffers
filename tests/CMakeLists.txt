@@ -15,11 +15,6 @@ set(CTEST_OPTS -j${N} --output-on-failure --progress ${CTEST_OPTS})
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} ${CTEST_OPTS}
                         USES_TERMINAL)
 
-add_executable(queue-test queue-test.c)
-target_link_libraries(queue-test shamon-queue)
-target_include_directories(queue-test PRIVATE ${CMAKE_SOURCE_DIR})
-add_test(queue-test queue-test)
-
 add_executable(list-test list-test.c)
 target_link_libraries(list-test shamon-list)
 target_include_directories(list-test PRIVATE ${CMAKE_SOURCE_DIR})
@@ -53,11 +48,11 @@ add_test(NAME queue-par-test-3
 
 add_test(NAME queue-par-cbmc
          COMMAND cbmc -I${CMAKE_SOURCE_DIR} --c11 --unwind 2
-	         queue-par-cbmc.c ${CMAKE_SOURCE_DIR}/core/parallel_queue.c)
+	         queue-par-cbmc.c ${CMAKE_SOURCE_DIR}/core/par_queue.c)
 
 add_test(NAME queue-par-cbmc-2
          COMMAND cbmc -I${CMAKE_SOURCE_DIR} --c11 --unwind 2
-	         queue-par-cbmc_2.c ${CMAKE_SOURCE_DIR}/core/parallel_queue.c)
+	         queue-par-cbmc_2.c ${CMAKE_SOURCE_DIR}/core/par_queue.c)
 
 add_executable(fetch-test fetch-test.c)
 target_link_libraries(fetch-test shamon-shmbuf shamon-arbiter shamon-parallel-queue pthread)
