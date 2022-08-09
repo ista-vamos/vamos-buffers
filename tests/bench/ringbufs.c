@@ -2,6 +2,7 @@
 #include <string.h>
 #include <assert.h>
 #include <time.h>
+#include <threads.h>
 
 #include "core/source.h"
 #include "shmbuf/buffer.h"
@@ -14,10 +15,14 @@
 
 #define N 50000
 
-static double report_time(const char *msg, struct timespec *start, struct timespec *end) {
+static double elapsed_time(struct timespec *start, struct timespec *end) {
     long seconds = end->tv_sec - start->tv_sec;
     long nanoseconds = end->tv_nsec - start->tv_nsec;
-    double elapsed = seconds + nanoseconds*1e-9;
+    return seconds + nanoseconds*1e-9;
+}
+
+static double report_time(const char *msg, struct timespec *start, struct timespec *end) {
+    double elapsed = elapsed_time(start, end);
     printf("%s: %lf seconds.\n", msg, elapsed);
     return elapsed;
 }
@@ -166,6 +171,79 @@ static void run_queue_spsc_push_pop_st() {
     free(buff);
 }
 
+struct thr_data {
+    double elapsed;
+    void *data_buffer;
+    void *ringbuffer;
+    size_t writer_waited;
+};
+
+static int queue_spsc_push_pop_1_writer(void *arg) {
+    struct thr_data *data = (struct thr_data *) arg;
+    shm_queue_spsc *q = (shm_queue_spsc *) data->ringbuffer;
+    int *buff = data->data_buffer;
+
+    int i;
+    size_t off;
+    struct timespec start, mid;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+    for (i = 0; i < N; ++i) {
+        while(!shm_queue_spsc_write_offset(q, &off)) {
+            ++data->writer_waited;
+        }
+        buff[off] = i;
+        memcpy(buff + off, &i, sizeof(int));
+        shm_queue_spsc_write_finish(q);
+    }
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &mid);
+
+    data->elapsed = elapsed_time(&start, &mid);
+
+    thrd_exit(0);
+}
+
+static void run_queue_spsc_push_pop_1() {
+    shm_queue_spsc q;
+    shm_queue_spsc_init(&q, N);
+    int *buff = malloc(sizeof(int)*N);
+    assert(buff);
+
+    thrd_t tid;
+    struct thr_data data = { .data_buffer = buff,
+                             .ringbuffer = &q,
+                             .writer_waited = 0};
+    thrd_create(&tid, queue_spsc_push_pop_1_writer, &data);
+
+    int j;
+    unsigned int n = 0;
+    size_t off;
+    size_t reader_waited = 0;
+    struct timespec mid, end;
+
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &mid);
+    while (n < N) {
+        if (shm_queue_spsc_read_offset(&q, &off) == 0) {
+            ++reader_waited;
+            continue;
+        }
+        memcpy(&j, buff + n, sizeof(int));
+        shm_queue_spsc_consume(&q, 1);
+        ++n;
+    }
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+
+    thrd_join(tid, NULL);
+
+    printf("[queue-spsc], writing: %lf\n", data.elapsed);
+    double elapsed = report_time("[queue-spsc], reading", &mid, &end);
+    printf("[queue-spsc], writer waited: %lu, reader waited: %lu\n",
+           data.writer_waited, reader_waited);
+    printf("\033[34m[queue-spsc], totally: %lf seconds.\033[0m\n",
+           elapsed + data.elapsed);
+
+    free(buff);
+}
+
 #ifdef RMIND_RINGBUF
 static void run_rmind_ringbuf_push_pop_st() {
     size_t ringbuf_obj_size;
@@ -213,6 +291,79 @@ static void run_rmind_ringbuf_push_pop_st() {
     free(buff);
     free(r);
 }
+
+static int ringbuf_push_pop_1_writer(void *arg) {
+    struct thr_data *data = (struct thr_data *) arg;
+    ringbuf_t *r = (ringbuf_t *) data->ringbuffer;
+    int *buff = data->data_buffer;
+
+    ringbuf_worker_t *w = ringbuf_register(r, 0);
+
+    int i;
+    ssize_t off;
+    struct timespec start, mid;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+    for (i = 0; i < N; ++i) {
+        while ((off = ringbuf_acquire(r, w, 1)) == -1) {
+            ++data->writer_waited;
+        }
+        buff[off] = i;
+        memcpy(buff + off, &i, sizeof(int));
+        ringbuf_produce(r, w);
+    }
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &mid);
+
+    data->elapsed = elapsed_time(&start, &mid);
+    ringbuf_unregister(r, w);
+
+    thrd_exit(0);
+}
+
+static void run_rmind_ringbuf_push_pop_1() {
+    size_t ringbuf_obj_size;
+    ringbuf_get_sizes(1, &ringbuf_obj_size, NULL);
+    int *buff = malloc(sizeof(int)*N);
+    assert(buff);
+
+    ringbuf_t *r = malloc(ringbuf_obj_size);
+    ringbuf_setup(r, 1, N+1);
+
+    ssize_t off;
+    size_t uoff;
+    int j;
+    unsigned int n = 0;
+    size_t reader_waited = 0;
+    struct timespec mid, end;
+
+    thrd_t tid;
+    struct thr_data data = { .data_buffer = buff,
+                             .ringbuffer = r,
+                             .writer_waited = 0};
+    thrd_create(&tid, ringbuf_push_pop_1_writer, &data);
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &mid);
+    while (n < N) {
+        if ((off = ringbuf_consume(r, &uoff)) == 0) {
+            ++reader_waited;
+            continue;
+        }
+        memcpy(&j, buff + off, sizeof(int));
+        ringbuf_release(r, 1);
+        ++n;
+    }
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+
+    thrd_join(tid, NULL);
+
+    printf("[ringbuf], writing: %lf\n", data.elapsed);
+    double elapsed = report_time("[ringbuf], reading", &mid, &end);
+    printf("[ringbuf], writer waited: %lu, reader waited: %lu\n",
+           data.writer_waited, reader_waited);
+    printf("\033[34m[ringbuf], totally: %lf seconds.\033[0m\n",
+           elapsed + data.elapsed);
+
+    free(buff);
+    free(r);
+}
 #endif /* RMIND_RINGBUF */
 
 int main(void) {
@@ -223,8 +374,12 @@ int main(void) {
     run_par_queue_push_pop_st();
     puts("----------");
     run_queue_spsc_push_pop_st();
+    puts("----------");
+    run_queue_spsc_push_pop_1();
 #ifdef RMIND_RINGBUF
     puts("----------");
     run_rmind_ringbuf_push_pop_st();
+    puts("----------");
+    run_rmind_ringbuf_push_pop_1();
 #endif
 }
