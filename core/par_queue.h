@@ -6,6 +6,10 @@
 
 typedef struct _shm_event shm_event;
 
+/**
+ * shm_par_queue is a single-producer single-consumer (SPSC) lock-free
+ * concurrent queue.
+ */
 typedef struct _shm_par_queue {
     size_t capacity;
     /* modifications of this variable are going to be atomic,
