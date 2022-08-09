@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define __predict_false(x) __builtin_expect((x) != 0, 0)
+#define __predict_true(x)  __builtin_expect((x) != 0, 1)
+
 static inline void elem_num_inc(shm_queue_spsc *q, int k) {
     /* Do ++q->elem_num atomically. */
     /* The increment must come after everything is done.
@@ -36,7 +39,7 @@ void shm_queue_spsc_destroy(shm_queue_spsc *q) {
 }
 
 bool shm_queue_spsc_write_offset(shm_queue_spsc *q, size_t *offset) {
-    if (elem_num(q) == q->capacity) {
+    if (__predict_false(elem_num(q) == q->capacity)) {
         return false;
     }
 
@@ -58,7 +61,7 @@ void shm_queue_spsc_writes_finish(shm_queue_spsc *q, size_t written_num) {
     q->head += written_num;
 
     /* queue is full, rotate it */
-    if (q->head == q->capacity) {
+    if (__predict_false(q->head == q->capacity)) {
         q->head = 0;
     }
 
@@ -72,12 +75,12 @@ void shm_queue_spsc_write_finish(shm_queue_spsc *q) {
 size_t shm_queue_spsc_consume(shm_queue_spsc *q, size_t k) {
     assert(k > 0);
     size_t num = elem_num(q);
-    if (num < k) {
+    if (__predict_false(num < k)) {
         k = num;
     }
 
     q->tail += k;
-    if (q->tail >= q->capacity)
+    if (__predict_false(q->tail >= q->capacity))
         q->tail -= q->capacity;
 
     assert(elem_num(q) >= k);
@@ -122,11 +125,8 @@ size_t shm_queue_spsc_peek(shm_queue_spsc *q, size_t n,
 
 /* peak1 -- it is like top + return the number of elements */
 size_t shm_queue_spsc_read_offset(shm_queue_spsc *q, size_t *offset) {
-    size_t cur_elem_num = elem_num(q);
-    if (cur_elem_num > 0) {
-        *offset = q->tail;
-    }
-    return cur_elem_num;
+    *offset = q->tail;
+    return elem_num(q);
 }
 
 /*
@@ -146,7 +146,7 @@ size_t shm_queue_spsc_peek_at(shm_queue_spsc *q, size_t idx) {
 
 size_t shm_queue_spsc_peek_atmost_at(shm_queue_spsc *q, size_t *want_k, size_t *offset) {
     size_t num = elem_num(q);
-    if (num == 0)
+    if (__predict_false(num == 0))
         return 0;
 
     if (*want_k >= num) {
