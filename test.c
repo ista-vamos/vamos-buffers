@@ -374,6 +374,7 @@ int main(int argc, char **argv) {
 	shm_arbiter_buffer_set_active(BUFFER_Left, true);
 	shm_arbiter_buffer_set_active(BUFFER_Right, true);
 
+	monitor_buffer = shm_monitor_buffer_create(sizeof(STREAM_NumberPairs_out), 64);
 
     // create source-events threads
 	thrd_create(&THREAD_Left, PERF_LAYER_Left,0);
