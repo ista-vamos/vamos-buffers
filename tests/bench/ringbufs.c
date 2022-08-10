@@ -7,9 +7,9 @@
 #include "shmbuf/buffer.h"
 #include "core/par_queue.h"
 
-//#ifdef RMIND_RINGBUF
+#ifdef RMIND_RINGBUF
 #include "ringbuf.h"
-//#endif
+#endif
 
 #define N 50000
 
@@ -126,6 +126,7 @@ static void run_par_queue_push_pop_st() {
     shm_par_queue_destroy(&q);
 }
 
+#ifdef RMIND_RINGBUF
 static void run_rmind_ringbuf_push_pop_st() {
     size_t ringbuf_obj_size;
     ringbuf_get_sizes(1, &ringbuf_obj_size, NULL);
@@ -172,6 +173,7 @@ static void run_rmind_ringbuf_push_pop_st() {
     free(buff);
     free(r);
 }
+#endif /* RMIND_RINGBUF */
 
 int main(void) {
     run_shmbuf_push_pop_st();
@@ -179,6 +181,8 @@ int main(void) {
     run_local_shmbuf_push_pop_st();
     puts("----------");
     run_par_queue_push_pop_st();
+#ifdef RMIND_RINGBUF
     puts("----------");
     run_rmind_ringbuf_push_pop_st();
+#endif
 }

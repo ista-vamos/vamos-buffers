@@ -17,10 +17,25 @@ endif()
 
 OPTION(DUMP_STATS "Collect and allow dumping statistics" OFF)
 OPTION(DYNAMORIO_SOURCES "Build sources based on DynamoRIO" ON)
+OPTION(RMIND_RINGBUF "Build and use githbu:rmind/ringbuf ring buffer" ON)
+
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 if (DUMP_STATS)
 	add_compile_definitions(DUMP_STATS)
+endif()
+
+if (RMIND_RINGBUF)
+	include(ExternalProject)
+	ExternalProject_Add(rmind-ringbuf
+			    GIT_REPOSITORY https://github.com/rmind/ringbuf
+			    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rmind-ringbuf
+			    CONFIGURE_COMMAND ""
+			    BUILD_COMMAND make -C src
+			    INSTALL_COMMAND ""
+			    BUILD_IN_SOURCE 1)
+
+	add_compile_definitions(RMIND_RINGBUF)
 endif()
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wpedantic -Werror")

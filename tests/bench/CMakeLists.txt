@@ -6,6 +6,7 @@ target_link_libraries(ringbufs-bench shamon-shmbuf shamon-parallel-queue)
 target_include_directories(ringbufs-bench PRIVATE ${CMAKE_SOURCE_DIR}
 					  PRIVATE ${CMAKE_SOURCE_DIR}/core)
 
-
-target_include_directories(ringbufs-bench PRIVATE ${CMAKE_SOURCE_DIR}/ringbuf/src)
-target_link_libraries(ringbufs-bench ${CMAKE_SOURCE_DIR}/ringbuf/src/ringbuf.o)
+if (RMIND_RINGBUF)
+	target_include_directories(ringbufs-bench PRIVATE ${CMAKE_SOURCE_DIR}/rmind-ringbuf/src)
+	target_link_libraries(ringbufs-bench ${CMAKE_SOURCE_DIR}/rmind-ringbuf/src/ringbuf.o)
+endif()
