@@ -419,6 +419,6 @@ int main(int argc, char **argv) {
 	shm_arbiter_buffer_free(BUFFER_Right);
 
 	// destroy monitor buffer
-	shm_monitor_buffer_destroy(monitor_buffer);
+	// shm_monitor_buffer_destroy(monitor_buffer);
 }
 
