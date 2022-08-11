@@ -145,31 +145,9 @@ void *fetch_arbiter_stream(shm_monitor_buffer *buffer) {
     assert(0 && "Unreachable");
 }
 
-#if 0
-/* drop an event and notify buffer the buffer that it may free up
- * the payload of this and older events */
-size_t shm_monitor_buffer_drop(shm_monitor_buffer *buffer, size_t k) {
-#ifdef DUMP_STATS
-    buffer->volunt_dropped_num_asked += k;
-#endif
-    --k; /* peek_*_at takes index from 0 */
-    shm_event *ev = shm_par_queue_peek_atmost_at(&buffer->buffer, &k);
-    if (!ev)
-        return 0; /* empty queue */
-    shm_eventid last_id = shm_event_id(ev);
-#ifndef NDEBUG
-    size_t n =
-#endif
-        ++k; /* k is index, we must increase it back by one */
-    shm_par_queue_drop(&buffer->buffer, k);
-    assert(n == k && "Something changed the queue in between");
-    shm_stream_notify_last_processed_id(buffer->stream, last_id);
-#ifdef DUMP_STATS
-    buffer->volunt_dropped_num += k;
-#endif
-    return k;
+size_t shm_monitor_buffer_consume(shm_monitor_buffer *buffer, size_t k) {
+    return shm_par_queue_drop(&buffer->buffer, k);
 }
-#endif
 
 /* wait for an event on the 'stream'
 void shm_monitor_buffer_notify_dropped(shm_monitor_buffer *buffer,
