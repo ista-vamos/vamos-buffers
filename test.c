@@ -407,6 +407,7 @@ int main(int argc, char **argv) {
 		  }
 		}
         
+        shm_monitor_buffer_consume(monitor_buffer, 1);
     }
     
      
@@ -419,6 +420,6 @@ int main(int argc, char **argv) {
 	shm_arbiter_buffer_free(BUFFER_Right);
 
 	// destroy monitor buffer
-	// shm_monitor_buffer_destroy(monitor_buffer);
+	// shm_monitor_buffer_destroy(monitor_buffer); TODO: should I call this?
 }
 
