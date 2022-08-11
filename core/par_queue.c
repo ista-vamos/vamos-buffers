@@ -10,16 +10,16 @@ static inline void elem_num_inc(shm_par_queue *q, int k) {
     /* The increment must come after everything is done.
        The release order makes sure that the written element
        is visible to other threads by now. */
-    atomic_fetch_add_explicit(&q->elem_num, k, memory_order_release);
+    atomic_fetch_add_explicit(&q->elem_num, k, memory_order_seq_cst);
 }
 
 static inline void elem_num_dec(shm_par_queue *q, int k) {
     /* Do q->elem_num -= k atomically. */
-    atomic_fetch_sub_explicit(&q->elem_num, k, memory_order_acquire);
+    atomic_fetch_sub_explicit(&q->elem_num, k, memory_order_seq_cst);
 }
 
 static inline size_t elem_num(shm_par_queue *q) {
-    return atomic_load_explicit(&q->elem_num, memory_order_relaxed);
+    return atomic_load_explicit(&q->elem_num, memory_order_seq_cst);
 }
 
 void shm_par_queue_init(shm_par_queue *q, size_t capacity, size_t elem_size) {

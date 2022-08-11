@@ -112,16 +112,16 @@ static inline void elem_num_inc(struct buffer_info *info, int k) {
     /* The increment must come after everything is done.
        The release order makes sure that the written element
        is visible to other threads by now. */
-    atomic_fetch_add_explicit(&info->elem_num, k, memory_order_release);
+    atomic_fetch_add_explicit(&info->elem_num, k, memory_order_seq_cst);
 }
 
 static inline void elem_num_dec(struct buffer_info *info, int k) {
     /* Do info->elem_num -= k atomically. */
-    atomic_fetch_sub_explicit(&info->elem_num, k, memory_order_acquire);
+    atomic_fetch_sub_explicit(&info->elem_num, k, memory_order_seq_cst);
 }
 
 static inline size_t elem_num(struct buffer_info *info) {
-    return atomic_load_explicit(&info->elem_num, memory_order_relaxed);
+    return atomic_load_explicit(&info->elem_num, memory_order_seq_cst);
 }
 
 size_t buffer_allocation_size() {
