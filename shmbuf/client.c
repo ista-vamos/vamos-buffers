@@ -27,25 +27,29 @@ static inline void restore_sigfunc(void (*sigfunc)(int)) {
 int buffer_wait_for_monitor(struct buffer *buff) {
     void (*sigfunc)(int);
     sigfunc = signal(SIGINT, sig_int);
+    int err = 0;
 
     while (!buffer_monitor_attached(buff)) {
         if (sleep_ms(SLEEP_TIME) != 0) {
-            restore_sigfunc(sigfunc);
-            return -errno;
+            err = -errno;
+            break;
         }
         if (interrupted) {
-            restore_sigfunc(sigfunc);
-            return -EINTR;
+            err = -EINTR;
+            break;
         }
     }
 
     restore_sigfunc(sigfunc);
 
+    if (err < 0)
+        return err;
+
     /* sleep once more so that the monitor has some time
      * to move to monitoring code */
     if (sleep_ms(SLEEP_TIME) != 0) {
-        return -errno;
+        err = -errno;
     }
 
-    return 0;
+    return err;
 }
