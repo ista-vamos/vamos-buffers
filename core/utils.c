@@ -3,11 +3,11 @@
 
 #include "utils.h"
 
-void sleep_ns(uint64_t ns) {
+int sleep_ns(uint64_t ns) {
     struct timespec ts = {.tv_nsec = ns};
-    nanosleep(&ts, NULL);
+    return nanosleep(&ts, NULL);
 }
 
-void sleep_ms(uint64_t ms) {
-    sleep_ns(ms * 1000000);
+int sleep_ms(uint64_t ms) {
+    return sleep_ns(ms * 1000000);
 }
