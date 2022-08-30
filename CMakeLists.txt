@@ -19,7 +19,7 @@ endif()
 OPTION(DUMP_STATS "Collect and allow dumping statistics" OFF)
 OPTION(DYNAMORIO_SOURCES "Build sources based on DynamoRIO" ON)
 OPTION(RMIND_RINGBUF "Build and use githbu:rmind/ringbuf ring buffer" OFF)
-OPTION(BPF_SOURCES "Build and use eBPF sources" ON)
+OPTION(BPF_SOURCES "Build and use eBPF sources" OFF)
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
