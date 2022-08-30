@@ -68,6 +68,11 @@ void shm_stream_get_dropped_event(shm_stream *stream,
 
 bool shm_stream_is_ready(shm_stream *);
 
+/*
+ * returns true if there will come no events in the future, false otherwise
+ * */
+bool shm_stream_is_finished(shm_stream *);
+
 void shm_stream_notify_dropped(shm_stream *stream, uint64_t begin_id,
                                uint64_t end_id);
 void shm_stream_destroy(shm_stream *stream);

@@ -21,6 +21,9 @@ void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
     stream->id = ++last_stream_id;
     stream->event_size = event_size;
     stream->incoming_events_buffer = incoming_events_buffer;
+    /* TODO: maybe we could just have a boolean flag that would be set
+     * by a particular stream implementation instead of this function call?
+     * Or a special universal event that is sent by the source...*/
     stream->is_ready = is_ready;
     stream->filter = filter;
     stream->alter = alter;
@@ -72,6 +75,10 @@ void shm_stream_get_dropped_event(shm_stream *stream,
 
 bool shm_stream_is_ready(shm_stream *s) {
     return s->is_ready(s);
+}
+
+bool shm_stream_is_finished(shm_stream *s) {
+    return shm_stream_buffer_size(s) == 0 && !shm_stream_is_ready(s);
 }
 
 void *shm_stream_read_events(shm_stream *s, size_t *num) {
