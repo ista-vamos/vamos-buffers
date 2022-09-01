@@ -137,6 +137,7 @@ void *fetch_arbiter_stream(shm_monitor_buffer *buffer, uint64_t timeout) {
     void *ev;
 
     while (1) {
+        
         /* wait for the event */
         ev = shm_monitor_buffer_top(buffer);
         if (ev) {

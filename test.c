@@ -1,20 +1,21 @@
 #include "shamon.h"
 #include "mmlib.h"
-#include "monitor.c"
+#include "monitor.h"
+#include "./compiler/cfiles/compiler_utils.h"
 #include <threads.h>
 #include <stdio.h>
-
+#include <stdatomic.h>
 
 struct _EVENT_hole
 {
   uint64_t n;
 };
 typedef struct _EVENT_hole EVENT_hole;
-
 // event declarations for stream type Primes
 struct _EVENT_Prime {
 	int n;
 	int p;
+
 };
 typedef struct _EVENT_Prime EVENT_Prime;
 
@@ -36,12 +37,12 @@ struct _STREAM_Primes_out {
     }cases;
 };
 typedef struct _STREAM_Primes_out STREAM_Primes_out;
-        
-// event declarations for stream type NumberPairs
+        // event declarations for stream type NumberPairs
 struct _EVENT_NumberPair {
 	int i;
 	int n;
 	int m;
+
 };
 typedef struct _EVENT_NumberPair EVENT_NumberPair;
 
@@ -65,53 +66,97 @@ struct _STREAM_NumberPairs_out {
 typedef struct _STREAM_NumberPairs_out STREAM_NumberPairs_out;
         
 
-bool SHOULD_KEEP_Left(shm_stream * s, shm_event * e) {
-    if (e->kind == 2) {
-        return true;
-    }
-        
-    return false;
-}
-bool SHOULD_KEEP_Right(shm_stream * s, shm_event * e) {
-    if (e->kind == 2) {
-        return true;
-    }
-        
-    return false;
-}
+    typedef struct _STREAM_Primes_ARGS {
+    	int pos;
 
+    } STREAM_Primes_ARGS;
+            
 
-int count_event_streams = 2;
+STREAM_Primes_ARGS stream_args_P_0;
+STREAM_Primes_ARGS stream_args_P_1;
+
+int *arbiter_counter;
+// monitor buffer
+shm_monitor_buffer *monitor_buffer;
+
+// globals code
+STREAM_NumberPairs_out *arbiter_outevent;
+#include "./compiler/cfiles/intmap.h"
+     intmap buf;
+     int count = 0;
+ 
+     int process(int n, int p, int pos, int opos)
+     {
+         if(pos < opos)
+         {
+             int oval=0;
+             if(intmap_get(&buf, n, &oval))
+             {
+                 
+
+        arbiter_outevent = (STREAM_NumberPairs_out *)shm_monitor_buffer_write_ptr(monitor_buffer);
+         arbiter_outevent->head.kind = 2;
+    arbiter_outevent->head.id = (*arbiter_counter)++;
+    ((STREAM_NumberPairs_out *) arbiter_outevent)->cases.NumberPair.i = n;
+((STREAM_NumberPairs_out *) arbiter_outevent)->cases.NumberPair.n = oval;
+((STREAM_NumberPairs_out *) arbiter_outevent)->cases.NumberPair.m = p;
+
+         shm_monitor_buffer_write_finish(monitor_buffer);
+        }
+             count -= intmap_remove_upto(&buf, n);
+         }
+         else
+         {
+             if(count<10)
+             {
+                 intmap_insert(&buf, n, p);
+                 count++;
+             }
+         }
+         return n+1;
+     }
+ 
+bool SHOULD_KEEP_P(shm_stream * s, shm_event * e) {
+    return true;
+}
+            
+
+atomic_int count_event_streams = 2;
 
 // declare event streams
-shm_stream *EV_SOURCE_Left;
-shm_stream *EV_SOURCE_Right;
+shm_stream *EV_SOURCE_P_0;
+shm_stream *EV_SOURCE_P_1;
 
-//declare flags for event streams
-bool is_Left_done;
-bool is_Right_done;
 
 // event sources threads
-thrd_t THREAD_Left;
-thrd_t THREAD_Right;
+thrd_t THREAD_P_0;
+thrd_t THREAD_P_1;
+
 
 // declare arbiter thread
 thrd_t ARBITER_THREAD;
 
-// Arbiter buffer for event source Left
-shm_arbiter_buffer *BUFFER_Left;
+// Arbiter buffer for event source P (0)
+shm_arbiter_buffer *BUFFER_P0;
 
-// Arbiter buffer for event source Right
-shm_arbiter_buffer *BUFFER_Right;
+// Arbiter buffer for event source P (1)
+shm_arbiter_buffer *BUFFER_P1;
 
 
-// monitor buffer
-shm_monitor_buffer *monitor_buffer;
 
-int PERF_LAYER_Left (void *arg) {
-    shm_arbiter_buffer *buffer = BUFFER_Left;
+
+// buffer groups
+
+bool Ps_ORDER_EXP (void *args1, void *args2) {
+    return ((STREAM_Primes_ARGS *) args1)->pos > ((STREAM_Primes_ARGS *) args2)->pos;
+}        
+
+
+buffer_group BG_Ps;
+        
+
+int PERF_LAYER_P (shm_arbiter_buffer *buffer) {
     shm_stream *stream = shm_arbiter_buffer_stream(buffer);   
-
     STREAM_Primes_in *inevent;
     STREAM_Primes_out *outevent;   
 
@@ -119,90 +164,25 @@ int PERF_LAYER_Left (void *arg) {
     while ((!shm_arbiter_buffer_active(buffer))){
         sleep_ns(10);
     }
-    
-    is_Left_done = 0;
     while(true) {
-        inevent = stream_filter_fetch(stream, buffer, &SHOULD_KEEP_Left);
+        inevent = stream_filter_fetch(stream, buffer, &SHOULD_KEEP_P);
         
         if (inevent == NULL) {
             // no more events
-            is_Left_done = 1;
             break;
         }
         outevent = shm_arbiter_buffer_write_ptr(buffer);
         
-        switch ((inevent->head).kind) {
-
-			case 2:
-
-				(outevent->head).kind = 2;
-				(outevent->head).id = (inevent->head).id;
-int n  = inevent->cases.Prime.n ;
-int p  = inevent->cases.Prime.p ;
-
-				outevent->cases.Prime.n = n ;
-				outevent->cases.Prime.p = p ;
-
-				break;
-            default:
-                printf("Default case executed in thread for event source Left. Exiting thread...");
-                return 1;
-        }
+        memcpy(outevent, inevent, sizeof(STREAM_Primes_out));
         shm_arbiter_buffer_write_finish(buffer);
         shm_stream_consume(stream, 1);
-    }     
+    }  
+    atomic_fetch_add(&count_event_streams, -1);   
 }
 
-int PERF_LAYER_Right (void *arg) {
-    shm_arbiter_buffer *buffer = BUFFER_Right;
-    shm_stream *stream = shm_arbiter_buffer_stream(buffer);   
-
-    STREAM_Primes_in *inevent;
-    STREAM_Primes_out *outevent;   
-
-    // wait for active buffer
-    while ((!shm_arbiter_buffer_active(buffer))){
-        sleep_ns(10);
-    }
-    
-    is_Right_done = 0;
-    while(true) {
-        inevent = stream_filter_fetch(stream, buffer, &SHOULD_KEEP_Right);
-        
-        if (inevent == NULL) {
-            // no more events
-            is_Right_done = 1;
-            break;
-        }
-        outevent = shm_arbiter_buffer_write_ptr(buffer);
-        
-        switch ((inevent->head).kind) {
-
-			case 2:
-
-				(outevent->head).kind = 2;
-				(outevent->head).id = (inevent->head).id;
-int n  = inevent->cases.Prime.n ;
-int p  = inevent->cases.Prime.p ;
-
-				outevent->cases.Prime.n = n ;
-				outevent->cases.Prime.p = p ;
-
-				break;
-            default:
-                printf("Default case executed in thread for event source Right. Exiting thread...");
-                return 1;
-        }
-        shm_arbiter_buffer_write_finish(buffer);
-        shm_stream_consume(stream, 1);
-    }     
-}
 
 bool exists_open_streams() {
-    int c = 0;
-	c += is_Left_done;
-	c += is_Right_done;
-	return c < count_event_streams;
+    return count_event_streams > 0;
 }
     
 bool check_n_events(shm_arbiter_buffer* b, size_t n) {
@@ -212,14 +192,16 @@ bool check_n_events(shm_arbiter_buffer* b, size_t n) {
 	return shm_arbiter_buffer_peek(b,0, &e1, &i1, &e2, &i2) == n;
 }
 
+
 bool are_events_in_head(shm_arbiter_buffer *b, size_t ev_size, int event_kinds[], int n_events) {
     char* e1; size_t i1;
 	char* e2; size_t i2;
 	int count = shm_arbiter_buffer_peek(b, n_events, (void **)&e1, &i1,(void**) &e2, &i2);
 	if (count < n_events) {
 	    return false;
-	}
-	
+    }
+    
+    
 	int i = 0;
 	while (i < i1) {
 	    shm_event * ev = (shm_event *) (e1);
@@ -239,7 +221,7 @@ bool are_events_in_head(shm_arbiter_buffer *b, size_t ev_size, int event_kinds[]
 	    i+=1;
 	    e2 += ev_size;
 	}
-	
+
 	return true;
 }
 
@@ -252,140 +234,222 @@ shm_event * get_event_at_index(char* e1, size_t i1, char* e2, size_t i2, size_t 
 	}
 }
 
-int RULE_SET_rs(int *);
+//arbiter outevent
+STREAM_NumberPairs_out *arbiter_outevent;
+int RULE_SET_rs();
 
-int RULE_SET_rs(int *arbiter_counter) {
-    STREAM_NumberPairs_out *outevent;   
-    
-        int TEMPARR0[] = {2};
+
+int RULE_SET_rs() {
+dll_node *chosen_streams; // used for match fun
+            int TEMPARR0[] = {2};
 int TEMPARR1[] = {2};
 
-    if (are_events_in_head(BUFFER_Left, sizeof(STREAM_Primes_out), TEMPARR0, 1) && are_events_in_head(BUFFER_Right, sizeof(STREAM_Primes_out), TEMPARR1, 1)) {
-        if(true ) {
+            if (are_events_in_head(BUFFER_P0, sizeof(STREAM_Primes_out), TEMPARR1, 1)) {
+                    if (are_events_in_head(BUFFER_P1, sizeof(STREAM_Primes_out), TEMPARR0, 1)) {
+                    
+            if(true ) {
+                
+                char* e1_P; size_t i1_P;
+	            char* e2_P; size_t i2_P;
+	            shm_arbiter_buffer_peek(BUFFER_P0, 1, (void**)&e1_P, &i1_P,(void**) &e2_P, &i2_P);
             
-                char* e1_Left; size_t i1_Left;
-	            char* e2_Left; size_t i2_Left;
-	            shm_arbiter_buffer_peek(BUFFER_Left, 1, (void**)&e1_Left, &i1_Left,(void**) &e2_Left, &i2_Left);
-            
-                char* e1_Right; size_t i1_Right;
-	            char* e2_Right; size_t i2_Right;
-	            shm_arbiter_buffer_peek(BUFFER_Right, 1, (void**)&e1_Right, &i1_Right,(void**) &e2_Right, &i2_Right);
-            
-            STREAM_Primes_out * event_for_ln = (STREAM_Primes_out *) get_event_at_index(e1_Left, i1_Left, e2_Left, i2_Left, sizeof(STREAM_Primes_out), 0);
+                STREAM_Primes_out * event_for_ln = (STREAM_Primes_out *) get_event_at_index(e1_P, i1_P, e2_P, i2_P, sizeof(STREAM_Primes_out), 0);
 int ln = event_for_ln->cases.Prime.n;
 
-STREAM_Primes_out * event_for_lp = (STREAM_Primes_out *) get_event_at_index(e1_Left, i1_Left, e2_Left, i2_Left, sizeof(STREAM_Primes_out), 0);
+STREAM_Primes_out * event_for_lp = (STREAM_Primes_out *) get_event_at_index(e1_P, i1_P, e2_P, i2_P, sizeof(STREAM_Primes_out), 0);
 int lp = event_for_lp->cases.Prime.p;
 
-STREAM_Primes_out * event_for_rn = (STREAM_Primes_out *) get_event_at_index(e1_Right, i1_Right, e2_Right, i2_Right, sizeof(STREAM_Primes_out), 0);
+STREAM_Primes_out * event_for_rn = (STREAM_Primes_out *) get_event_at_index(e1_P, i1_P, e2_P, i2_P, sizeof(STREAM_Primes_out), 0);
 int rn = event_for_rn->cases.Prime.n;
 
-STREAM_Primes_out * event_for_rp = (STREAM_Primes_out *) get_event_at_index(e1_Right, i1_Right, e2_Right, i2_Right, sizeof(STREAM_Primes_out), 0);
+STREAM_Primes_out * event_for_rp = (STREAM_Primes_out *) get_event_at_index(e1_P, i1_P, e2_P, i2_P, sizeof(STREAM_Primes_out), 0);
 int rp = event_for_rp->cases.Prime.p;
 
 
-            if(ln == rn)
- 		   {
- 		       
+                if(ln == rn)
+             {
+                 
 
-        outevent = shm_monitor_buffer_write_ptr(monitor_buffer);
-         outevent->head.kind = 2;
-    outevent->head.id = (*arbiter_counter)++;
-    ((STREAM_NumberPairs_out *) outevent)->cases.NumberPair.i = ln;
-((STREAM_NumberPairs_out *) outevent)->cases.NumberPair.n = lp;
-((STREAM_NumberPairs_out *) outevent)->cases.NumberPair.m = rp;
+        arbiter_outevent = (STREAM_NumberPairs_out *)shm_monitor_buffer_write_ptr(monitor_buffer);
+         arbiter_outevent->head.kind = 2;
+    arbiter_outevent->head.id = (*arbiter_counter)++;
+    ((STREAM_NumberPairs_out *) arbiter_outevent)->cases.NumberPair.i = ln;
+((STREAM_NumberPairs_out *) arbiter_outevent)->cases.NumberPair.n = lp;
+((STREAM_NumberPairs_out *) arbiter_outevent)->cases.NumberPair.m = rp;
 
          shm_monitor_buffer_write_finish(monitor_buffer);
-        	shm_arbiter_buffer_drop(BUFFER_Left, 1);
-	shm_arbiter_buffer_drop(BUFFER_Right, 1);
+        	shm_arbiter_buffer_drop(BUFFER_P0, 1);
+	shm_arbiter_buffer_drop(BUFFER_P1, 1);
+
+intmap_clear(&buf);
+                 stream_args_P_0.pos
+= ln + 1;
+                 stream_args_P_1.pos
+= rn + 1;
+             }
+             else if(stream_args_P_0.pos
+<stream_args_P_1.pos
+)
+             {
+                 stream_args_P_0.pos
+= process(ln, lp, stream_args_P_0.pos
+, stream_args_P_1.pos
+);
+                 	shm_arbiter_buffer_drop(BUFFER_P0, 1);
 
 }
- 		   else if(ln < rn)
- 		   {
- 		       	shm_arbiter_buffer_drop(BUFFER_Left, 1);
+             else
+             {
+                 stream_args_P_1.pos
+= process(rn, rp, stream_args_P_1.pos
+, stream_args_P_0.pos
+);
+                 	shm_arbiter_buffer_drop(BUFFER_P1, 1);
 
 }
- 		   else
- 		   {
- 		       	shm_arbiter_buffer_drop(BUFFER_Right, 1);
-
-}
- 		
-        }
-    }
-        
-        int TEMPARR2[] = {1};
-
-    if (are_events_in_head(BUFFER_Left, sizeof(STREAM_Primes_out), TEMPARR2, 1)) {
-        if(true ) {
+         
+            }
             
-                char* e1_Left; size_t i1_Left;
-	            char* e2_Left; size_t i2_Left;
-	            shm_arbiter_buffer_peek(BUFFER_Left, 1, (void**)&e1_Left, &i1_Left,(void**) &e2_Left, &i2_Left);
+                }
+                }
             
-            STREAM_Primes_out * event_for_n = (STREAM_Primes_out *) get_event_at_index(e1_Left, i1_Left, e2_Left, i2_Left, sizeof(STREAM_Primes_out), 0);
+            int TEMPARR2[] = {1};
+
+            
+            if (chosen_streams != NULL) {
+                free(chosen_streams);
+            }
+            chosen_streams = malloc(sizeof(dll_node *)*2);
+            bg_get_first_n(&BG_Ps, 2, &chosen_streams);
+
+            if (chosen_streams != NULL) {
+                chosen_streams--;
+shm_stream *F = chosen_streams->stream;
+shm_arbiter_buffer *BUFFER_F = chosen_streams->buffer;
+STREAM_Primes_ARGS stream_args_F = (*(STREAM_Primes_ARGS *)chosen_streams->args);
+chosen_streams--;
+shm_stream *S = chosen_streams->stream;
+shm_arbiter_buffer *BUFFER_S = chosen_streams->buffer;
+STREAM_Primes_ARGS stream_args_S = (*(STREAM_Primes_ARGS *)chosen_streams->args);
+
+                if (are_events_in_head(BUFFER_F, sizeof(STREAM_Primes_out), TEMPARR2, 1)) {
+                    
+            if(true ) {
+                
+                char* e1_F; size_t i1_F;
+	            char* e2_F; size_t i2_F;
+	            shm_arbiter_buffer_peek(BUFFER_F, 1, (void**)&e1_F, &i1_F,(void**) &e2_F, &i2_F);
+            
+                STREAM_Primes_out * event_for_n = (STREAM_Primes_out *) get_event_at_index(e1_F, i1_F, e2_F, i2_F, sizeof(STREAM_Primes_out), 0);
 int n = event_for_n->cases.hole.n;
 
 
+                if(
+stream_args_F.pos< 
+stream_args_S.pos)
+             {
+                 count -= intmap_remove_upto(&buf, 
+stream_args_F.pos+n);
+             }
+             
+stream_args_F.pos+= n;
+         
+            }
             
-        }
-    }
-        
-        int TEMPARR3[] = {1};
-
-    if (are_events_in_head(BUFFER_Right, sizeof(STREAM_Primes_out), TEMPARR3, 1)) {
-        if(true ) {
+                }
+            }
+                    
             
-                char* e1_Right; size_t i1_Right;
-	            char* e2_Right; size_t i2_Right;
-	            shm_arbiter_buffer_peek(BUFFER_Right, 1, (void**)&e1_Right, &i1_Right,(void**) &e2_Right, &i2_Right);
-            
-            STREAM_Primes_out * event_for_n = (STREAM_Primes_out *) get_event_at_index(e1_Right, i1_Right, e2_Right, i2_Right, sizeof(STREAM_Primes_out), 0);
-int n = event_for_n->cases.hole.n;
-
+            int TEMPARR3[] = {2};
 
             
-        }
-    }
-        
-}
+            if (chosen_streams != NULL) {
+                free(chosen_streams);
+            }
+            chosen_streams = malloc(sizeof(dll_node *)*2);
+            bg_get_first_n(&BG_Ps, 2, &chosen_streams);
 
+            if (chosen_streams != NULL) {
+                chosen_streams--;
+shm_stream *F = chosen_streams->stream;
+shm_arbiter_buffer *BUFFER_F = chosen_streams->buffer;
+STREAM_Primes_ARGS stream_args_F = (*(STREAM_Primes_ARGS *)chosen_streams->args);
+chosen_streams--;
+shm_stream *S = chosen_streams->stream;
+shm_arbiter_buffer *BUFFER_S = chosen_streams->buffer;
+STREAM_Primes_ARGS stream_args_S = (*(STREAM_Primes_ARGS *)chosen_streams->args);
+
+                if (are_events_in_head(BUFFER_F, sizeof(STREAM_Primes_out), TEMPARR3, 1)) {
+                    
+            if(true ) {
+                
+                char* e1_F; size_t i1_F;
+	            char* e2_F; size_t i2_F;
+	            shm_arbiter_buffer_peek(BUFFER_F, 1, (void**)&e1_F, &i1_F,(void**) &e2_F, &i2_F);
+            
+                STREAM_Primes_out * event_for_n = (STREAM_Primes_out *) get_event_at_index(e1_F, i1_F, e2_F, i2_F, sizeof(STREAM_Primes_out), 0);
+int n = event_for_n->cases.Prime.n;
+
+STREAM_Primes_out * event_for_p = (STREAM_Primes_out *) get_event_at_index(e1_F, i1_F, e2_F, i2_F, sizeof(STREAM_Primes_out), 0);
+int p = event_for_p->cases.Prime.p;
+
+
+                stream_args_F.pos
+= process(n, p, stream_args_F.pos
+, stream_args_S.pos
+);
+         
+            }
+            
+                }
+            }
+                    
+            }
 int arbiter() {
-    int arbiter_counter = 10;
     while (exists_open_streams()) {
-    	RULE_SET_rs(&arbiter_counter);
+    	RULE_SET_rs();
 	}
     shm_monitor_set_finished(monitor_buffer);
 }
     
 int main(int argc, char **argv) {
-    initialize_events(); // Always call this first
-    
-	// connect to event source Left
-	EV_SOURCE_Left = shm_stream_create("Left", argc, argv);
-	BUFFER_Left = shm_arbiter_buffer_create(EV_SOURCE_Left,  sizeof(STREAM_Primes_out), 8);
+	initialize_events(); // Always call this first
+	arbiter_counter = malloc(sizeof(int));
+	*arbiter_counter = 10;
+	
+	stream_args_P_0.pos = 0;
+	stream_args_P_1.pos = 0;
 
-	// connect to event source Right
-	EV_SOURCE_Right = shm_stream_create("Right", argc, argv);
-	BUFFER_Right = shm_arbiter_buffer_create(EV_SOURCE_Right,  sizeof(STREAM_Primes_out), 8);
+	// init buffer groups
+	init_buffer_group(&BG_Ps);
+	bg_insert(&BG_Ps, EV_SOURCE_P_0, BUFFER_P0,&stream_args_P_0,Ps_ORDER_EXP);
+	bg_insert(&BG_Ps, EV_SOURCE_P_1, BUFFER_P1,&stream_args_P_1,Ps_ORDER_EXP);
+        
+
+	// connect to event source P_0
+	EV_SOURCE_P_0 = shm_stream_create("P_0", argc, argv);
+	BUFFER_P0 = shm_arbiter_buffer_create(EV_SOURCE_P_0,  sizeof(STREAM_Primes_out), 8);
+
+	// connect to event source P_1
+	EV_SOURCE_P_1 = shm_stream_create("P_1", argc, argv);
+	BUFFER_P1 = shm_arbiter_buffer_create(EV_SOURCE_P_1,  sizeof(STREAM_Primes_out), 8);
 
 
-    // activate buffers
-	shm_arbiter_buffer_set_active(BUFFER_Left, true);
-	shm_arbiter_buffer_set_active(BUFFER_Right, true);
+     // activate buffers
+	shm_arbiter_buffer_set_active(BUFFER_P0, true);
+	shm_arbiter_buffer_set_active(BUFFER_P1, true);
 
-	monitor_buffer = shm_monitor_buffer_create(sizeof(STREAM_NumberPairs_out), 64);
+ 	monitor_buffer = shm_monitor_buffer_create(sizeof(STREAM_NumberPairs_out), 64);
+ 	
+     // create source-events threads
+	thrd_create(&THREAD_P_0, PERF_LAYER_P,BUFFER_P0);
+	thrd_create(&THREAD_P_1, PERF_LAYER_P,BUFFER_P1);
 
-    // create source-events threads
-	thrd_create(&THREAD_Left, PERF_LAYER_Left,0);
-	thrd_create(&THREAD_Right, PERF_LAYER_Right,0);
 
-
-    // create arbiter thread
-    thrd_create(&ARBITER_THREAD, arbiter, 0);
-    
-    
-
+     // create arbiter thread
+     thrd_create(&ARBITER_THREAD, arbiter, 0);
+     
+ 
     // monitor
     STREAM_NumberPairs_out * received_event;
     while(true) {
@@ -400,7 +464,8 @@ int main(int argc, char **argv) {
 			int m = received_event->cases.NumberPair.m;
 
 		  if (true ) {
-		      if(n!=m){
+		      if(n!=m)
+         {
            printf("Error at index %i: %i is not equal to %i\n", i, n, m);
          }
      
@@ -410,16 +475,18 @@ int main(int argc, char **argv) {
         shm_monitor_buffer_consume(monitor_buffer, 1);
     }
     
-     
-    // destroy event sources
-	shm_stream_destroy(EV_SOURCE_Left);
-	shm_stream_destroy(EV_SOURCE_Right);
+ 	
+	destroy_buffer_group(&BG_Ps);
 
-    // destroy arbiter buffers
-	shm_arbiter_buffer_free(BUFFER_Left);
-	shm_arbiter_buffer_free(BUFFER_Right);
+	// destroy event sources
+	shm_stream_destroy(EV_SOURCE_P_0);
+	shm_stream_destroy(EV_SOURCE_P_1);
 
-	// destroy monitor buffer
-	// shm_monitor_buffer_destroy(monitor_buffer); TODO: should I call this?
+
+	// destroy arbiter buffers
+	shm_arbiter_buffer_free(BUFFER_P0);
+	shm_arbiter_buffer_free(BUFFER_P1);
+
+	
+	
 }
-
