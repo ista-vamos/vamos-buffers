@@ -156,6 +156,7 @@ buffer_group BG_Ps;
         
 
 int PERF_LAYER_P (shm_arbiter_buffer *buffer) {
+    
     shm_stream *stream = shm_arbiter_buffer_stream(buffer);   
     STREAM_Primes_in *inevent;
     STREAM_Primes_out *outevent;   
@@ -166,7 +167,6 @@ int PERF_LAYER_P (shm_arbiter_buffer *buffer) {
     }
     while(true) {
         inevent = stream_filter_fetch(stream, buffer, &SHOULD_KEEP_P);
-        
         if (inevent == NULL) {
             // no more events
             break;
@@ -240,7 +240,8 @@ int RULE_SET_rs();
 
 
 int RULE_SET_rs() {
-dll_node *chosen_streams; // used for match fun
+
+dll_node **chosen_streams; // used for match fun
             int TEMPARR0[] = {2};
 int TEMPARR1[] = {2};
 
@@ -319,19 +320,15 @@ intmap_clear(&buf);
             if (chosen_streams != NULL) {
                 free(chosen_streams);
             }
-            chosen_streams = malloc(sizeof(dll_node *)*2);
-            printf("chosen streams %lld\n", chosen_streams);
-            bg_get_first_n(&BG_Ps, 2, chosen_streams);
-            printf("chosen streams %lld\n", chosen_streams);
+            chosen_streams = bg_get_first_n(&BG_Ps, 2);
+
             if (chosen_streams != NULL) {
-                chosen_streams-=sizeof(dll_node*);
-shm_stream *F = chosen_streams->stream;
-shm_arbiter_buffer *BUFFER_F = chosen_streams->buffer;
-STREAM_Primes_ARGS stream_args_F = *((STREAM_Primes_ARGS *)(chosen_streams->args));
-chosen_streams-=sizeof(dll_node*);
-shm_stream *S = chosen_streams->stream;
-shm_arbiter_buffer *BUFFER_S = chosen_streams->buffer;
-STREAM_Primes_ARGS stream_args_S = *((STREAM_Primes_ARGS *)(chosen_streams->args));
+                shm_stream *F = chosen_streams[0]->stream;
+shm_arbiter_buffer *BUFFER_F = chosen_streams[0]->buffer;
+STREAM_Primes_ARGS stream_args_F = *((STREAM_Primes_ARGS *)chosen_streams[0]->args);
+shm_stream *S = chosen_streams[1]->stream;
+shm_arbiter_buffer *BUFFER_S = chosen_streams[1]->buffer;
+STREAM_Primes_ARGS stream_args_S = *((STREAM_Primes_ARGS *)chosen_streams[1]->args);
 
                 if (are_events_in_head(BUFFER_F, sizeof(STREAM_Primes_out), TEMPARR2, 1)) {
                     
@@ -367,18 +364,15 @@ stream_args_F.pos+= n;
             if (chosen_streams != NULL) {
                 free(chosen_streams);
             }
-            chosen_streams = malloc(sizeof(dll_node *)*2);
-            bg_get_first_n(&BG_Ps, 2, &chosen_streams);
+            chosen_streams = bg_get_first_n(&BG_Ps, 2);
 
             if (chosen_streams != NULL) {
-                chosen_streams--;
-shm_stream *F = chosen_streams->stream;
-shm_arbiter_buffer *BUFFER_F = chosen_streams->buffer;
-STREAM_Primes_ARGS stream_args_F = (*(STREAM_Primes_ARGS *)chosen_streams->args);
-chosen_streams--;
-shm_stream *S = chosen_streams->stream;
-shm_arbiter_buffer *BUFFER_S = chosen_streams->buffer;
-STREAM_Primes_ARGS stream_args_S = (*(STREAM_Primes_ARGS *)chosen_streams->args);
+                shm_stream *F = chosen_streams[0]->stream;
+shm_arbiter_buffer *BUFFER_F = chosen_streams[0]->buffer;
+STREAM_Primes_ARGS stream_args_F = *((STREAM_Primes_ARGS *)chosen_streams[0]->args);
+shm_stream *S = chosen_streams[1]->stream;
+shm_arbiter_buffer *BUFFER_S = chosen_streams[1]->buffer;
+STREAM_Primes_ARGS stream_args_S = *((STREAM_Primes_ARGS *)chosen_streams[1]->args);
 
                 if (are_events_in_head(BUFFER_F, sizeof(STREAM_Primes_out), TEMPARR3, 1)) {
                     
@@ -414,12 +408,11 @@ int arbiter() {
 }
     
 int main(int argc, char **argv) {
-    
 	initialize_events(); // Always call this first
 	arbiter_counter = malloc(sizeof(int));
-    
 	*arbiter_counter = 10;
-	
+	init_intmap(&buf);
+ 
 	stream_args_P_0.pos = 0;
 	stream_args_P_1.pos = 0;
 
@@ -438,14 +431,15 @@ int main(int argc, char **argv) {
 	shm_arbiter_buffer_set_active(BUFFER_P1, true);
 
  	monitor_buffer = shm_monitor_buffer_create(sizeof(STREAM_NumberPairs_out), 64);
- 	//	init buffer groups
+ 	
+ 		// init buffer groups
 	init_buffer_group(&BG_Ps);
 	bg_insert(&BG_Ps, EV_SOURCE_P_0, BUFFER_P0,&stream_args_P_0,Ps_ORDER_EXP);
 	bg_insert(&BG_Ps, EV_SOURCE_P_1, BUFFER_P1,&stream_args_P_1,Ps_ORDER_EXP);
         
 
  	
-    //  // create source-events threads
+     // create source-events threads
 	thrd_create(&THREAD_P_0, PERF_LAYER_P,BUFFER_P0);
 	thrd_create(&THREAD_P_1, PERF_LAYER_P,BUFFER_P1);
 
@@ -480,7 +474,7 @@ int main(int argc, char **argv) {
     }
     
  	
-	//destroy_buffer_group(&BG_Ps);
+	destroy_buffer_group(&BG_Ps);
 
 	// destroy event sources
 	shm_stream_destroy(EV_SOURCE_P_0);
