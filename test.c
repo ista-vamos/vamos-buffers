@@ -72,12 +72,15 @@ typedef struct _STREAM_NumberPairs_out STREAM_NumberPairs_out;
     } STREAM_Primes_ARGS;
             
 
-STREAM_Primes_ARGS stream_args_P_0;
-STREAM_Primes_ARGS stream_args_P_1;
+STREAM_Primes_ARGS *stream_args_P_0;
+STREAM_Primes_ARGS *stream_args_P_1;
 
 int *arbiter_counter;
 // monitor buffer
 shm_monitor_buffer *monitor_buffer;
+
+bool is_selection_successful;
+dll_node **chosen_streams; // used in rule set for get_first/last_n
 
 // globals code
 STREAM_NumberPairs_out *arbiter_outevent;
@@ -182,10 +185,29 @@ int PERF_LAYER_P (shm_arbiter_buffer *buffer) {
 }
 
 
-bool exists_open_streams() {
-    return count_event_streams > 0;
+bool are_there_events(shm_arbiter_buffer * b) {
+  void * e1;
+  size_t i1;
+  void * e2;
+  size_t i2;
+  return shm_arbiter_buffer_peek(b, 0, & e1, & i1, & e2, & i2) > 0;
+}
+
+
+bool are_buffers_empty() {
+	int c = 0;
+	c += are_there_events(BUFFER_P0);
+	c += are_there_events(BUFFER_P1);
+
+    return c == 0;
 }
     
+bool are_streams_done() {
+    assert(count_event_streams >=0);
+    return count_event_streams == 0 && are_buffers_empty();
+}
+
+
 bool check_n_events(shm_arbiter_buffer* b, size_t n) {
     // checks if there are exactly n elements on a given stream s
     void* e1; size_t i1;
@@ -241,7 +263,7 @@ int RULE_SET_rs();
 
 
 int RULE_SET_rs() {
-dll_node **chosen_streams; // used for match fun
+
             int TEMPARR0[] = {2};
 int TEMPARR1[] = {2};
 
@@ -252,20 +274,24 @@ int TEMPARR1[] = {2};
                     
             if(true ) {
                 
-                char* e1_P; size_t i1_P;
-	            char* e2_P; size_t i2_P;
-	            shm_arbiter_buffer_peek(BUFFER_P0, 1, (void**)&e1_P, &i1_P,(void**) &e2_P, &i2_P);
+                char* e1_P0; size_t i1_P0;
+	            char* e2_P0; size_t i2_P0;
+	            shm_arbiter_buffer_peek(BUFFER_P0, 1, (void**)&e1_P0, &i1_P0,(void**) &e2_P0, &i2_P0);
             
-                STREAM_Primes_out * event_for_ln = (STREAM_Primes_out *) get_event_at_index(e1_P, i1_P, e2_P, i2_P, sizeof(STREAM_Primes_out), 0);
+                char* e1_P1; size_t i1_P1;
+	            char* e2_P1; size_t i2_P1;
+	            shm_arbiter_buffer_peek(BUFFER_P1, 1, (void**)&e1_P1, &i1_P1,(void**) &e2_P1, &i2_P1);
+            
+                STREAM_Primes_out * event_for_ln = (STREAM_Primes_out *) get_event_at_index(e1_P0, i1_P0, e2_P0, i2_P0, sizeof(STREAM_Primes_out), 0);
 int ln = event_for_ln->cases.Prime.n;
 
-STREAM_Primes_out * event_for_lp = (STREAM_Primes_out *) get_event_at_index(e1_P, i1_P, e2_P, i2_P, sizeof(STREAM_Primes_out), 0);
+STREAM_Primes_out * event_for_lp = (STREAM_Primes_out *) get_event_at_index(e1_P0, i1_P0, e2_P0, i2_P0, sizeof(STREAM_Primes_out), 0);
 int lp = event_for_lp->cases.Prime.p;
 
-STREAM_Primes_out * event_for_rn = (STREAM_Primes_out *) get_event_at_index(e1_P, i1_P, e2_P, i2_P, sizeof(STREAM_Primes_out), 0);
+STREAM_Primes_out * event_for_rn = (STREAM_Primes_out *) get_event_at_index(e1_P1, i1_P1, e2_P1, i2_P1, sizeof(STREAM_Primes_out), 0);
 int rn = event_for_rn->cases.Prime.n;
 
-STREAM_Primes_out * event_for_rp = (STREAM_Primes_out *) get_event_at_index(e1_P, i1_P, e2_P, i2_P, sizeof(STREAM_Primes_out), 0);
+STREAM_Primes_out * event_for_rp = (STREAM_Primes_out *) get_event_at_index(e1_P1, i1_P1, e2_P1, i2_P1, sizeof(STREAM_Primes_out), 0);
 int rp = event_for_rp->cases.Prime.p;
 
 
@@ -285,32 +311,34 @@ int rp = event_for_rp->cases.Prime.p;
 	shm_arbiter_buffer_drop(BUFFER_P1, 1);
 
 intmap_clear(&buf);
-                 stream_args_P_0.pos
+                 stream_args_P_0->pos
 = ln + 1;
-                 stream_args_P_1.pos
+                 stream_args_P_1->pos
 = rn + 1;
              }
-             else if(stream_args_P_0.pos
-<stream_args_P_1.pos
+             else if(stream_args_P_0->pos
+<stream_args_P_1->pos
 )
              {
-                 stream_args_P_0.pos
-= process(ln, lp, stream_args_P_0.pos
-, stream_args_P_1.pos
+                 stream_args_P_0->pos
+= process(ln, lp, stream_args_P_0->pos
+, stream_args_P_1->pos
 );
                  	shm_arbiter_buffer_drop(BUFFER_P0, 1);
 
 }
              else
              {
-                 stream_args_P_1.pos
-= process(rn, rp, stream_args_P_1.pos
-, stream_args_P_0.pos
+                 stream_args_P_1->pos
+= process(rn, rp, stream_args_P_1->pos
+, stream_args_P_0->pos
 );
                  	shm_arbiter_buffer_drop(BUFFER_P1, 1);
 
 }
          
+                
+                return 1;
             }
             
                     
@@ -321,22 +349,19 @@ intmap_clear(&buf);
             int TEMPARR2[] = {1};
 
             
-            if (chosen_streams != NULL) {
-                free(chosen_streams);
-            }
             bg_update(&BG_Ps, Ps_ORDER_EXP);
-            chosen_streams = bg_get_first_n(&BG_Ps, 2);
+            is_selection_successful = bg_get_first_n(&BG_Ps, 2, &chosen_streams);
 
         
-            if (chosen_streams != NULL) {
+            if (is_selection_successful) {
                 
             {
                 shm_stream *F = chosen_streams[0]->stream;
 shm_arbiter_buffer *BUFFER_F = chosen_streams[0]->buffer;
-STREAM_Primes_ARGS stream_args_F = *((STREAM_Primes_ARGS *)chosen_streams[0]->args);
+STREAM_Primes_ARGS *stream_args_F = (STREAM_Primes_ARGS *)chosen_streams[0]->args;
 shm_stream *S = chosen_streams[1]->stream;
 shm_arbiter_buffer *BUFFER_S = chosen_streams[1]->buffer;
-STREAM_Primes_ARGS stream_args_S = *((STREAM_Primes_ARGS *)chosen_streams[1]->args);
+STREAM_Primes_ARGS *stream_args_S = (STREAM_Primes_ARGS *)chosen_streams[1]->args;
 
                 
                 if (are_events_in_head(BUFFER_F, sizeof(STREAM_Primes_out), TEMPARR2, 1)) {
@@ -352,29 +377,31 @@ int n = event_for_n->cases.hole.n;
 
 
                 if(
-stream_args_F.pos< 
-stream_args_S.pos)
+stream_args_F->pos< 
+stream_args_S->pos)
              {
                  count -= intmap_remove_upto(&buf, 
-stream_args_F.pos+n);
+stream_args_F->pos+n);
              }
              
-stream_args_F.pos+= n;
+stream_args_F->pos+= n;
          
+                	shm_arbiter_buffer_drop(BUFFER_F, 1);
+
+                return 1;
             }
             
-                    	shm_arbiter_buffer_drop(BUFFER_F, 1);
-
+                    
                 }
             }
             
             {
                 shm_stream *F = chosen_streams[1]->stream;
 shm_arbiter_buffer *BUFFER_F = chosen_streams[1]->buffer;
-STREAM_Primes_ARGS stream_args_F = *((STREAM_Primes_ARGS *)chosen_streams[1]->args);
+STREAM_Primes_ARGS *stream_args_F = (STREAM_Primes_ARGS *)chosen_streams[1]->args;
 shm_stream *S = chosen_streams[0]->stream;
 shm_arbiter_buffer *BUFFER_S = chosen_streams[0]->buffer;
-STREAM_Primes_ARGS stream_args_S = *((STREAM_Primes_ARGS *)chosen_streams[0]->args);
+STREAM_Primes_ARGS *stream_args_S = (STREAM_Primes_ARGS *)chosen_streams[0]->args;
 
                 
                 if (are_events_in_head(BUFFER_F, sizeof(STREAM_Primes_out), TEMPARR2, 1)) {
@@ -390,19 +417,21 @@ int n = event_for_n->cases.hole.n;
 
 
                 if(
-stream_args_F.pos< 
-stream_args_S.pos)
+stream_args_F->pos< 
+stream_args_S->pos)
              {
                  count -= intmap_remove_upto(&buf, 
-stream_args_F.pos+n);
+stream_args_F->pos+n);
              }
              
-stream_args_F.pos+= n;
+stream_args_F->pos+= n;
          
+                	shm_arbiter_buffer_drop(BUFFER_F, 1);
+
+                return 1;
             }
             
-                    	shm_arbiter_buffer_drop(BUFFER_F, 1);
-
+                    
                 }
             }
             
@@ -412,22 +441,19 @@ stream_args_F.pos+= n;
             int TEMPARR3[] = {2};
 
             
-            if (chosen_streams != NULL) {
-                free(chosen_streams);
-            }
             bg_update(&BG_Ps, Ps_ORDER_EXP);
-            chosen_streams = bg_get_first_n(&BG_Ps, 2);
+            is_selection_successful = bg_get_first_n(&BG_Ps, 2, &chosen_streams);
 
         
-            if (chosen_streams != NULL) {
+            if (is_selection_successful) {
                 
             {
                 shm_stream *F = chosen_streams[0]->stream;
 shm_arbiter_buffer *BUFFER_F = chosen_streams[0]->buffer;
-STREAM_Primes_ARGS stream_args_F = *((STREAM_Primes_ARGS *)chosen_streams[0]->args);
+STREAM_Primes_ARGS *stream_args_F = (STREAM_Primes_ARGS *)chosen_streams[0]->args;
 shm_stream *S = chosen_streams[1]->stream;
 shm_arbiter_buffer *BUFFER_S = chosen_streams[1]->buffer;
-STREAM_Primes_ARGS stream_args_S = *((STREAM_Primes_ARGS *)chosen_streams[1]->args);
+STREAM_Primes_ARGS *stream_args_S = (STREAM_Primes_ARGS *)chosen_streams[1]->args;
 
                 
                 if (are_events_in_head(BUFFER_F, sizeof(STREAM_Primes_out), TEMPARR3, 1)) {
@@ -445,25 +471,27 @@ STREAM_Primes_out * event_for_p = (STREAM_Primes_out *) get_event_at_index(e1_F,
 int p = event_for_p->cases.Prime.p;
 
 
-                stream_args_F.pos
-= process(n, p, stream_args_F.pos
-, stream_args_S.pos
+                stream_args_F->pos
+= process(n, p, stream_args_F->pos
+, stream_args_S->pos
 );
          
+                	shm_arbiter_buffer_drop(BUFFER_F, 1);
+
+                return 1;
             }
             
-                    	shm_arbiter_buffer_drop(BUFFER_F, 1);
-
+                    
                 }
             }
             
             {
                 shm_stream *F = chosen_streams[1]->stream;
 shm_arbiter_buffer *BUFFER_F = chosen_streams[1]->buffer;
-STREAM_Primes_ARGS stream_args_F = *((STREAM_Primes_ARGS *)chosen_streams[1]->args);
+STREAM_Primes_ARGS *stream_args_F = (STREAM_Primes_ARGS *)chosen_streams[1]->args;
 shm_stream *S = chosen_streams[0]->stream;
 shm_arbiter_buffer *BUFFER_S = chosen_streams[0]->buffer;
-STREAM_Primes_ARGS stream_args_S = *((STREAM_Primes_ARGS *)chosen_streams[0]->args);
+STREAM_Primes_ARGS *stream_args_S = (STREAM_Primes_ARGS *)chosen_streams[0]->args;
 
                 
                 if (are_events_in_head(BUFFER_F, sizeof(STREAM_Primes_out), TEMPARR3, 1)) {
@@ -481,36 +509,43 @@ STREAM_Primes_out * event_for_p = (STREAM_Primes_out *) get_event_at_index(e1_F,
 int p = event_for_p->cases.Prime.p;
 
 
-                stream_args_F.pos
-= process(n, p, stream_args_F.pos
-, stream_args_S.pos
+                stream_args_F->pos
+= process(n, p, stream_args_F->pos
+, stream_args_S->pos
 );
          
+                	shm_arbiter_buffer_drop(BUFFER_F, 1);
+
+                return 1;
             }
             
-                    	shm_arbiter_buffer_drop(BUFFER_F, 1);
-
+                    
                 }
             }
             
             }
                     
-            }
+            return 0;
+}
 int arbiter() {
-    while (exists_open_streams()) {
+    while (!are_streams_done()) {
     	RULE_SET_rs();
 	}
     shm_monitor_set_finished(monitor_buffer);
 }
     
+
 int main(int argc, char **argv) {
 	initialize_events(); // Always call this first
+	chosen_streams = (dll_node *) malloc(2); // the maximum size this can have is the total number of event sources
 	arbiter_counter = malloc(sizeof(int));
 	*arbiter_counter = 10;
 	init_intmap(&buf);
  
-	stream_args_P_0.pos = 0;
-	stream_args_P_1.pos = 0;
+stream_args_P_0 = malloc(sizeof(STREAM_Primes_ARGS));
+stream_args_P_1 = malloc(sizeof(STREAM_Primes_ARGS));
+	stream_args_P_0->pos = 0;
+	stream_args_P_1->pos = 0;
 
 
 	// connect to event source P_0
@@ -530,8 +565,8 @@ int main(int argc, char **argv) {
  	
  		// init buffer groups
 	init_buffer_group(&BG_Ps);
-	bg_insert(&BG_Ps, EV_SOURCE_P_0, BUFFER_P0,&stream_args_P_0,Ps_ORDER_EXP);
-	bg_insert(&BG_Ps, EV_SOURCE_P_1, BUFFER_P1,&stream_args_P_1,Ps_ORDER_EXP);
+	bg_insert(&BG_Ps, EV_SOURCE_P_0, BUFFER_P0,stream_args_P_0,Ps_ORDER_EXP);
+	bg_insert(&BG_Ps, EV_SOURCE_P_1, BUFFER_P1,stream_args_P_1,Ps_ORDER_EXP);
         
 
  	
@@ -556,7 +591,6 @@ int main(int argc, char **argv) {
 			int i = received_event->cases.NumberPair.i;
 			int n = received_event->cases.NumberPair.n;
 			int m = received_event->cases.NumberPair.m;
-            //printf("monitor: %d %d %d\n", i, n, m);
 
 		  if (true ) {
 		      if(n!=m)
@@ -565,15 +599,13 @@ int main(int argc, char **argv) {
          }
      
 		  }
-		}else {
-            printf("%d\n", received_event->head.kind);
-        }
+		}
         
         shm_monitor_buffer_consume(monitor_buffer, 1);
     }
     
  	
-//	destroy_buffer_group(&BG_Ps);
+	destroy_buffer_group(&BG_Ps);
 
 	// destroy event sources
 	shm_stream_destroy(EV_SOURCE_P_0);
@@ -585,5 +617,11 @@ int main(int argc, char **argv) {
 	shm_arbiter_buffer_free(BUFFER_P1);
 
 	
-	
+	// free chosen_streams
+	for(int i = 0; i < 2; i++) {
+		free(chosen_streams[i]);
+	}
+	free(chosen_streams);
+	destroy_intmap(&buf);
+ 
 }
