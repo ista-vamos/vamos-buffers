@@ -43,9 +43,6 @@ void shm_arbiter_buffer_write_finish(shm_arbiter_buffer *q) {
 
 void shm_arbiter_buffer_finish_push(shm_arbiter_buffer *q);
 
-void shm_arbiter_buffer_push_k(shm_arbiter_buffer *q, const void *elems,
-                               size_t size);
-
 size_t shm_arbiter_buffer_size(shm_arbiter_buffer *buffer) {
     return shm_par_queue_size(&buffer->buffer);
 }
@@ -203,64 +200,6 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
             ++buffer->written_num;
         }
 #endif
-    }
-}
-
-/*
- * Push k events that reside in a continuous memory
- */
-void shm_arbiter_buffer_push_k(shm_arbiter_buffer *buffer, const void *elems,
-                               size_t k) {
-    // printf("Buffering %lu events\n", k);
-    assert(shm_arbiter_buffer_active(buffer));
-    shm_par_queue *queue = &buffer->buffer;
-
-    if (buffer->dropped_num > 0) {
-        if (shm_par_queue_free_num(queue) < 2) {
-            // printf("[buffer] dropping %lu events (free space: %lu)\n", k,
-            // shm_par_queue_free_num(queue));
-            buffer->dropped_num += k;
-        } else {
-            // printf("[buffer] generating dropped event 'dropped(%lu)'\n",
-            // buffer->dropped_num);
-            shm_event_dropped dropped;
-
-            shm_stream_get_dropped_event(buffer->stream, &dropped,
-                                         buffer->drop_begin_id,
-                                         buffer->dropped_num);
-            assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
-            assert(shm_par_queue_free_num(queue) > 1);
-            shm_par_queue_push(queue, &dropped, sizeof(dropped));
-#ifdef DUMP_STATS
-            ++buffer->written_num;
-#endif
-            buffer->total_dropped_num += buffer->dropped_num;
-            ++buffer->total_dropped_times;
-
-            /* the end id may not be precise, but we need just the upper bound
-             */
-            shm_arbiter_buffer_notify_dropped(buffer, buffer->drop_begin_id,
-                                              shm_event_id((shm_event *)elems) -
-                                                  1);
-
-            assert(shm_par_queue_free_num(queue) >= 1);
-            buffer->dropped_num =
-                shm_par_queue_push_k(&buffer->buffer, elems, k);
-#ifdef DUMP_STATS
-            buffer->written_num += k - buffer->dropped_num;
-#endif
-        }
-    } else {
-        buffer->dropped_num = shm_par_queue_push_k(&buffer->buffer, elems, k);
-#ifdef DUMP_STATS
-        buffer->written_num += k - buffer->dropped_num;
-#endif
-        if (buffer->dropped_num > 0) {
-            shm_event *first_dropped_ev =
-                shm_par_queue_peek_at(&buffer->buffer, k - buffer->dropped_num);
-            assert(first_dropped_ev);
-            buffer->drop_begin_id = shm_event_id((shm_event *)first_dropped_ev);
-        }
     }
 }
 

@@ -8,8 +8,10 @@ int main(void) {
     int num[] = {0, 1, 2, 3, 4, 5, 6};
     shm_par_queue q;
     shm_par_queue_init(&q, 3, sizeof(int));
-
-    assert(shm_par_queue_push_k(&q, num + 1, 5) == 2);
+    assert(shm_par_queue_push(&q, num + 1, sizeof(int)) == true);
+    assert(shm_par_queue_push(&q, num + 2, sizeof(int)) == true);
+    assert(shm_par_queue_push(&q, num + 3, sizeof(int)) == true);
+    assert(shm_par_queue_push(&q, num + 4, sizeof(int)) == false);
     for (i = 0; i < (int)shm_par_queue_size(&q); ++i) {
         int *p = (int*)shm_par_queue_peek_at(&q, i);
         assert(*p == i + 1);
@@ -21,12 +23,17 @@ int main(void) {
     assert(shm_par_queue_push(&q, num + 0 , sizeof(i)) == true);
     assert(shm_par_queue_push(&q, num + 1 , sizeof(i)) == true);
     assert(shm_par_queue_pop(&q, &i) == true && i == 0);
-    assert(shm_par_queue_push_k(&q, num + 2, 5) == 3);
+    assert(shm_par_queue_push(&q, num + 2, sizeof(int)) == true);
+    assert(shm_par_queue_push(&q, num + 3, sizeof(int)) == true);
+    assert(shm_par_queue_push(&q, num + 4, sizeof(int)) == false);
     assert(shm_par_queue_pop(&q, &i) == true && i == 1);
     assert(shm_par_queue_pop(&q, &i) == true && i == 2);
     assert(shm_par_queue_pop(&q, &i) == true && i == 3);
     assert(shm_par_queue_size(&q) == 0);
-    assert(shm_par_queue_push_k(&q, num + 2, 5) == 2);
+    assert(shm_par_queue_push(&q, num + 2, sizeof(int)) == true);
+    assert(shm_par_queue_push(&q, num + 3, sizeof(int)) == true);
+    assert(shm_par_queue_push(&q, num + 4, sizeof(int)) == true);
+    assert(shm_par_queue_push(&q, num + 5, sizeof(int)) == false);
     int *d1, *d2;
     size_t s1, s2;
     size_t n = shm_par_queue_peek(&q, 5, (void**)&d1, &s1, (void**)&d2, &s2);

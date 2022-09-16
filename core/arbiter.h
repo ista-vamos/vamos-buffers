@@ -38,9 +38,8 @@ size_t shm_arbiter_buffer_sizeof(void);
 /* writer's API */
 void shm_arbiter_buffer_push(shm_arbiter_buffer *q, const void *elem,
                              size_t size);
-void shm_arbiter_buffer_push_k(shm_arbiter_buffer *q, const void *elems,
-                               size_t size);
-/* cannot be mixed with push/push_k */
+
+/* cannot be mixed with push */
 
 void *shm_arbiter_buffer_write_ptr(shm_arbiter_buffer *q);
 void shm_arbiter_buffer_write_finish(shm_arbiter_buffer *q);
