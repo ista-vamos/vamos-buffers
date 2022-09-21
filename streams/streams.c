@@ -9,27 +9,6 @@
 #include "stream-regex.h"
 #include "stream-regexrw.h"
 
-/*
-static const char *get_arg(const char *name, size_t len,
-                           int argc, char *argv[]) {
-        for (int i = 0; i < argc; ++i) {
-            if (strncmp(argv[i], name, len) == 0) {
-                return argv[i];
-            }
-        }
-        return NULL;
-}
-
-
-const char *get_next_part(const char *params, char out[256]) {
-    const char *part_end = find_next_part(params);
-    if (!part_end)
-        return NULL;
-    strncpy(out, params, part_end - params - 1);
-    return part_end;
-}
-*/
-
 const char *find_next_part(const char *params) {
     params = strchr(params, ':');
     if (!params || *(params + 1) == '\0')
@@ -53,7 +32,7 @@ const char *get_next_part(const char *params, char out[256], char delim) {
         return NULL;
     }
 }
-static const char *get_params(const char *stream_name, int argc, char *argv[]) {
+static const char *get_spec(const char *stream_name, int argc, char *argv[]) {
     size_t slen = strlen(stream_name);
     for (int i = 1; i < argc; ++i) {
         if (strncmp(stream_name, argv[i], slen) == 0) {
@@ -79,15 +58,8 @@ static struct stream_rec avail_streams[] = {
     {NULL, NULL} /* to mark the end */
 };
 
-shm_stream *shm_stream_create(const char *stream_name, int argc, char *argv[]) {
-    const char *params = get_params(stream_name, argc, argv);
-    if (!params) {
-        fprintf(stderr, "error: did not find spec for stream '%s'\n",
-                stream_name);
-        return NULL;
-    }
-
-    const char *next = find_next_part(params); /* skip the name */
+shm_stream *shm_stream_create(const char *stream_name, const char *spec) {
+    const char *next = find_next_part(spec); /* skip the name */
     if (!next) {
         fprintf(stderr,
                 "error: no source specified for stream with name '%s'\n",
@@ -179,42 +151,7 @@ shm_stream *shm_stream_create(const char *stream_name, int argc, char *argv[]) {
 
         return shm_create_generic_stream(key);
     }
-#if 0
-    else if (strncmp(name, "files", 5) == 0) {
-        const char *params = get_arg("files:", 6, argc, argv);
-        if (!params) {
-            fprintf(stderr, "error: stream 'files' takes as parameters files to open\n");
-            return NULL;
-        }
 
-        char file[256];
-        params = get_next_part(params);
-        if (!params) {
-            fprintf(stderr, "error: stream 'files' needs some parameters\n");
-            return NULL;
-        }
-        params = get_next_param(params, file);
-        shm_stream *s = shm_create_fds_stream();
-        while (params) {
-            printf("Opening file '%s' ...", file);
-            int fd = open(file, O_RDONLY);
-            if (fd == -1) {
-                perror("open failed");
-                continue;
-            }
-            shm_stream_fds_add_fd((shm_stream_fds*)s, fd);
-
-            /* get next file */
-            params = get_next_param(params, file);
-        }
-        return s;
-    } else if (strncmp(name, "stdin", 5) == 0) {
-        if (get_arg("stdin", 5, argc, argv)) {
-            fprintf(stderr, "warning: stream 'stdin' takes no parameters, ignoring them\n");
-        }
-        return shm_create_stdin_stream();
-    }
-#endif
     fprintf(stderr, "Unknown stream. Available streams:\n");
     struct stream_rec *it = &avail_streams[0];
     while (it->name != NULL) {
@@ -223,6 +160,17 @@ shm_stream *shm_stream_create(const char *stream_name, int argc, char *argv[]) {
     }
     abort();
     return NULL;
+}
+
+shm_stream *shm_stream_create_from_argv(const char *stream_name, int argc, char *argv[]) {
+    const char *spec = get_spec(stream_name, argc, argv);
+    if (!spec) {
+        fprintf(stderr, "error: did not find spec for stream '%s'\n",
+                stream_name);
+        return NULL;
+    }
+
+    return shm_stream_create(stream_name, spec);
 }
 
 /* This is something that most of the streams do, so have it as a helper fun */
