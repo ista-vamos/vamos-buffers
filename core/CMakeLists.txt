@@ -4,7 +4,7 @@ add_library(shamon-list OBJECT list.c)
 add_library(shamon-vector OBJECT vector.c)
 add_library(shamon-queue-spsc OBJECT queue_spsc.c)
 
-add_library(shamon-source STATIC source.c)
+add_library(shamon-source OBJECT source.c)
 add_library(shamon-monitor STATIC monitor.c)
 
 target_compile_options(shamon-source PRIVATE -fPIC)
