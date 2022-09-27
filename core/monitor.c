@@ -78,6 +78,11 @@ size_t shm_monitor_buffer_peek1(shm_monitor_buffer *buffer, void **data) {
     return shm_par_queue_peek1(&buffer->buffer, data);
 }
 
+void *shm_monitor_buffer_write_ptr_or_null(shm_monitor_buffer *q) {
+    assert(!q->finished && "Asking a pointer from a finished buffer");
+    return shm_par_queue_write_ptr(&q->buffer);
+}
+
 void *shm_monitor_buffer_write_ptr(shm_monitor_buffer *q) {
     assert(!q->finished && "Asking a pointer from a finished buffer");
 
