@@ -21,7 +21,7 @@ target_compile_definitions(shamon-arbiter PUBLIC -D_POSIX_C_SOURCE=200809L)
 add_library(shamon-signature STATIC signatures.c)
 target_compile_options(shamon-signature PRIVATE -fPIC)
 
-add_library(shamon-ringbuf STATIC spsc_ringbuf.c)
+add_library(shamon-ringbuf OBJECT spsc_ringbuf.c)
 add_library(shamon-parallel-queue STATIC par_queue.c)
 target_link_libraries(shamon-parallel-queue PUBLIC shamon-ringbuf)
 
