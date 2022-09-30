@@ -9,4 +9,5 @@ target_include_directories(ringbufs-bench PRIVATE ${CMAKE_SOURCE_DIR}
 if (RMIND_RINGBUF)
 	target_include_directories(ringbufs-bench PRIVATE ${CMAKE_SOURCE_DIR}/rmind-ringbuf/src)
 	target_link_libraries(ringbufs-bench ${CMAKE_SOURCE_DIR}/rmind-ringbuf/src/ringbuf.o)
+	add_dependencies(ringbufs-bench rmind-ringbuf)
 endif()

@@ -13,7 +13,7 @@
 #include "ringbuf.h"
 #endif
 
-#define N 50000
+#define N 1000000
 
 static double elapsed_time(struct timespec *start, struct timespec *end) {
     long seconds = end->tv_sec - start->tv_sec;
@@ -27,6 +27,7 @@ static double report_time(const char *msg, struct timespec *start, struct timesp
     return elapsed;
 }
 
+#if 0
 static void run_shmbuf_push_pop_st() {
     struct source_control *ctrl = source_control_define(1, "dummy", "i");
     struct buffer *buff = create_shared_buffer("/test", sizeof(int), ctrl);
@@ -99,7 +100,7 @@ static void run_local_shmbuf_push_pop_st() {
     assert(buffer_size(buff) == 0);
     release_local_buffer(buff);
 }
-
+#endif
 
 static void run_par_queue_push_pop_st() {
     shm_par_queue q;
@@ -408,11 +409,11 @@ static void run_rmind_ringbuf_push_pop_1() {
 
     thrd_join(tid, NULL);
 
-    printf("[ringbuf], writing: %lf\n", data.elapsed);
+    printf("[rmind-ringbuf], writing: %lf\n", data.elapsed);
     double elapsed = report_time("[ringbuf], reading", &mid, &end);
-    printf("[ringbuf], writer waited: %lu, reader waited: %lu\n",
+    printf("[rmind-ringbuf], writer waited: %lu, reader waited: %lu\n",
            data.writer_waited, reader_waited);
-    printf("\033[34m[ringbuf], totally: %lf seconds.\033[0m\n",
+    printf("\033[34m[rmind-ringbuf], totally: %lf seconds.\033[0m\n",
            elapsed + data.elapsed);
 
     free(buff);
@@ -421,10 +422,6 @@ static void run_rmind_ringbuf_push_pop_1() {
 #endif /* RMIND_RINGBUF */
 
 int main(void) {
-    run_shmbuf_push_pop_st();
-    puts("----------");
-    run_local_shmbuf_push_pop_st();
-    puts("----------");
     run_par_queue_push_pop_st();
     puts("----------");
     run_par_queue_push_pop_1();
