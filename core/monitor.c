@@ -91,16 +91,16 @@ void *shm_monitor_buffer_write_ptr(shm_monitor_buffer *q) {
         return ptr;
 
     /* wait for space in the buffer */
-    size_t spinned = 0;
-    uint64_t sleep_time = SLEEP_TIME_NS_INIT;
+    // size_t spinned = 0;
+    // uint64_t sleep_time = SLEEP_TIME_NS_INIT;
     do {
-        if (++spinned > 1000) {
-            if (sleep_time < SLEEP_TIME_NS_THRES)
-                sleep_time *= 10;
-            sleep_ns(sleep_time);
-            /* TODO: should we use some signaling here after some time
-             * of spinning/sleeping? */
-        }
+        // if (++spinned > 1000) {
+        //     if (sleep_time < SLEEP_TIME_NS_THRES)
+        //         sleep_time *= 10;
+        //     sleep_ns(sleep_time);
+        //     /* TODO: should we use some signaling here after some time
+        //      * of spinning/sleeping? */
+        // }
 
         assert(!q->finished && "Asking a pointer from a finished buffer");
         ptr = shm_par_queue_write_ptr(&q->buffer);
