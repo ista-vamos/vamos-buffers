@@ -38,12 +38,18 @@ int main(void) {
     size_t s1, s2;
     size_t n = shm_par_queue_peek(&q, 5, (void**)&d1, &s1, (void**)&d2, &s2);
     assert(n == 3);
-    assert(s1 == 2);
-    assert(*d1 == 2);
-    assert(*(d1+1) == 3);
-    assert(s2 == 1);
-    assert(*d2 == 4);
-    assert(s1 + s2 == n);
+    assert(s1 + s2 == 3);
+    size_t si = 0;
+    while (si < s1) {
+        assert(d1[si] == (int)(si + 2));
+	++si;
+    }
+    si = 0;
+    while (si < s2) {
+        assert(d2[si] == (int)(si + 2 + s1));
+	++si;
+    }
+
     assert(*(int*)shm_par_queue_peek_at(&q, 0) == 2);
     assert(*(int*)shm_par_queue_peek_at(&q, 1) == 3);
     assert(*(int*)shm_par_queue_peek_at(&q, 2) == 4);

@@ -15,6 +15,7 @@ typedef struct _shm_event shm_event;
 typedef struct _shm_par_queue {
     shm_spsc_ringbuf ringbuf;
     size_t elem_size;
+    size_t capacity;
     unsigned char *data;
 } shm_par_queue;
 
@@ -22,7 +23,7 @@ void shm_par_queue_init(shm_par_queue *q, size_t capacity, size_t elem_size);
 void shm_par_queue_destroy(shm_par_queue *q);
 bool shm_par_queue_push(shm_par_queue *q, const void *elem, size_t size);
 bool shm_par_queue_pop(shm_par_queue *q, void *buff);
-size_t shm_par_queue_drop(shm_par_queue *q, size_t k);
+void shm_par_queue_drop(shm_par_queue *q, size_t k);
 size_t shm_par_queue_size(shm_par_queue *q);
 size_t shm_par_queue_elem_size(shm_par_queue *q);
 size_t shm_par_queue_capacity(shm_par_queue *q);

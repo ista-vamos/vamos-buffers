@@ -150,8 +150,8 @@ void *fetch_arbiter_stream(shm_monitor_buffer *buffer) {
     assert(0 && "Unreachable");
 }
 
-size_t shm_monitor_buffer_consume(shm_monitor_buffer *buffer, size_t k) {
-    return shm_par_queue_drop(&buffer->buffer, k);
+void shm_monitor_buffer_consume(shm_monitor_buffer *buffer, size_t k) {
+    shm_par_queue_drop(&buffer->buffer, k);
 }
 
 /* wait for an event on the 'stream'

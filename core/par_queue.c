@@ -13,10 +13,11 @@ void shm_par_queue_init(shm_par_queue *q, size_t capacity, size_t elem_size) {
     assert(capacity > 0);
     assert(elem_size > 0);
 
-    shm_spsc_ringbuf_init(&q->ringbuf, capacity);
+    shm_spsc_ringbuf_init(&q->ringbuf, capacity + 1);
 
+    q->capacity = capacity;
     q->elem_size = elem_size;
-    q->data = malloc(capacity * elem_size);
+    q->data = malloc((capacity + 1)* elem_size);
     if (!q->data) {
         assert(false && "Allocation failed");
         abort();
@@ -63,18 +64,14 @@ bool shm_par_queue_pop(shm_par_queue *q, void *buff) {
     const size_t off = shm_spsc_ringbuf_read_off_nowrap(&q->ringbuf, &n);
     if (__predict_true(n > 0)) {
         memcpy(buff, q->data + (off * q->elem_size), q->elem_size);
-#ifndef NDEBUG
-        size_t c =
-#endif
         shm_spsc_ringbuf_consume(&q->ringbuf, 1);
-        assert(c == 1 && "Consumed a wrong number of items");
         return true;
     }
     return false;
 }
 
-size_t shm_par_queue_drop(shm_par_queue *q, size_t k) {
-    return shm_spsc_ringbuf_consume(&q->ringbuf, k);
+void shm_par_queue_drop(shm_par_queue *q, size_t k) {
+    shm_spsc_ringbuf_consume(&q->ringbuf, k);
 }
 
 size_t shm_par_queue_free_num(shm_par_queue *q) {
@@ -82,7 +79,7 @@ size_t shm_par_queue_free_num(shm_par_queue *q) {
 }
 
 size_t shm_par_queue_capacity(shm_par_queue *q) {
-    return shm_spsc_ringbuf_capacity(&q->ringbuf);
+    return q->capacity;
 }
 
 size_t shm_par_queue_size(shm_par_queue *q) {
