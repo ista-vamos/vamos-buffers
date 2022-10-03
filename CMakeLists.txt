@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.1)
 project(Shamon C)
 
-include(CTest)
+enable_testing()
+
 include(ExternalProject)
 
 SET (CMAKE_VERBOSE_MAKEFILE 1)
