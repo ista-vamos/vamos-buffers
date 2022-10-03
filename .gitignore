@@ -15,4 +15,5 @@ __pycache__
 .DS_Store
 build/
 experiments/primes/programs/
-DartConfiguration.tcl
+*.tcl
+
