@@ -1,19 +1,55 @@
+#include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <assert.h>
+#include <signal.h>
 
-#include "client.h"
-#include "utils.h"
 #include "buffer.h"
+#include "client.h"
 #include "shm.h"
+#include "utils.h"
 
 #define SLEEP_TIME 1000
-void buffer_wait_for_monitor(struct buffer *buff) {
-    while (!buffer_monitor_attached(buff)) {
-        sleep_ms(SLEEP_TIME);
-    }
-    /* sleep once more so that the monitor has some time
-     * to move to monitoring code */
-    sleep_ms(SLEEP_TIME);
+
+static volatile sig_atomic_t interrupted = 0;
+
+static void sig_int(int signo) {
+    (void) signo;
+    interrupted = 1;
 }
 
+static inline void restore_sigfunc(void (*sigfunc)(int)) {
+    if (sigfunc != SIG_ERR) {
+        signal(SIGINT, sigfunc);
+    }
+}
+
+int buffer_wait_for_monitor(struct buffer *buff) {
+    void (*sigfunc)(int);
+    sigfunc = signal(SIGINT, sig_int);
+    int err = 0;
+
+    while (!buffer_monitor_attached(buff)) {
+        if (sleep_ms(SLEEP_TIME) != 0) {
+            err = -errno;
+            break;
+        }
+        if (interrupted) {
+            err = -EINTR;
+            break;
+        }
+    }
+
+    restore_sigfunc(sigfunc);
+
+    if (err < 0)
+        return err;
+
+    /* sleep once more so that the monitor has some time
+     * to move to monitoring code */
+    if (sleep_ms(SLEEP_TIME) != 0) {
+        err = -errno;
+    }
+
+    return err;
+}

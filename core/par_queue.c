@@ -1,27 +1,25 @@
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdatomic.h>
-#include <string.h>
+#include "par_queue.h"
 #include <assert.h>
-#include "parallel_queue.h"
+#include <stdatomic.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 
 static inline void elem_num_inc(shm_par_queue *q, int k) {
     /* Do ++q->elem_num atomically. */
     /* The increment must come after everything is done.
        The release order makes sure that the written element
        is visible to other threads by now. */
-    atomic_fetch_add_explicit(&q->elem_num, k,
-                              memory_order_release);
+    atomic_fetch_add_explicit(&q->elem_num, k, memory_order_seq_cst);
 }
 
 static inline void elem_num_dec(shm_par_queue *q, int k) {
     /* Do q->elem_num -= k atomically. */
-    atomic_fetch_sub_explicit(&q->elem_num, k,
-                              memory_order_acquire);
+    atomic_fetch_sub_explicit(&q->elem_num, k, memory_order_seq_cst);
 }
 
 static inline size_t elem_num(shm_par_queue *q) {
-    return atomic_load_explicit(&q->elem_num, memory_order_relaxed);
+    return atomic_load_explicit(&q->elem_num, memory_order_seq_cst);
 }
 
 void shm_par_queue_init(shm_par_queue *q, size_t capacity, size_t elem_size) {
@@ -43,16 +41,14 @@ void shm_par_queue_destroy(shm_par_queue *q) {
 /* push an element into the queue.
  * 'size' is the actual size of the pushed element
  * and it must hold that 'size' <= 'elem_size' */
-bool shm_par_queue_push(shm_par_queue *q,
-                        const void *elem,
-                        size_t size) {
+bool shm_par_queue_push(shm_par_queue *q, const void *elem, size_t size) {
     // queue is full
     if (elem_num(q) == q->capacity) {
         return false;
     }
 
     // all ok, copy the data
-    void *pos = q->data + q->head*q->elem_size;
+    void *pos = q->data + q->head * q->elem_size;
     ++q->head;
 
     // queue full, rotate it
@@ -78,12 +74,12 @@ void *shm_par_queue_write_ptr(shm_par_queue *q) {
 #endif
 
     // all ok, copy the data
-    return q->data + q->head*q->elem_size;
+    return q->data + q->head * q->elem_size;
 }
 
 bool shm_par_queue_write_finish(shm_par_queue *q) {
-    assert(q->partial_head == q->head
-           && "Inconsistent head, was push() called?");
+    assert(q->partial_head == q->head &&
+           "Inconsistent head, was push() called?");
     ++q->head;
 
     // queue full, rotate it
@@ -97,9 +93,7 @@ bool shm_par_queue_write_finish(shm_par_queue *q) {
 }
 
 /* return how many elements were not pushed */
-size_t shm_par_queue_push_k(shm_par_queue *q,
-                            const void *elems,
-                            size_t k) {
+size_t shm_par_queue_push_k(shm_par_queue *q, const void *elems, size_t k) {
     /* how many elements can we actually fit in? */
     size_t freen = q->capacity - elem_num(q);
     size_t ret = 0;
@@ -108,18 +102,17 @@ size_t shm_par_queue_push_k(shm_par_queue *q,
         k = freen;
     }
 
-    void *pos = q->data + q->head*q->elem_size;
+    void *pos = q->data + q->head * q->elem_size;
     size_t end = q->head + k;
     if (end > q->capacity) {
         size_t ovfl = end - q->capacity;
-        memcpy(pos, elems, q->elem_size*(k - ovfl));
-        memcpy(q->data,
-               (unsigned char *)elems + q->elem_size*(k-ovfl),
-               q->elem_size*ovfl);
+        memcpy(pos, elems, q->elem_size * (k - ovfl));
+        memcpy(q->data, (unsigned char *)elems + q->elem_size * (k - ovfl),
+               q->elem_size * ovfl);
         q->head = ovfl;
     } else {
         assert(k <= q->capacity && "Too many elements to push");
-        memcpy(pos, elems, q->elem_size*k);
+        memcpy(pos, elems, q->elem_size * k);
         q->head += k;
         /* queue full, rotate it */
         assert(q->head <= q->capacity);
@@ -133,13 +126,12 @@ size_t shm_par_queue_push_k(shm_par_queue *q,
     return ret;
 }
 
-
 bool shm_par_queue_pop(shm_par_queue *q, void *buff) {
     if (elem_num(q) == 0) {
         return false;
     }
 
-    unsigned char *pos = q->data + q->tail*q->elem_size;
+    unsigned char *pos = q->data + q->tail * q->elem_size;
     memcpy(buff, pos, q->elem_size);
     ++q->tail;
     if (q->tail == q->capacity)
@@ -186,37 +178,36 @@ size_t shm_par_queue_elem_size(shm_par_queue *q) {
 
 shm_event *shm_par_queue_top(shm_par_queue *q) {
     if (elem_num(q) > 0)
-        return (shm_event *)(q->data + q->tail*q->elem_size);
+        return (shm_event *)(q->data + q->tail * q->elem_size);
     return (shm_event *)0;
 }
 
-size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
-                          void **ptr1, size_t *len1,
+size_t shm_par_queue_peek(shm_par_queue *q, size_t n, void **ptr1, size_t *len1,
                           void **ptr2, size_t *len2) {
     size_t cur_elem_num = elem_num(q);
     if (n > cur_elem_num)
         n = cur_elem_num;
     size_t end = n + q->tail;
     if (end >= q->capacity) {
-        *ptr1 = q->data + q->tail*q->elem_size;
+        *ptr1 = q->data + q->tail * q->elem_size;
         *len1 = q->capacity - q->tail;
         *ptr2 = q->data;
         *len2 = end - q->capacity;
     } else {
-        *ptr1 = q->data + q->tail*q->elem_size;
+        *ptr1 = q->data + q->tail * q->elem_size;
         *len1 = n;
         *len2 = 0;
     }
     assert(*len1 + *len2 == n);
     /* return  n; */
-    return  cur_elem_num;
+    return cur_elem_num;
 }
 
 /* peak1 -- it is like top + return the number of elements */
 size_t shm_par_queue_peek1(shm_par_queue *q, void **data) {
     size_t cur_elem_num = elem_num(q);
     if (cur_elem_num > 0) {
-        *data = (unsigned char *)(q->data + q->tail*q->elem_size);
+        *data = (unsigned char *)(q->data + q->tail * q->elem_size);
     }
     return cur_elem_num;
 }
@@ -228,10 +219,10 @@ shm_event *shm_par_queue_peek_at(shm_par_queue *q, size_t k) {
 
     size_t end = k + q->tail;
     if (end >= q->capacity) {
-        return (shm_event*)(q->data + (end - q->capacity)*q->elem_size);
+        return (shm_event *)(q->data + (end - q->capacity) * q->elem_size);
     }
 
-    return (shm_event*)(q->data + (q->tail + k)*q->elem_size);
+    return (shm_event *)(q->data + (q->tail + k) * q->elem_size);
 }
 
 shm_event *shm_par_queue_peek_atmost_at(shm_par_queue *q, size_t *want_k) {
@@ -247,8 +238,8 @@ shm_event *shm_par_queue_peek_atmost_at(shm_par_queue *q, size_t *want_k) {
 
     size_t end = k + q->tail;
     if (end >= q->capacity) {
-        return (shm_event*)(q->data + (end - q->capacity)*q->elem_size);
+        return (shm_event *)(q->data + (end - q->capacity) * q->elem_size);
     }
 
-    return (shm_event*)(q->data + (q->tail + k)*q->elem_size);
+    return (shm_event *)(q->data + (q->tail + k) * q->elem_size);
 }

@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
 project(Shamon C)
 
-include(CTest)
+enable_testing()
+
+include(ExternalProject)
 
 SET (CMAKE_VERBOSE_MAKEFILE 1)
 set(CMAKE_C_STANDARD 11)
@@ -17,10 +19,37 @@ endif()
 
 OPTION(DUMP_STATS "Collect and allow dumping statistics" OFF)
 OPTION(DYNAMORIO_SOURCES "Build sources based on DynamoRIO" ON)
+OPTION(RMIND_RINGBUF "Build and use githbu:rmind/ringbuf ring buffer" OFF)
+OPTION(BPF_SOURCES "Build and use eBPF sources" OFF)
+
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 if (DUMP_STATS)
 	add_compile_definitions(DUMP_STATS)
+endif()
+
+if (RMIND_RINGBUF)
+	ExternalProject_Add(rmind-ringbuf
+			    GIT_REPOSITORY https://github.com/rmind/ringbuf
+			    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rmind-ringbuf
+			    CONFIGURE_COMMAND ""
+			    BUILD_COMMAND make -C src
+			    INSTALL_COMMAND ""
+			    BUILD_IN_SOURCE 1)
+
+	add_compile_definitions(RMIND_RINGBUF)
+endif()
+
+if (BPF_SOURCES)
+	ExternalProject_Add(bcc
+			    GIT_REPOSITORY https://github.com/iovisor/bcc
+			    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bcc-src
+			    #CONFIGURE_COMMAND ""
+			    #BUILD_COMMAND make -C src
+			    INSTALL_COMMAND ""
+			    BUILD_IN_SOURCE 1)
+
+	add_compile_definitions(BPF_SOURCES)
 endif()
 
 
@@ -35,33 +64,15 @@ if (DYNAMORIO_SOURCES)
         endif(NOT DynamoRIO_FOUND)
 endif()
 
-add_library(shamon-list OBJECT list.c)
-add_library(shamon-vector OBJECT vector.c)
-add_library(shamon-queue OBJECT queue.c)
-add_library(shamon-source OBJECT source.c)
-
-add_library(shamon-utils STATIC utils.c)
-target_compile_definitions(shamon-utils PUBLIC -D_POSIX_C_SOURCE=200809L)
-add_library(shamon-parallel-queue STATIC parallel_queue.c)
-add_library(shamon-arbiter STATIC shamon.c arbiter.c event.c stream.c)
-target_compile_options(shamon-arbiter PRIVATE -fPIC)
-target_compile_definitions(shamon-arbiter PUBLIC -D_POSIX_C_SOURCE=200809L)
-add_library(shamon-signature STATIC signatures.c)
-target_compile_options(shamon-signature PRIVATE -fPIC)
-
-add_library(shamon STATIC shamon.c)
+add_subdirectory(core)
+include_directories(${CMAKE_SOURCE_DIR}/core)
+link_directories(${CMAKE_SOURCE_DIR}/core)
 
 add_subdirectory(streams)
 add_subdirectory(sources)
 add_subdirectory(shmbuf)
 add_subdirectory(fastbuf)
-
-add_library(shamon-lib SHARED arbiter.c event.c stream.c)
-target_compile_definitions(shamon-lib PUBLIC -D_POSIX_C_SOURCE=200809L)
-target_link_libraries(shamon-lib PUBLIC shamon-parallel-queue
-		                        shamon-signature
-		                        shamon-shmbuf)
-
+add_subdirectory(monitors)
 add_subdirectory(experiments)
 add_subdirectory(tests)
 

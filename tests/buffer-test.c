@@ -1,11 +1,17 @@
 #undef NDEBUG
 #include <assert.h>
 #include <stdlib.h>
+
+#include "source.h"
 #include "shmbuf/buffer.h"
+
 
 int main(void) {
     size_t i;
-    struct buffer *b = initialize_shared_buffer("/testkey", sizeof(size_t), NULL);
+    struct source_control ctrl = {
+        .size = 0
+    };
+    struct buffer *b = create_shared_buffer("/testkey", sizeof(size_t), &ctrl);
     assert(b);
     assert(buffer_size(b) == 0);
     for (i = 1; i < 101; ++i) {

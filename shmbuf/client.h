@@ -3,6 +3,6 @@
 
 struct buffer;
 
-void buffer_wait_for_monitor(struct buffer *);
+int buffer_wait_for_monitor(struct buffer *);
 
 #endif

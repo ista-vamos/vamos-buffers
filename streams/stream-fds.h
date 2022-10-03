@@ -1,23 +1,23 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "event.h"
-#include "stream.h"
 #include "queue.h"
+#include "stream.h"
 
 typedef struct _shm_event_fd_in {
-	// mandatory
-	shm_event base;
-	// data
-	int fd;
+    // mandatory
+    shm_event base;
+    // data
+    int fd;
     uint64_t time;
-	shm_string_ref str_ref;
+    shm_string_ref str_ref;
 } shm_event_fd_in;
 
 typedef struct _shm_stream_fds {
-	shm_stream base;
-	// user can add here some auxiliary data if needed
+    shm_stream base;
+    // user can add here some auxiliary data if needed
     // ...
     // the pointer to the read lines
     char *line;
@@ -41,4 +41,3 @@ shm_stream *shm_create_fds_stream();
 void shm_stream_fds_add_fd(shm_stream_fds *stream, int fd);
 
 void shm_destroy_fds_stream(shm_stream_fds *ss);
-

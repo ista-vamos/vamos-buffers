@@ -1,6 +1,6 @@
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 #include "list.h"
 
@@ -18,7 +18,8 @@ void shm_list_destroy(shm_list *list, shm_list_elem_destroy_fn destroy) {
     }
 }
 
-size_t shm_list_insert_elem_after(shm_list *list, shm_list_elem *elem, shm_list_elem *new) {
+size_t shm_list_insert_elem_after(shm_list *list, shm_list_elem *elem,
+                                  shm_list_elem *new) {
     assert(elem);
     new->next = elem->next;
     new->prev = elem;

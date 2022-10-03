@@ -46,3 +46,4 @@ void spin_wait()
 	for (int i = 0; i < 500; i++)
 		;
 }
+

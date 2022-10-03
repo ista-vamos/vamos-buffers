@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <threads.h>
-#include "parallel_queue.h"
+#include "par_queue.h"
 
 int buffer[4];
 

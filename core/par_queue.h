@@ -1,11 +1,15 @@
 #ifndef SHAMON_PARALLEL_QUEUE_H
 #define SHAMON_PARALLEL_QUEUE_H
 
-#include <unistd.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 typedef struct _shm_event shm_event;
 
+/**
+ * shm_par_queue is a single-producer single-consumer (SPSC) lock-free
+ * concurrent queue.
+ */
 typedef struct _shm_par_queue {
     size_t capacity;
     /* modifications of this variable are going to be atomic,
@@ -31,8 +35,7 @@ size_t shm_par_queue_elem_size(shm_par_queue *q);
 size_t shm_par_queue_capacity(shm_par_queue *q);
 size_t shm_par_queue_free_num(shm_par_queue *q);
 shm_event *shm_par_queue_top(shm_par_queue *q);
-size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
-                          void **ptr1, size_t *len1,
+size_t shm_par_queue_peek(shm_par_queue *q, size_t n, void **ptr1, size_t *len1,
                           void **ptr2, size_t *len2);
 /* peek 1 event */
 size_t shm_par_queue_peek1(shm_par_queue *q, void **data);

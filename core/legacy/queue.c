@@ -1,9 +1,8 @@
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <assert.h>
 #include "queue.h"
-
+#include <assert.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 
 void shm_queue_init(shm_queue *q, size_t size, size_t elem_size) {
     assert(q);
@@ -30,7 +29,7 @@ void *shm_queue_extend(shm_queue *q) {
         return NULL;
 
     // all ok, copy the data
-    void *pos = q->data + q->head*q->elem_size;
+    void *pos = q->data + q->head * q->elem_size;
     ++q->head;
     ++q->elem_num;
 
@@ -41,7 +40,6 @@ void *shm_queue_extend(shm_queue *q) {
 
     return pos;
 }
-
 
 bool shm_queue_push(shm_queue *q, const void *elem) {
     void *pos = shm_queue_extend(q);
@@ -57,7 +55,7 @@ bool shm_queue_pop(shm_queue *q, void *buff) {
         return false;
     }
 
-    unsigned char *pos = q->data + q->tail*q->elem_size;
+    unsigned char *pos = q->data + q->tail * q->elem_size;
     memcpy(buff, pos, q->elem_size);
     ++q->tail;
     --q->elem_num;
