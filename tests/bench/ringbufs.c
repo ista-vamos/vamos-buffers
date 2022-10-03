@@ -424,14 +424,16 @@ static void run_rmind_ringbuf_push_pop_1() {
 int main(void) {
     run_par_queue_push_pop_st();
     puts("----------");
-    run_par_queue_push_pop_1();
-    puts("----------");
     run_queue_spsc_push_pop_st();
+    puts("----------");
+#ifdef RMIND_RINGBUF
+    run_rmind_ringbuf_push_pop_st();
+    puts("----------");
+#endif
+    run_par_queue_push_pop_1();
     puts("----------");
     run_queue_spsc_push_pop_1();
 #ifdef RMIND_RINGBUF
-    puts("----------");
-    run_rmind_ringbuf_push_pop_st();
     puts("----------");
     run_rmind_ringbuf_push_pop_1();
 #endif
