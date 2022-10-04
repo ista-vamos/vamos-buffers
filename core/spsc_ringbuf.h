@@ -15,13 +15,19 @@
  */
 typedef struct _shm_spsc_ringbuf {
     /* capacity needs to be also aligned as it is read by both reader and writer */
+    /* TODO: cache capacity locally (do a proxy to acces the ringbuf?
+     * That would help also with using this ringbuf in shmbuf/) */
     CACHELINE_ALIGNED size_t capacity;
 
     /* reader */
+    /* TODO: put these into a single cache line to save space
+       or cache the seen head locally */
     CACHELINE_ALIGNED _Atomic size_t tail;
     CACHELINE_ALIGNED size_t seen_head;
 
     /* writer */
+    /* TODO: put these into a single cache line to save space
+       or cache the seen tail locally */
     CACHELINE_ALIGNED size_t seen_tail;
     CACHELINE_ALIGNED _Atomic size_t head;
 #ifndef NDEBUG

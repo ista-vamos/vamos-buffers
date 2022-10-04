@@ -17,6 +17,12 @@ void shm_spsc_ringbuf_init(shm_spsc_ringbuf *b, size_t capacity) {
 }
 
 static inline size_t get_written_num(size_t head, size_t tail, size_t capacity) {
+    /* TODO check on init that capacity is such that this expr cannot underflow */
+    ssize_t num = ((ssize_t)head - (ssize_t)tail);
+    if (num < 0)
+        return num + capacity;
+    return num;
+    /*
     if (tail < head) {
         return head - tail;
     } else {
@@ -26,6 +32,7 @@ static inline size_t get_written_num(size_t head, size_t tail, size_t capacity) 
             return capacity - tail + head;
         }
     }
+    */
 }
 
 static inline size_t get_free_num(size_t head, size_t tail, size_t capacity) {
@@ -229,8 +236,10 @@ size_t shm_spsc_ringbuf_peek(shm_spsc_ringbuf *b,
         n = cur_elem_num;
     }
 
+    assert(n <= cur_elem_num);
+
     if (tail < head) {
-        *len1 = head - tail > n ? n : head - tail;
+        *len1 = n;
         *len2 = 0;
     } else {
         assert(tail != head && "Ringbuf is empty");
