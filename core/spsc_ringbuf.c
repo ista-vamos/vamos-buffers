@@ -6,64 +6,103 @@
 #define __predict_true(x)  __builtin_expect((x) != 0, 1)
 
 void shm_spsc_ringbuf_init(shm_spsc_ringbuf *b, size_t capacity) {
-    /* NOTE: we use one element as a separator */
+    /*  we use one element as a separator */
+    assert(capacity > 1);
+
     b->capacity = capacity;
     b->head = 0;
     b->tail = 0;
+    b->seen_head = 0;
+    b->seen_tail = 0;
+}
+
+static inline size_t get_written_num(size_t head, size_t tail, size_t capacity) {
+    if (tail < head) {
+        return head - tail;
+    } else {
+        if (__predict_false(tail == head)) {
+             return 0;
+        } else {
+            return capacity - tail + head;
+        }
+    }
+}
+
+static inline size_t get_free_num(size_t head, size_t tail, size_t capacity) {
+    if (tail < head)
+        return capacity - head + tail - 1;
+
+    if (__predict_false(head == tail)) {
+        return capacity;
+    }
+
+    return tail - head - 1;
 }
 
 size_t shm_spsc_ringbuf_capacity(shm_spsc_ringbuf *b) {
-    return b->capacity;
+    /* we use one element as a separator */
+    return b->capacity - 1;
 }
 
 size_t shm_spsc_ringbuf_size(shm_spsc_ringbuf *b) {
-    size_t head = atomic_load_explicit(&b->head, memory_order_relaxed);
-    size_t tail = atomic_load_explicit(&b->tail, memory_order_relaxed);
-
-    if (tail < head)
-        return head - tail;
-
-    return head == tail ? 0 : b->capacity - tail + head;
+    return get_written_num(atomic_load_explicit(&b->head, memory_order_relaxed),
+                           atomic_load_explicit(&b->tail, memory_order_relaxed),
+                           b->capacity);
 }
 
 size_t shm_spsc_ringbuf_free_num(shm_spsc_ringbuf *b) {
-    const size_t c = b->capacity;
-    size_t head = atomic_load_explicit(&b->head, memory_order_relaxed);
-    size_t tail = atomic_load_explicit(&b->tail, memory_order_relaxed);
-
-    if (tail < head)
-        return c - head + tail - 1;
-
-    return head == tail ? c : tail - head - 1;
+    return get_free_num(atomic_load_explicit(&b->head, memory_order_relaxed),
+                        atomic_load_explicit(&b->tail, memory_order_relaxed),
+                        b->capacity);
 }
 
 bool shm_spsc_ringbuf_full(shm_spsc_ringbuf *b) {
     size_t head = atomic_load_explicit(&b->head, memory_order_relaxed);
     size_t tail = atomic_load_explicit(&b->tail, memory_order_relaxed);
-    return __predict_false(tail + 1 == head);
+    return __predict_false(head == tail + 1 || (head == b->capacity - 1 && tail == 0));
+}
+
+static inline size_t get_write_off(size_t head, size_t tail, size_t capacity,
+                                   size_t *n, size_t *wrap_n) {
+    if (tail < head) {
+        if (__predict_false(tail == 0)) {
+            *n = capacity - head - 1;
+            if (wrap_n) {
+                *wrap_n = 0;
+            }
+            return capacity - head - 1;
+        }
+
+        *n = capacity - head;
+        if (wrap_n) {
+             *wrap_n = tail - 1;
+        }
+        return capacity - head + tail - 1;
+    }
+
+    if (__predict_false(tail == head)) {
+        *n = capacity;
+        if (wrap_n) {
+            *wrap_n = 0;
+        }
+        return capacity;
+    }
+
+    *n = tail - head - 1;
+    if (wrap_n) {
+        *wrap_n = 0;
+    }
+    return tail - head - 1;
 }
 
 size_t shm_spsc_ringbuf_write_off(shm_spsc_ringbuf *b, size_t *n, size_t *wrap_n) {
-    const size_t head = atomic_load_explicit(&b->head, memory_order_relaxed);
-    /* TODO: isn't relaxed OK here if we do memory barrier in write_finish? */
-    const size_t tail = atomic_load_explicit(&b->tail, memory_order_acquire);
+    const size_t head = atomic_load_explicit(&b->head, memory_order_acquire);
 
-    if (tail < head) {
-        if (__predict_false(tail == 0)) {
-            *n = b->capacity - head - 1;
-            *wrap_n = 0;
-        } else {
-            *n = b->capacity - head;
-            *wrap_n = tail - 1;
-        }
-    } else {
-        if (__predict_false(tail == head)) {
-            *n = b->capacity;
-        } else {
-            *n = tail - head - 1;
-            *wrap_n = 0;
-        }
+    if (get_write_off(head, b->seen_tail, b->capacity, n, wrap_n) == 0) {
+        b->seen_tail = atomic_load_explicit(&b->tail, memory_order_relaxed);
+        get_write_off(head, b->seen_tail, b->capacity, n, wrap_n);
     }
+
 #ifndef NDEBUG
      b->write_in_progress.head = head;
      b->write_in_progress.n = *n + *wrap_n;
@@ -73,23 +112,13 @@ size_t shm_spsc_ringbuf_write_off(shm_spsc_ringbuf *b, size_t *n, size_t *wrap_n
 }
 
 size_t shm_spsc_ringbuf_write_off_nowrap(shm_spsc_ringbuf *b, size_t *n) {
-    const size_t head = atomic_load_explicit(&b->head, memory_order_relaxed);
-    /* TODO: isn't relaxed OK here if we do memory barrier in write_finish? */
-    const size_t tail = atomic_load_explicit(&b->tail, memory_order_acquire);
+    const size_t head = atomic_load_explicit(&b->head, memory_order_acquire);
 
-    if (tail < head) {
-        if (__predict_false(tail == 0)) {
-            *n = b->capacity - head - 1;
-        } else {
-            *n = b->capacity - head;
-        }
-    } else {
-        if (__predict_false(tail == head)) {
-            *n = b->capacity;
-        } else {
-            *n = tail - head - 1;
-        }
+    if (get_write_off(head, b->seen_tail, b->capacity, n, NULL) == 0) {
+        b->seen_tail = atomic_load_explicit(&b->tail, memory_order_relaxed);
+        get_write_off(head, b->seen_tail, b->capacity, n, NULL);
     }
+
 #ifndef NDEBUG
      b->write_in_progress.head = head;
      b->write_in_progress.n = *n;
@@ -123,18 +152,14 @@ void shm_spsc_ringbuf_write_finish(shm_spsc_ringbuf *b, size_t n) {
 }
 
 size_t shm_spsc_ringbuf_read_off_nowrap(shm_spsc_ringbuf *b, size_t *n) {
-    const size_t tail = atomic_load_explicit(&b->tail, memory_order_relaxed);
-    const size_t head = atomic_load_explicit(&b->head, memory_order_acquire);
-
-    if (tail < head) {
-        *n = head - tail;
-    } else {
-        if (__predict_false(tail == head)) {
-            *n = 0;
-        } else {
-            *n = b->capacity - tail + head;
-        }
+    const size_t tail = atomic_load_explicit(&b->tail, memory_order_acquire);
+    size_t tmp = get_written_num(b->seen_head, tail, b->capacity);
+    if (tmp == 0) {
+        b->seen_head = atomic_load_explicit(&b->head, memory_order_acquire);
+        tmp = get_written_num(b->seen_head, tail, b->capacity);
     }
+
+    *n = tmp;
 
     return tail;
 }

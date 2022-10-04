@@ -13,7 +13,7 @@
 #include "ringbuf.h"
 #endif
 
-#define N 1000000
+#define N 50000000
 
 static double elapsed_time(struct timespec *start, struct timespec *end) {
     long seconds = end->tv_sec - start->tv_sec;
