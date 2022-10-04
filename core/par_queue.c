@@ -104,7 +104,9 @@ size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
                           void **ptr1, size_t *len1,
                           void **ptr2, size_t *len2) {
     size_t off;
-    const size_t cur_elem_num = shm_spsc_ringbuf_peek(&q->ringbuf, n, &off, len1, len2);
+    const size_t cur_elem_num = shm_spsc_ringbuf_peek(&q->ringbuf,
+                                                      n == 0 ? ~((size_t)0) : n,
+                                                      &off, len1, len2);
     if (__predict_true(cur_elem_num > 0)) {
         *ptr1 = q->data + (off * q->elem_size);
 
@@ -129,7 +131,7 @@ shm_event *shm_par_queue_peek_at(shm_par_queue *q, size_t k) {
     unsigned char *ptr1, *ptr2;
     size_t len1, len2;
 
-    size_t n = shm_par_queue_peek(q, k == (~((size_t)0)) ? 0 : k + 1,
+    size_t n = shm_par_queue_peek(q, k == (~((size_t)0)) ? k : k + 1,
                                   (void**)&ptr1, &len1,
                                   (void**)&ptr2, &len2);
     if (n <= k) {
@@ -148,7 +150,7 @@ shm_event *shm_par_queue_peek_atmost_at(shm_par_queue *q, size_t *want_k) {
     size_t len1, len2;
     size_t k = *want_k;
 
-    size_t n = shm_par_queue_peek(q, k == (~((size_t)0)) ? 0 : k + 1,
+    size_t n = shm_par_queue_peek(q, k == (~((size_t)0)) ? k : k + 1,
                                   &ptr1, &len1, &ptr2, &len2);
     if (n <= k) {
         k = n - 1;

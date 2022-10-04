@@ -184,31 +184,38 @@ void shm_spsc_ringbuf_consume(shm_spsc_ringbuf *b, size_t n) {
 size_t shm_spsc_ringbuf_peek(shm_spsc_ringbuf *b,
                              size_t n, size_t *off,
                              size_t *len1, size_t *len2) {
-    const size_t tail = atomic_load_explicit(&b->tail, memory_order_relaxed);
-    const size_t head = atomic_load_explicit(&b->head, memory_order_relaxed);
+    const size_t tail = atomic_load_explicit(&b->tail, memory_order_acquire);
+    size_t head = b->seen_head;
+    size_t cur_elem_num = get_written_num(head, tail, b->capacity);
+    if (cur_elem_num < n) {
+        b->seen_head = head = atomic_load_explicit(&b->head, memory_order_acquire);
+        cur_elem_num = get_written_num(head, tail, b->capacity);
+    }
+
+    if (n == 0)
+        return cur_elem_num;
+
+    if (__predict_false(cur_elem_num == 0))
+        return 0;
+
+    if (cur_elem_num < n) {
+        n = cur_elem_num;
+    }
 
     if (tail < head) {
         *len1 = head - tail > n ? n : head - tail;
         *len2 = 0;
     } else {
-        if (__predict_false(tail == head)) {
-            *len1 = 0;
-            *len2 = 0;
-        } else {
-            const size_t c = b->capacity;
-            *len1 = c - tail > n ? n : c - tail;
-            *len2 = head < (n - *len1) ? head : n - *len1;
-        }
+        assert(tail != head && "Ringbuf is empty");
+        const size_t c = b->capacity;
+        const size_t l1 = c - tail > n ? n : c - tail;
+        *len1 = l1;
+        *len2 = head < (n - l1) ? head : n - l1;
     }
 
-    assert(*len1 + *len2 <= n);
-
+    assert(*len1 + *len2 == n);
     *off = tail;
 
-    /* return the number of elements in the rb */
-    if (tail < head)
-        return head - tail;
-
-    return head == tail ? 0 : b->capacity - tail + head;
+    return cur_elem_num;
 }
 
