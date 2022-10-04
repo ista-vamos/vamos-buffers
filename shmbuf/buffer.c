@@ -17,6 +17,7 @@
 #include "list.h"
 #include "shm.h"
 #include "source.h"
+#include "utils.h"
 #include "vector-macro.h"
 
 #include "buffer-size.h"
@@ -266,10 +267,20 @@ void release_local_buffer(struct buffer *buff) {
 
 static struct source_control *get_shared_control_buffer(const char *buff_key);
 
-struct buffer *get_shared_buffer(const char *key) {
+struct buffer *try_get_shared_buffer(const char *key, size_t retry) {
     printf("Getting shared buffer '%s'\n", key);
-    int fd = shamon_shm_open(key, O_RDWR, S_IRWXU);
-    if (fd < 0) {
+
+    int fd = -1;
+    ++retry;
+    do {
+        fd = shamon_shm_open(key, O_RDWR, S_IRWXU);
+        if (fd >= 0) {
+            break;
+        }
+        sleep_ns(100);
+    } while (--retry > 0);
+
+    if (fd == -1) {
         perror("shm_open");
         return NULL;
     }
@@ -326,6 +337,10 @@ before_mmap_clean:
         perror("shm_unlink after mmap failure");
     }
     return NULL;
+}
+
+struct buffer *get_shared_buffer(const char *key) {
+    return try_get_shared_buffer(key, 10);
 }
 
 struct event_record *buffer_get_avail_events(struct buffer *buff,
@@ -407,17 +422,14 @@ void *buffer_read_pointer(struct buffer *buff, size_t *size) {
     return buff->shmbuffer->data + tail * info->elem_size;
 }
 
-/*
-void *buffer_top(struct buffer *buff) {
-    struct buffer_info *info = &buff->shmbuffer->info;
-    ssize_t off = shm_spsc_ringbuf_top(&info->ringbuf);
-    return buff->shmbuffer->data + off * info->elem_size;
-}
-*/
-
 bool buffer_drop_k(struct buffer *buff, size_t k) {
     return shm_spsc_ringbuf_consume_upto(_ringbuf(buff), k) == k;
 }
+
+size_t buffer_consume(struct buffer *buff, size_t k) {
+    return shm_spsc_ringbuf_consume_upto(_ringbuf(buff), k);
+}
+
 
 /* buffer_push broken down into several operations:
  *

@@ -11,6 +11,7 @@ struct buffer;
 
 struct buffer *create_shared_buffer(const char *key, size_t elem_size,
                                     const struct source_control *control);
+struct buffer *try_get_shared_buffer(const char *key, size_t retry);
 struct buffer *get_shared_buffer(const char *key);
 struct event_record *buffer_get_avail_events(struct buffer *, size_t *);
 
@@ -34,6 +35,7 @@ void *buffer_get_str(struct buffer *buff, uint64_t elem);
 
 void *buffer_read_pointer(struct buffer *buff, size_t *size);
 bool buffer_drop_k(struct buffer *buff, size_t size);
+size_t buffer_consume(struct buffer *buff, size_t k);
 
 size_t buffer_size(struct buffer *buff);
 size_t buffer_capacity(struct buffer *buff);
