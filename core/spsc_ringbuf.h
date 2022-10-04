@@ -36,6 +36,7 @@ typedef struct _shm_spsc_ringbuf {
 
 void shm_spsc_ringbuf_init(shm_spsc_ringbuf *b, size_t capacity);
 void shm_spsc_ringbuf_consume(shm_spsc_ringbuf *b, size_t n);
+size_t shm_spsc_ringbuf_consume_upto(shm_spsc_ringbuf *b, size_t n);
 size_t shm_spsc_ringbuf_write_off(shm_spsc_ringbuf *b, size_t *n, size_t *wrap_n);
 size_t shm_spsc_ringbuf_write_off_nowrap(shm_spsc_ringbuf *b, size_t *n);
 void shm_spsc_ringbuf_write_finish(shm_spsc_ringbuf *q, size_t n);

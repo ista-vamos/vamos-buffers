@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include "buffer.h"
+#include "spsc_ringbuf.h"
 #include "list.h"
 #include "shm.h"
 #include "source.h"
@@ -32,26 +33,27 @@ struct dropped_range {
     shm_eventid end;
 };
 
+#define _ringbuf(buff) (&buff->shmbuffer->info.ringbuf)
+
 struct buffer_info {
+    shm_spsc_ringbuf ringbuf;
+
     size_t capacity;
-    _Atomic size_t elem_num;
     size_t elem_size;
-    size_t head;
-    size_t tail;
     shm_eventid last_processed_id;
     struct dropped_range dropped_ranges[DROPPED_RANGES_NUM];
     size_t dropped_ranges_next;
-    _Atomic bool dropped_ranges_lock; /* spin lock */
+    _Atomic _Bool dropped_ranges_lock; /* spin lock */
     /* the monitored program exited/destroyed the buffer */
     volatile _Bool destroyed;
-    _Bool monitor_attached;
+    volatile _Bool monitor_attached;
 } __attribute__((aligned(8)));
 
 /* TODO: not all systems have the size of page 4kB */
 #define MEM_SIZE (SHM_BUFFER_SIZE_PAGES * 4096)
 
 struct shmbuffer {
-    struct buffer_info __attribute__((aligned(8))) info;
+    _Alignas(64) struct buffer_info info;
     /* pointer to the beginning of data */
     unsigned char data[MEM_SIZE];
 };
@@ -66,6 +68,9 @@ struct aux_buffer {
     unsigned char data[];
 };
 
+/* TODO: cache the shared state in local state
+   (e.g., elem_size, etc.). Maybe we could also inline
+   the shm_spsc_ringbuf so that we can keep local cache */
 struct buffer {
     struct shmbuffer *shmbuffer;
     struct source_control *control;
@@ -107,23 +112,6 @@ static inline void drop_ranges_unlock(struct buffer *buff) {
 #define BUFF_START(b) ((unsigned char *)b->data)
 #define BUFF_END(b) ((unsigned char *)b->data + MEM_SIZE - 1)
 
-static inline void elem_num_inc(struct buffer_info *info, int k) {
-    /* Do ++info->elem_num atomically. */
-    /* The increment must come after everything is done.
-       The release order makes sure that the written element
-       is visible to other threads by now. */
-    atomic_fetch_add_explicit(&info->elem_num, k, memory_order_release);
-}
-
-static inline void elem_num_dec(struct buffer_info *info, int k) {
-    /* Do info->elem_num -= k atomically. */
-    atomic_fetch_sub_explicit(&info->elem_num, k, memory_order_acquire);
-}
-
-static inline size_t elem_num(struct buffer_info *info) {
-    return atomic_load_explicit(&info->elem_num, memory_order_relaxed);
-}
-
 size_t buffer_allocation_size() {
     return sizeof(struct shmbuffer);
 }
@@ -141,7 +129,7 @@ size_t buffer_capacity(struct buffer *buff) {
 }
 
 size_t buffer_size(struct buffer *buff) {
-    return elem_num(&buff->shmbuffer->info);
+    return shm_spsc_ringbuf_size(_ringbuf(buff));
 }
 
 size_t buffer_elem_size(struct buffer *buff) {
@@ -182,8 +170,12 @@ static struct buffer *initialize_shared_buffer(const char *key,
 
     buff->shmbuffer = (struct shmbuffer *)mem;
     memset(buff->shmbuffer, 0, sizeof(struct buffer_info));
-    buff->shmbuffer->info.capacity =
+
+    const size_t capacity =
         (BUFF_END(buff->shmbuffer) - BUFF_START(buff->shmbuffer)) / elem_size;
+    /* ringbuf has one dummy element */
+    buff->shmbuffer->info.capacity = capacity - 1;
+    shm_spsc_ringbuf_init(_ringbuf(buff), capacity);
     printf("  .. buffer allocated size = %lu, capacity = %lu\n",
            buffer_allocation_size(), buff->shmbuffer->info.capacity);
     buff->shmbuffer->info.elem_size = elem_size;
@@ -232,11 +224,14 @@ struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
 
     struct buffer *buff = malloc(sizeof(struct buffer));
     assert(buff && "Memory allocation failed");
-
     buff->shmbuffer = (struct shmbuffer *)mem;
     memset(buff->shmbuffer, 0, sizeof(struct buffer_info));
-    buff->shmbuffer->info.capacity =
+
+    const size_t capacity =
         (BUFF_END(buff->shmbuffer) - BUFF_START(buff->shmbuffer)) / elem_size;
+    /* ringbuf has one dummy element */
+    buff->shmbuffer->info.capacity = capacity - 1;
+    shm_spsc_ringbuf_init(_ringbuf(buff), capacity);
     printf("  .. buffer allocated size = %lu, capacity = %lu\n",
            buffer_allocation_size(), buff->shmbuffer->info.capacity);
     buff->shmbuffer->info.elem_size = elem_size;
@@ -404,61 +399,24 @@ void destroy_shared_buffer(struct buffer *buff) {
 
 void *buffer_read_pointer(struct buffer *buff, size_t *size) {
     struct buffer_info *info = &buff->shmbuffer->info;
-
-    if (elem_num(info) == 0) {
-        *size = 0;
+    size_t tail = shm_spsc_ringbuf_read_off_nowrap(&info->ringbuf, size);
+    if (*size == 0)
         return NULL;
-    }
-
-    size_t tail = info->tail;
-    unsigned char *pos = buff->shmbuffer->data + tail * info->elem_size;
-    size_t end = tail + *size;
-    if (end > info->capacity) {
-        *size -= end - info->capacity;
-        assert(*size <= elem_num(info));
-    }
-
-    /* should not happen with one reader */
-    assert(tail == info->tail && "Something changed tail");
-
-    return pos;
+    /* TODO: get rid of the multiplication,
+     * incrementally shift a pointer instead */
+    return buff->shmbuffer->data + tail * info->elem_size;
 }
 
-/* can be safely used only by the reader */
+/*
+void *buffer_top(struct buffer *buff) {
+    struct buffer_info *info = &buff->shmbuffer->info;
+    ssize_t off = shm_spsc_ringbuf_top(&info->ringbuf);
+    return buff->shmbuffer->data + off * info->elem_size;
+}
+*/
+
 bool buffer_drop_k(struct buffer *buff, size_t k) {
-    struct buffer_info *info = &buff->shmbuffer->info;
-    if (elem_num(info) >= k) {
-        info->tail += k;
-        if (info->tail >= info->capacity)
-            info->tail -= info->capacity;
-        elem_num_dec(info, k);
-        return true;
-    }
-    return false;
-}
-
-bool buffer_push(struct buffer *buff, const void *elem, size_t size) {
-    struct buffer_info *info = &buff->shmbuffer->info;
-    assert(!info->destroyed && "Writing to a destroyed buffer");
-    /* buffer full */
-    if (elem_num(info) == info->capacity) {
-        return false;
-    }
-
-    /* all ok, copy the data */
-    assert(info->elem_size >= size && "Size does not fit the slot");
-    void *pos = buff->shmbuffer->data + info->head * info->elem_size;
-    memcpy(pos, elem, size);
-    ++info->head;
-
-    // queue full, rotate it
-    if (info->head == info->capacity) {
-        info->head = 0;
-    }
-
-    elem_num_inc(info, 1);
-
-    return true;
+    return shm_spsc_ringbuf_consume_upto(_ringbuf(buff), k) == k;
 }
 
 /* buffer_push broken down into several operations:
@@ -481,25 +439,22 @@ void *buffer_start_push(struct buffer *buff) {
     struct buffer_info *info = &buff->shmbuffer->info;
     assert(!info->destroyed && "Writing to a destroyed buffer");
 
-    /* buffer full */
-    if (elem_num(info) == info->capacity) {
+    size_t n;
+    size_t off = shm_spsc_ringbuf_write_off_nowrap(_ringbuf(buff), &n);
+    if (n == 0) {
         /* ++info->dropped; */
-        return NULL;
+        return false;
     }
 
     /* all ok, return the pointer to the data */
     /* FIXME: do not use multiplication, maintain the pointer to the head of
      * data */
-    return buff->shmbuffer->data + info->head * info->elem_size;
+    return buff->shmbuffer->data + off * info->elem_size;
 }
 
 void *buffer_partial_push(struct buffer *buff, void *prev_push,
                           const void *elem, size_t size) {
     assert(buffer_is_ready(buff) && "Writing to a destroyed buffer");
-    /* buffer full */
-    assert(elem_num(&buff->shmbuffer->info) < buff->shmbuffer->info.capacity);
-
-    /* all ok, copy the data */
     assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
     assert((unsigned char *)prev_push < BUFF_END(buff->shmbuffer));
     assert((unsigned char *)prev_push <= BUFF_END(buff->shmbuffer) - size);
@@ -512,10 +467,6 @@ void *buffer_partial_push(struct buffer *buff, void *prev_push,
 void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
                               uint64_t evid, const char *str) {
     assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
-    /* buffer full */
-    assert(elem_num(&buff->shmbuffer->info) < buff->shmbuffer->info.capacity);
-
-    /* all ok, copy the data */
     assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
     assert((unsigned char *)prev_push < BUFF_END(buff->shmbuffer));
 
@@ -527,10 +478,6 @@ void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
 void *buffer_partial_push_str_n(struct buffer *buff, void *prev_push,
                                 uint64_t evid, const char *str, size_t len) {
     assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
-    /* buffer full */
-    assert(elem_num(&buff->shmbuffer->info) < buff->shmbuffer->info.capacity);
-
-    /* all ok, copy the data */
     assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
     assert((unsigned char *)prev_push < BUFF_END(buff->shmbuffer));
 
@@ -539,43 +486,41 @@ void *buffer_partial_push_str_n(struct buffer *buff, void *prev_push,
     return (unsigned char *)prev_push + sizeof(uint64_t);
 }
 
-bool buffer_finish_push(struct buffer *buff) {
-    struct buffer_info *info = &buff->shmbuffer->info;
-    assert(!info->destroyed && "Writing to a destroyed buffer");
-    /* buffer full */
-    assert(elem_num(info) != info->capacity);
+void buffer_finish_push(struct buffer *buff) {
+    assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
+    shm_spsc_ringbuf_write_finish(_ringbuf(buff), 1);
+}
 
-    ++info->head;
+bool buffer_push(struct buffer *buff, const void *elem, size_t size) {
+    assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
+    assert(buff->shmbuffer->info.elem_size >= size
+           && "Size does not fit the slot");
 
-    // queue full, rotate it
-    if (info->head == info->capacity) {
-        info->head = 0;
-    }
+    void *dst = buffer_start_push(buff);
+    if (dst == NULL)
+        return false;
 
-    elem_num_inc(info, 1);
+    memcpy(dst, elem, size);
+    buffer_finish_push(buff);
 
     return true;
 }
 
 bool buffer_pop(struct buffer *buff, void *dst) {
-    struct buffer_info *info = &buff->shmbuffer->info;
-    assert(!info->destroyed && "Reading from a destroyed buffer");
-    if (elem_num(info) == 0) {
-        return false;
+    assert(!buff->shmbuffer->info.destroyed && "Reading from a destroyed buffer");
+
+    size_t size;
+    void *pos = buffer_read_pointer(buff, &size);
+    if (size > 0) {
+        memcpy(dst, pos, buff->shmbuffer->info.elem_size);
+        shm_spsc_ringbuf_consume(_ringbuf(buff), 1);
+        return true;
     }
 
-    unsigned char *pos = buff->shmbuffer->data + info->tail * info->elem_size;
-    memcpy(dst, pos, info->elem_size);
-    ++info->tail;
-    if (info->tail == info->capacity)
-        info->tail = 0;
-
-    assert(elem_num(info) > 0);
-    elem_num_dec(info, 1);
-
-    return true;
+    return false;
 }
 
+#if 0
 /* copy k elements out of the buffer */
 bool buffer_pop_k(struct buffer *buff, void *dst, size_t k) {
     struct buffer_info *info = &buff->shmbuffer->info;
@@ -601,6 +546,7 @@ bool buffer_pop_k(struct buffer *buff, void *dst, size_t k) {
     elem_num_dec(info, k);
     return true;
 }
+#endif
 
 /*** CONTROL BUFFER ****/
 

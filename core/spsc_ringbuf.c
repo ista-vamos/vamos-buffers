@@ -169,6 +169,7 @@ size_t shm_spsc_ringbuf_read_off_nowrap(shm_spsc_ringbuf *b, size_t *n) {
  * Consume n items from the ringbuffer. There must be at least n items.
  */
 void shm_spsc_ringbuf_consume(shm_spsc_ringbuf *b, size_t n) {
+    assert(n > 0 && "Consume 0 elems");
     assert(n <= b->capacity);
     assert((b->capacity < (~((size_t)0)) - n) && "Possible overflow");
 
@@ -179,6 +180,32 @@ void shm_spsc_ringbuf_consume(shm_spsc_ringbuf *b, size_t n) {
     }
 
     atomic_store_explicit(&b->tail, new_tail, memory_order_release);
+}
+
+
+/*
+ * Consume up to n items from the ringbuffer. Return the number of consumed events.
+ */
+size_t shm_spsc_ringbuf_consume_upto(shm_spsc_ringbuf *b, size_t n) {
+    assert(n <= b->capacity);
+    assert((b->capacity < (~((size_t)0)) - n) && "Possible overflow");
+
+    const size_t tail = atomic_load_explicit(&b->tail, memory_order_acquire);
+    size_t k = get_written_num(b->seen_head, tail, b->capacity);
+    if (k < n) {
+        b->seen_head = atomic_load_explicit(&b->head, memory_order_acquire);
+        k = get_written_num(b->seen_head, tail, b->capacity);
+    }
+
+    if (k < n) {
+        n = k;
+    }
+
+    if (n > 0) {
+        shm_spsc_ringbuf_consume(b, n);
+    }
+
+    return n;
 }
 
 size_t shm_spsc_ringbuf_peek(shm_spsc_ringbuf *b,
@@ -218,4 +245,3 @@ size_t shm_spsc_ringbuf_peek(shm_spsc_ringbuf *b,
 
     return cur_elem_num;
 }
-

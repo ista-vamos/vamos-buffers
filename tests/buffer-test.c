@@ -5,7 +5,6 @@
 #include "source.h"
 #include "shmbuf/buffer.h"
 
-
 int main(void) {
     size_t i;
     struct source_control ctrl = {
@@ -30,11 +29,10 @@ int main(void) {
         assert(buffer_push(b, &i, sizeof(size_t)) == true);
     }
     assert(buffer_size(b) == 100);
-    size_t num[100];
-    assert(buffer_pop_k(b, num, 101) == false);
-    assert(buffer_pop_k(b, num, 100) == true);
+    size_t num;
     for (i = 0; i < 100; ++i) {
-        assert(num[i] == i + 1);
+	assert(buffer_pop(b, &num) == true);
+	assert(num == i + 1);
     }
 
     // pop k with rotate
@@ -53,13 +51,5 @@ int main(void) {
     assert(buffer_push(b, &i, sizeof(size_t)) == true);
     // buffer contains 5, ... capacity + 1
     assert(buffer_size(b) == capacity - 2);
-    size_t *nums = malloc(sizeof(size_t)*(capacity-2));
-    assert(buffer_pop_k(b, nums, capacity - 1) == false);
-    assert(buffer_pop_k(b, nums, capacity - 2) == true);
-    for (i = 0; i < capacity - 2; ++i) {
-        assert(nums[i] == i + 5);
-    }
-
-    free(nums);
     destroy_shared_buffer(b);
 }
