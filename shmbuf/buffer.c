@@ -277,7 +277,7 @@ struct buffer *try_get_shared_buffer(const char *key, size_t retry) {
         if (fd >= 0) {
             break;
         }
-        sleep_ns(100);
+        sleep_ms(1000);
     } while (--retry > 0);
 
     if (fd == -1) {
@@ -340,7 +340,7 @@ before_mmap_clean:
 }
 
 struct buffer *get_shared_buffer(const char *key) {
-    return try_get_shared_buffer(key, 10);
+    return try_get_shared_buffer(key, 20);
 }
 
 struct event_record *buffer_get_avail_events(struct buffer *buff,
