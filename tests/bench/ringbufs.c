@@ -422,6 +422,10 @@ static void run_rmind_ringbuf_push_pop_1() {
 #endif /* RMIND_RINGBUF */
 
 int main(void) {
+#ifndef NDEBUG
+    printf("\033[31mWARNING: this is not a Release build!\033[0m\n");
+#endif
+
     run_par_queue_push_pop_st();
     puts("----------");
     run_queue_spsc_push_pop_st();
