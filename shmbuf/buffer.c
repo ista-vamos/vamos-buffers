@@ -364,6 +364,29 @@ void buffer_set_last_processed_id(struct buffer *buff, shm_eventid id) {
     buff->shmbuffer->info.last_processed_id = id;
 }
 
+static
+void release_shared_control_buffer(struct source_control *buffer) {
+    if (munmap(buffer, buffer->size) != 0) {
+        perror("munmap failure");
+    }
+
+    /* TODO: we leak fd */
+}
+
+
+static
+void destroy_shared_control_buffer(const char *buffkey,
+                                   struct source_control *buffer) {
+    release_shared_control_buffer(buffer);
+
+    char key[SHM_NAME_MAXLEN];
+    shamon_map_ctrl_key(buffkey, key);
+    if (shamon_shm_unlink(key) != 0) {
+        perror("release_shared_control_buffer: shm_unlink failure");
+    }
+}
+
+
 /* for readers */
 void release_shared_buffer(struct buffer *buff) {
     if (munmap(buff->shmbuffer, buffer_allocation_size()) != 0) {
@@ -372,7 +395,6 @@ void release_shared_buffer(struct buffer *buff) {
     if (close(buff->fd) == -1) {
         perror("release_shared_buffer: failed closing mmap fd");
     }
-    free(buff->key);
 
     size_t vecsize = VEC_SIZE(buff->aux_buffers);
     for (size_t i = 0; i < vecsize; ++i) {
@@ -381,6 +403,9 @@ void release_shared_buffer(struct buffer *buff) {
     }
     VEC_DESTROY(buff->aux_buffers);
 
+    release_shared_control_buffer(buff->control);
+
+    free(buff->key);
     free(buff);
 }
 
@@ -407,6 +432,8 @@ void destroy_shared_buffer(struct buffer *buff) {
     if (shamon_shm_unlink(buff->key) != 0) {
         perror("destroy_shared_buffer: shm_unlink failure");
     }
+
+    destroy_shared_control_buffer(buff->key, buff->control);
 
     free(buff->key);
     free(buff);
@@ -606,6 +633,7 @@ create_shared_control_buffer(const char *buff_key,
     return (struct source_control *)mem;
 }
 
+static
 struct source_control *get_shared_control_buffer(const char *buff_key) {
     char key[SHM_NAME_MAXLEN];
     shamon_map_ctrl_key(buff_key, key);
@@ -638,29 +666,6 @@ struct source_control *get_shared_control_buffer(const char *buff_key) {
 
     /* FIXME: we leak fd */
     return (struct source_control *)mem;
-}
-
-size_t control_buffer_size(void *buffer) {
-    size_t *mem = (size_t *)buffer;
-    return *(mem - 2);
-}
-
-void release_shared_control_buffer(const char *buffkey, void *buffer) {
-    size_t *mem = (size_t *)buffer;
-    int fd = (int)*(--mem);
-    size_t size = *(--mem);
-
-    if (munmap(mem, size) != 0) {
-        perror("munmap failure");
-    }
-    if (close(fd) == -1) {
-        perror("closing fd after mmap failure");
-    }
-    char key[SHM_NAME_MAXLEN];
-    shamon_map_ctrl_key(buffkey, key);
-    if (shamon_shm_unlink(key) != 0) {
-        perror("release_shared_control_buffer: shm_unlink failure");
-    }
 }
 
 /***** AUX BUFFERS ********/
