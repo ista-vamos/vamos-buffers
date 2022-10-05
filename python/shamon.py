@@ -7,12 +7,11 @@ lib = CDLL(so_file)
 
 lib.source_control_define_str.argtypes = [c_char_p]
 lib.source_control_define_str.restype = c_void_p
-lib.create_shared_buffer.argtypes = [c_char_p, c_size_t, c_void_p]
+lib.create_shared_buffer.argtypes = [c_char_p, c_void_p]
 lib.create_shared_buffer.restype = c_void_p
-def create_shared_buffer(key : str, elem_size : int, events: str):
+def create_shared_buffer(key: str, events: str):
     control = lib.source_control_define_str(c_char_p(events.encode('ascii')))
     return c_void_p(lib.create_shared_buffer(c_char_p(key.encode('ascii')),
-                                             c_size_t(elem_size),
                                              control))
 
 lib.destroy_shared_buffer.argtypes = [c_void_p]

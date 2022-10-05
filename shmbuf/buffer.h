@@ -4,16 +4,25 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/file.h>
 
 struct source_control;
 struct event_record;
 struct buffer;
 
-struct buffer *create_shared_buffer(const char *key, size_t elem_size,
+struct buffer *create_shared_buffer(const char *key,
                                     const struct source_control *control);
+struct buffer *create_shared_buffer_adv(const char *key,
+                                        mode_t mode,
+                                        size_t elem_size,
+                                        const struct source_control *control);
+
 struct buffer *try_get_shared_buffer(const char *key, size_t retry);
 struct buffer *get_shared_buffer(const char *key);
 struct event_record *buffer_get_avail_events(struct buffer *, size_t *);
+
+int buffer_get_key_path(struct buffer *, char keypath[], size_t keypathsize);
+int buffer_get_ctrl_key_path(struct buffer *, char keypath[], size_t keypathsize);
 
 void release_shared_buffer(struct buffer *);
 void destroy_shared_buffer(struct buffer *);

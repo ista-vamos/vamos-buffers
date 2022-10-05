@@ -85,6 +85,8 @@ struct buffer {
     int fd;
     /* shm key */
     char *key;
+    /* mode to set to the created SHM file */
+    mode_t mode;
 };
 
 static size_t aux_buffer_free_space(struct aux_buffer *buff);
@@ -137,12 +139,43 @@ size_t buffer_elem_size(struct buffer *buff) {
     return buff->shmbuffer->info.elem_size;
 }
 
+int buffer_get_key_path(struct buffer *buff, char keypath[], size_t keypathsize) {
+    if (SHM_NAME_MAXLEN <= keypathsize)
+        return -1;
+
+    if (shm_mapname(buff->key, keypath) == NULL) {
+        return -2;
+    }
+
+    return 0;
+}
+
+int buffer_get_ctrl_key_path(struct buffer *buff, char keypath[], size_t keypathsize) {
+    if (SHM_NAME_MAXLEN <= keypathsize)
+        return -1;
+
+    char ctrlkey[SHM_NAME_MAXLEN];
+    if (shamon_map_ctrl_key(buff->key, ctrlkey) == NULL) {
+        return -3;
+    }
+
+    if (shm_mapname(ctrlkey, keypath) == NULL) {
+        return -2;
+    }
+
+    return 0;
+}
+
+
 static struct buffer *initialize_shared_buffer(const char *key,
+                                               mode_t mode,
                                                size_t elem_size,
                                                struct source_control *control) {
     assert(elem_size > 0 && "Element size is 0");
+    assert(elem_size >= sizeof(shm_event_dropped) && "The size must be enough to contain the dropped event");
+
     printf("Initializing buffer '%s' with elem size '%lu'\n", key, elem_size);
-    int fd = shamon_shm_open(key, O_RDWR | O_CREAT, S_IRWXU);
+    int fd = shamon_shm_open(key, O_RDWR | O_CREAT, mode);
     if (fd < 0) {
         perror("shm_open");
         return NULL;
@@ -191,24 +224,48 @@ static struct buffer *initialize_shared_buffer(const char *key,
     buff->cur_aux_buff = NULL;
     buff->fd = fd;
     buff->control = control;
+    buff->mode = mode;
 
     puts("Done");
     return buff;
 }
 
 static struct source_control *
-create_shared_control_buffer(const char *buff_key,
+create_shared_control_buffer(const char *buff_key, mode_t mode,
                              const struct source_control *control);
 
-struct buffer *create_shared_buffer(const char *key, size_t elem_size,
+struct buffer *create_shared_buffer(const char *key,
                                     const struct source_control *control) {
-    struct source_control *ctrl = create_shared_control_buffer(key, control);
+    struct source_control *ctrl = create_shared_control_buffer(key, S_IRWXU, control);
     if (!ctrl) {
         fprintf(stderr, "Failed creating control buffer\n");
         return NULL;
     }
 
-    return initialize_shared_buffer(key, elem_size, ctrl);
+    size_t elem_size = source_control_max_event_size(ctrl);
+    if (elem_size < sizeof(shm_event_dropped))
+        elem_size = sizeof(shm_event_dropped);
+
+    return initialize_shared_buffer(key, S_IRWXU, elem_size, ctrl);
+}
+
+struct buffer *create_shared_buffer_adv(const char *key,
+                                        mode_t mode,
+                                        size_t elem_size,
+                                        const struct source_control *control) {
+    struct source_control *ctrl = create_shared_control_buffer(key, mode, control);
+    if (!ctrl) {
+        fprintf(stderr, "Failed creating control buffer\n");
+        return NULL;
+    }
+
+    if (elem_size == 0) {
+        elem_size = source_control_max_event_size(ctrl);
+        if (elem_size < sizeof(shm_event_dropped))
+            elem_size = sizeof(shm_event_dropped);
+    }
+
+    return initialize_shared_buffer(key, mode, elem_size, ctrl);
 }
 
 /* FOR TESTING */
@@ -591,13 +648,14 @@ bool buffer_pop_k(struct buffer *buff, void *dst, size_t k) {
 
 struct source_control *
 create_shared_control_buffer(const char *buff_key,
+                             mode_t mode,
                              const struct source_control *control) {
     char key[SHM_NAME_MAXLEN];
     shamon_map_ctrl_key(buff_key, key);
     size_t size = control->size;
 
     printf("Initializing control buffer '%s' of size '%lu'\n", key, size);
-    int fd = shamon_shm_open(key, O_RDWR | O_CREAT, S_IRWXU);
+    int fd = shamon_shm_open(key, O_RDWR | O_CREAT, mode);
     if (fd < 0) {
         perror("shm_open");
         return NULL;
@@ -684,7 +742,7 @@ static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
 
     /* printf("Initializing aux buffer %s\n", key); */
 
-    int fd = shamon_shm_open(key, O_RDWR | O_CREAT, S_IRWXU);
+    int fd = shamon_shm_open(key, O_RDWR | O_CREAT, buff->mode);
     if (fd < 0) {
         perror("shm_open");
         abort();
