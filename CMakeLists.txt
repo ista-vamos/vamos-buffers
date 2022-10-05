@@ -42,10 +42,9 @@ endif()
 
 if (BPF_SOURCES)
 	ExternalProject_Add(bcc
-			    GIT_REPOSITORY https://github.com/iovisor/bcc
-			    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bcc-src
-			    #CONFIGURE_COMMAND ""
-			    #BUILD_COMMAND make -C src
+			    GIT_REPOSITORY https://github.com/mchalupa/bcc
+			    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bcc
+                            GIT_TAG readwrite
 			    INSTALL_COMMAND ""
 			    BUILD_IN_SOURCE 1)
 
