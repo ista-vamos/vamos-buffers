@@ -48,11 +48,16 @@ add_test(NAME queue-par-test-3
 
 add_test(NAME queue-par-cbmc
          COMMAND cbmc -I${CMAKE_SOURCE_DIR} --c11 --unwind 2
-	         queue-par-cbmc.c ${CMAKE_SOURCE_DIR}/core/par_queue.c)
+	         queue-par-cbmc.c
+		 ${CMAKE_SOURCE_DIR}/core/par_queue.c
+		 ${CMAKE_SOURCE_DIR}/core/spsc_ringbuf.c)
+
 
 add_test(NAME queue-par-cbmc-2
          COMMAND cbmc -I${CMAKE_SOURCE_DIR} --c11 --unwind 2
-	         queue-par-cbmc_2.c ${CMAKE_SOURCE_DIR}/core/par_queue.c)
+	         queue-par-cbmc_2.c
+		 ${CMAKE_SOURCE_DIR}/core/par_queue.c
+		 ${CMAKE_SOURCE_DIR}/core/spsc_ringbuf.c)
 
 add_executable(fetch-test fetch-test.c)
 target_link_libraries(fetch-test shamon-shmbuf shamon-arbiter shamon-parallel-queue pthread)

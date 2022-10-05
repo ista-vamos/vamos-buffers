@@ -39,7 +39,7 @@ void shm_monitor_buffer_write_finish(shm_monitor_buffer *q);
 
 /* reader's API */
 void *fetch_arbiter_stream(shm_monitor_buffer *buffer);
-size_t shm_monitor_buffer_consume(shm_monitor_buffer *buffer, size_t n);
+void shm_monitor_buffer_consume(shm_monitor_buffer *buffer, size_t n);
 
 /* multiple threads can use top and peek if none of them uses drop/pop
  * at the time
