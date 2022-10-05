@@ -384,6 +384,7 @@ struct buffer *try_get_shared_buffer(const char *key, size_t retry) {
     buff->aux_buf_idx = 0;
     buff->cur_aux_buff = NULL;
     buff->fd = fd;
+    buff->mode = 0;
 
     return buff;
 
