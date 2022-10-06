@@ -24,6 +24,17 @@ OPTION(BPF_SOURCES "Build and use eBPF sources" OFF)
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
+# Here we can setup the responsivity of buffers:
+# If there is no event on a buffer, we first busy wait
+# BUSY_WAIT_FOR_EVENTS times. Then we suspend the thread
+# for SLEEP_TIME_INIT_NS seconds, then two times longer,
+# etc. up the the SLEEP_TIME_THRES_NS. If no event
+# still came, we keep suspending the thread using
+# the SLEEP_TIME_THRES_NS duration.
+add_compile_definitions(BUSY_WAIT_FOR_EVENTS=1000)
+add_compile_definitions(SLEEP_TIME_INIT_NS=10)
+add_compile_definitions(SLEEP_TIME_THRES_NS=30000)
+
 if (DUMP_STATS)
 	add_compile_definitions(DUMP_STATS)
 endif()

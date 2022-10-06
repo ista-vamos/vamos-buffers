@@ -8,10 +8,6 @@
 #include "par_queue.h"
 #include "utils.h"
 
-#define SLEEP_TIME_NS_INIT 1
-#define BUSY_WAIT_TIMES 1000
-#define SLEEP_TIME_NS_THRES 1000000
-
 typedef struct _shm_monitor_buffer {
     shm_par_queue buffer; // the buffer itself
     bool finished;        // the arbiter has finished?
@@ -91,16 +87,20 @@ void *shm_monitor_buffer_write_ptr(shm_monitor_buffer *q) {
         return ptr;
 
     /* wait for space in the buffer */
-    // size_t spinned = 0;
-    // uint64_t sleep_time = SLEEP_TIME_NS_INIT;
+#if 0
+    size_t spinned = 0;
+    uint64_t sleep_time = SLEEP_TIME_INIT_NS;
+#endif
     do {
-        // if (++spinned > 1000) {
-        //     if (sleep_time < SLEEP_TIME_NS_THRES)
-        //         sleep_time *= 10;
-        //     sleep_ns(sleep_time);
-        //     /* TODO: should we use some signaling here after some time
-        //      * of spinning/sleeping? */
-        // }
+#if 0
+        if (++spinned > BUSY_WAIT_FOR_EVENTS) {
+            sleep_ns(sleep_time);
+            if (sleep_time < SLEEP_TIME_THRES_NS)
+                sleep_time *= 2;
+            /* TODO: should we use some signaling here after some time
+             * of spinning/sleeping? */
+        }
+#endif
 
         assert(!q->finished && "Asking a pointer from a finished buffer");
         ptr = shm_par_queue_write_ptr(&q->buffer);
@@ -118,14 +118,13 @@ void shm_monitor_buffer_write_finish(shm_monitor_buffer *q) {
 /* get an event from the stream, block until there is some and return it
  * or return NULL if the stream ended */
 void *fetch_arbiter_stream(shm_monitor_buffer *buffer) {
-    size_t sleep_time = SLEEP_TIME_NS_INIT;
+    size_t sleep_time = SLEEP_TIME_INIT_NS;
     size_t spinned = 0;
     void *ev;
 
     while (1) {
         /* wait for the event */
-        ev = shm_monitor_buffer_top(buffer);
-        if (ev) {
+        if ((ev = shm_monitor_buffer_top(buffer))) {
             return ev;
         }
 
@@ -134,20 +133,17 @@ void *fetch_arbiter_stream(shm_monitor_buffer *buffer) {
         }
 
         /* before sleeping, try just to busy wait some time */
-        if (spinned < BUSY_WAIT_TIMES) {
-            ++spinned;
-            continue;
+        if (++spinned > BUSY_WAIT_FOR_EVENTS) {
+            sleep_ns(sleep_time);
+            /* no event read, sleep a while */
+            if (sleep_time < SLEEP_TIME_THRES_NS) {
+                sleep_time *= 2;
+            }
         }
-
-        /* no event read, sleep a while */
-        if (sleep_time < SLEEP_TIME_NS_THRES) {
-            sleep_time *= 10;
-        }
-
-        sleep_ns(sleep_time);
     }
 
     assert(0 && "Unreachable");
+    abort();
 }
 
 void shm_monitor_buffer_consume(shm_monitor_buffer *buffer, size_t k) {

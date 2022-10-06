@@ -226,10 +226,6 @@ size_t shm_arbiter_buffer_peek1(shm_arbiter_buffer *buffer, void **data) {
     return shm_par_queue_peek1(&buffer->buffer, data);
 }
 
-#define SLEEP_TIME_NS_INIT 10
-#define BUSY_WAIT_TIMES 1000
-#define SLEEP_TIME_NS_THRES 1000000
-
 /* get an event from the stream, block until there is some and return it
  * or return NULL if the stream ended */
 static void *get_event(shm_stream *stream) {
@@ -238,7 +234,7 @@ static void *get_event(shm_stream *stream) {
        an additional thread to handle the load of data if we copy them in chunks
      */
     size_t num = 1;
-    size_t sleep_time = SLEEP_TIME_NS_INIT;
+    size_t sleep_time = SLEEP_TIME_INIT_NS;
     size_t spinned = 0;
     void *ev;
     while (1) {
@@ -251,26 +247,26 @@ static void *get_event(shm_stream *stream) {
             return ev;
         }
 
-        /* before sleeping, try just to busy wait some time */
-        if (spinned < BUSY_WAIT_TIMES) {
-            ++spinned;
-            continue;
-        }
-
-        /* no event read, sleep a while */
-        if (sleep_time < SLEEP_TIME_NS_THRES) {
-            sleep_time *= 10;
-        } else {
-            /* checking for the readiness is not cheap,
-             * so do it only after we haven't read any
-             * event for some time */
-            if (!shm_stream_is_ready(stream))
-                return NULL;
-        }
+        /* Before sleeping, try just to busy wait some time.
+           After that, sleep, but start with short intervals. */
+        /* TODO: assign an expected frequency of events to each source
+         * (with some reasonable default value) and sleep according
+         * to this value */
+        if (++spinned > BUSY_WAIT_FOR_EVENTS) {
+            sleep_ns(sleep_time);
 #ifdef DUMP_STATS
         stream->slept_waiting_for_ev += sleep_time;
 #endif
-        sleep_ns(sleep_time);
+             if (sleep_time < SLEEP_TIME_THRES_NS) {
+                 sleep_time *= 2;
+             } else {
+                 /* checking for the readiness is not cheap,
+                  * so do it only after we haven't read any
+                  * event for some time */
+                 if (!shm_stream_is_ready(stream))
+                     return NULL;
+             }
+        }
     }
 
     assert(0 && "Unreachable");
@@ -300,7 +296,7 @@ static void push_dropped_event(shm_stream *stream, shm_arbiter_buffer *buffer,
 
 void *handle_stream_end(shm_stream *stream, shm_arbiter_buffer *buffer,
                         size_t last_ev_id) {
-    uint64_t sleep_time = SLEEP_TIME_NS_INIT;
+    uint64_t sleep_time = SLEEP_TIME_INIT_NS;
     while (buffer->dropped_num > 0) {
         assert(DROP_SPACE_THRESHOLD < shm_arbiter_buffer_capacity(buffer));
         if (shm_arbiter_buffer_free_space(buffer) > DROP_SPACE_THRESHOLD) {
@@ -314,8 +310,10 @@ void *handle_stream_end(shm_stream *stream, shm_arbiter_buffer *buffer,
             buffer->dropped_num = 0;
         } else {
             sleep_ns(sleep_time);
-            if (sleep_time < SLEEP_TIME_NS_THRES)
-                sleep_time *= 10;
+            /* the stream is at the end, so we can sleep longer */
+            if (sleep_time < 10*SLEEP_TIME_THRES_NS) {
+                sleep_time *= 2;
+            }
             assert(buffer->dropped_num > 0);
         }
     }
