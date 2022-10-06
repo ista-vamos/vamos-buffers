@@ -15,11 +15,13 @@
 #include "stream.h"
 #include "utils.h"
 #include "vector-macro.h"
-#include "vector.h"
+#include "vector-aligned.h"
 
 typedef struct _shamon {
     VEC(streams, shm_stream *);
-    shm_vector buffers;
+    /* shm_arbiter_buffers stored in this vector assume
+     * they are aligned in memory, so use aligned vector */
+    shm_vector_aligned buffers;
     VEC(buffer_threads, thrd_t);
     /* callbacks and their data */
     shamon_process_events_fn process_events;
@@ -29,6 +31,8 @@ typedef struct _shamon {
     shm_event *_ev;
     size_t _ev_size;
 } shamon;
+
+#define _buffers(shmn) ((shm_vector*)&shmn->buffers)
 
 #define SLEEP_NS_INIT (50)
 #define SLEEP_THRESHOLD_NS (10000000)
@@ -141,7 +145,7 @@ shamon *shamon_create(shamon_process_events_fn process_events,
     assert(shmn);
 
     VEC_INIT(shmn->streams);
-    shm_vector_init(&shmn->buffers, shm_arbiter_buffer_sizeof());
+    shm_vector_aligned_init(&shmn->buffers, shm_arbiter_buffer_sizeof(), CACHELINE_SIZE);
     VEC_INIT(shmn->buffer_threads);
     shmn->_ev_size = sizeof(shm_event_dropped);
     shmn->_ev = malloc(shmn->_ev_size);
@@ -153,7 +157,7 @@ shamon *shamon_create(shamon_process_events_fn process_events,
 }
 
 shm_vector *shamon_get_buffers(shamon *shmn) {
-    return &shmn->buffers;
+    return _buffers(shmn);
 }
 
 shm_stream **shamon_get_streams(shamon *shmn, size_t *size) {
@@ -162,7 +166,7 @@ shm_stream **shamon_get_streams(shamon *shmn, size_t *size) {
 }
 
 void shamon_destroy(shamon *shmn) {
-    assert(VEC_SIZE(shmn->buffer_threads) == shm_vector_size(&shmn->buffers));
+    assert(VEC_SIZE(shmn->buffer_threads) == shm_vector_size(_buffers(shmn)));
     for (size_t i = 0; i < VEC_SIZE(shmn->buffer_threads); ++i) {
         thrd_join(shmn->buffer_threads[i], NULL);
         /*
@@ -180,7 +184,7 @@ void shamon_destroy(shamon *shmn) {
     }
     VEC_DESTROY(shmn->streams);
     VEC_DESTROY(shmn->buffer_threads);
-    shm_vector_destroy(&shmn->buffers);
+    shm_vector_destroy(_buffers(shmn));
     free(shmn->_ev);
     free(shmn);
 
@@ -204,7 +208,8 @@ bool shamon_is_ready(shamon *shmn) {
 }
 
 shm_event *shamon_get_next_ev(shamon *shmn, shm_stream **streamret) {
-    return shmn->process_events(&shmn->buffers, shmn->process_events_data,
+    return shmn->process_events(_buffers(shmn),
+                                shmn->process_events_data,
                                 streamret);
 }
 
@@ -218,7 +223,7 @@ void shamon_add_stream(shamon *shmn, shm_stream *stream,
         shmn->_ev_size = stream->event_size;
     }
 
-    shm_arbiter_buffer *buffer = shm_vector_extend(&shmn->buffers);
+    shm_arbiter_buffer *buffer = shm_vector_aligned_extend(_buffers(shmn));
     /* 0 as the output event size means same as the stream */
     shm_arbiter_buffer_init(buffer, stream,
                             /* output event size = */ 0, buffer_capacity);

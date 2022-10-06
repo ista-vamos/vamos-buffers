@@ -25,6 +25,9 @@ int sleep_ms(uint64_t ms) {
 
 
 void *xalloc_aligned(size_t size, size_t alignment) {
+    assert(size > 0);
+    assert(alignment > 0);
+
     void *mem;
     int succ = posix_memalign(&mem, alignment, size);
     if (succ != 0) {
