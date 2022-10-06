@@ -215,9 +215,17 @@ shm_event *shamon_get_next_ev(shamon *shmn, shm_stream **streamret) {
 
 void shamon_add_stream(shamon *shmn, shm_stream *stream,
                        size_t buffer_capacity) {
+    for (unsigned i = 0; i < VEC_SIZE(shmn->streams); ++i) {
+        if (strcmp(shmn->streams[i]->name, stream->name) == 0) {
+            fprintf(stderr, "Stream '%s' added multiple times\n", stream->name);
+            abort();
+        }
+    }
+
     VEC_PUSH(shmn->streams, &stream);
     assert(shmn->streams[VEC_SIZE(shmn->streams) - 1] == stream &&
            "BUG: shm_vector_push");
+
     if (stream->event_size > shmn->_ev_size) {
         shmn->_ev = realloc(shmn->_ev, stream->event_size);
         shmn->_ev_size = stream->event_size;
