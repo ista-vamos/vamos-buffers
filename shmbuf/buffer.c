@@ -48,9 +48,7 @@ struct buffer_info {
     /* the monitored program exited/destroyed the buffer */
     volatile _Bool destroyed;
     volatile _Bool monitor_attached;
-
-    char __padding[64 - sizeof(_Bool)];
-};
+} __attribute__((aligned(CACHELINE_SIZE)));
 
 /* TODO: not all systems have the size of page 4kB */
 #define MEM_SIZE (SHM_BUFFER_SIZE_PAGES * 4096)
@@ -188,9 +186,9 @@ static struct buffer *initialize_shared_buffer(const char *key,
         return NULL;
     }
 
-    void *mem = mmap(0, buffer_allocation_size(), PROT_READ | PROT_WRITE,
+    void *shmem = mmap(0, buffer_allocation_size(), PROT_READ | PROT_WRITE,
                      MAP_SHARED, fd, 0);
-    if (mem == MAP_FAILED) {
+    if (shmem == MAP_FAILED) {
         perror("mmap failure");
         if (close(fd) == -1) {
             perror("closing fd after mmap failure");
@@ -204,7 +202,10 @@ static struct buffer *initialize_shared_buffer(const char *key,
     struct buffer *buff = malloc(sizeof(struct buffer));
     assert(buff && "Memory allocation failed");
 
-    buff->shmbuffer = (struct shmbuffer *)mem;
+    buff->shmbuffer = (struct shmbuffer *)shmem;
+    assert(ADDR_IS_CACHE_ALIGNED(buff->shmbuffer->data));
+    assert(ADDR_IS_CACHE_ALIGNED(&buff->shmbuffer->info.ringbuf));
+
     memset(buff->shmbuffer, 0, sizeof(struct buffer_info));
 
     const size_t capacity =
@@ -286,6 +287,10 @@ struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
     struct buffer *buff = malloc(sizeof(struct buffer));
     assert(buff && "Memory allocation failed");
     buff->shmbuffer = (struct shmbuffer *)mem;
+
+    assert(ADDR_IS_CACHE_ALIGNED(buff->shmbuffer->data));
+    assert(ADDR_IS_CACHE_ALIGNED(&buff->shmbuffer->info.ringbuf));
+
     memset(buff->shmbuffer, 0, sizeof(struct buffer_info));
 
     const size_t capacity =

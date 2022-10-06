@@ -107,8 +107,7 @@ size_t shm_arbiter_buffer_written_num(shm_arbiter_buffer *buffer) {
 
 void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
                              size_t out_event_size, size_t capacity) {
-    assert((unsigned long long)buffer % CACHELINE_SIZE == 0
-           && "The memory for the buffer is missaligned");
+    assert(ADDR_IS_CACHE_ALIGNED(buffer) && "The memory for the buffer is missaligned");
     assert(capacity >= 3 && "We need at least 3 elements in the buffer");
     size_t event_size = out_event_size > stream->event_size
                             ? out_event_size
