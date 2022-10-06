@@ -80,7 +80,7 @@ int main(void) {
         shm_stream *stream = &dummy_stream;
 
         shm_stream_init(stream, buffer, sizeof(struct event), is_ready,
-                        NULL, NULL, NULL, "dummy-stream");
+                        NULL, NULL, NULL, "dummy-stream", "dummy");
 
         /* into this buffer, stream_fetch() will push dropped() events if any */
         shm_arbiter_buffer *arbiter_buffer

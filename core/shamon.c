@@ -47,7 +47,7 @@ static int default_buffer_manager_thrd(void *data) {
     while (!shm_arbiter_buffer_active(buffer))
         _mm_pause();
 
-    printf("Running fetch & autodrop for stream %s\n", stream->name);
+    printf("Running fetch & autodrop for stream %s\n", shm_stream_get_name(stream));
 
     void *ev, *out;
     while (1) {
@@ -69,7 +69,7 @@ static int default_buffer_manager_thrd(void *data) {
 
     // TODO: we should check if the stream is finished and remove it
     // in that case
-    printf("BMM for stream %lu (%s) exits\n", stream->id, stream->name);
+    printf("BMM for stream %lu (%s) exits\n", stream->id, shm_stream_get_type(stream));
     thrd_exit(EXIT_SUCCESS);
 }
 
@@ -233,7 +233,7 @@ void shamon_add_stream(shamon *shmn, shm_stream *stream,
     VEC_PUSH(shmn->buffer_threads, &thread_id);
 
     printf("Added a stream id %lu: '%s'\n", VEC_SIZE(shmn->streams) - 1,
-           stream->name);
+           stream->type);
 
     shm_arbiter_buffer_set_active(buffer, true);
 }

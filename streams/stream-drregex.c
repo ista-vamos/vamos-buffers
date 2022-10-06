@@ -29,14 +29,15 @@ void drregex_destroy(shm_stream *s) {
 size_t stream_mk_event_kinds(const char *stream_name, struct buffer *shmbuffer,
                              size_t *max_ev_size);
 
-shm_stream *shm_create_drregex_stream(const char *key) {
+shm_stream *shm_create_drregex_stream(const char *key, const char *name) {
     shm_stream_drregex *ss = malloc(sizeof *ss);
     struct buffer *shmbuffer = get_shared_buffer(key);
     assert(shmbuffer && "Getting the shm buffer failed");
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
     shm_stream_init((shm_stream *)ss, shmbuffer, elem_size, drregex_is_ready,
-                    NULL, drregex_alter, drregex_destroy, "drregex-stream");
+                    NULL, drregex_alter, drregex_destroy,
+                    "drregex-stream", name);
     ss->shmbuffer = shmbuffer;
 
     stream_mk_event_kinds("drregex-stream", shmbuffer, NULL);

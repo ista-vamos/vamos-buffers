@@ -28,14 +28,15 @@ static void funs_destroy(shm_stream *s) {
 size_t stream_mk_event_kinds(const char *stream_name, struct buffer *shmbuffer,
                              size_t *max_ev_size);
 
-shm_stream *shm_create_funs_stream(const char *key) {
+shm_stream *shm_create_funs_stream(const char *key, const char *name) {
     shm_stream_funs *ss = malloc(sizeof *ss);
     struct buffer *shmbuffer = get_shared_buffer(key);
     assert(shmbuffer && "Getting the shm buffer failed");
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
     shm_stream_init((shm_stream *)ss, shmbuffer, elem_size, funs_is_ready, NULL,
-                    funs_alter, funs_destroy, "funs-stream");
+                    funs_alter, funs_destroy,
+                    "funs-stream", name);
     ss->shmbuffer = shmbuffer;
 
     size_t max_size;

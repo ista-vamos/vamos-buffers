@@ -1,3 +1,4 @@
+#include <string.h>
 #include <assert.h>
 
 #include "shmbuf/buffer.h"
@@ -12,12 +13,18 @@ const char *shm_stream_get_name(shm_stream *stream) {
     return stream->name;
 }
 
+const char *shm_stream_get_type(shm_stream *stream) {
+    assert(stream);
+    return stream->type;
+}
+
 static uint64_t last_stream_id = 0;
 
 void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
                      size_t event_size, shm_stream_is_ready_fn is_ready,
                      shm_stream_filter_fn filter, shm_stream_alter_fn alter,
-                     shm_stream_destroy_fn destroy, const char *const name) {
+                     shm_stream_destroy_fn destroy,
+                     const char *const type, const char *const name) {
     stream->id = ++last_stream_id;
     stream->event_size = event_size;
     stream->incoming_events_buffer = incoming_events_buffer;
@@ -28,7 +35,8 @@ void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
     stream->filter = filter;
     stream->alter = alter;
     stream->destroy = destroy;
-    stream->name = name;
+    stream->type = type;
+    stream->name = strdup(name);
 #ifndef NDEBUG
     stream->last_event_id = 0;
 #endif
@@ -113,6 +121,8 @@ void shm_stream_notify_dropped(shm_stream *stream, uint64_t begin_id,
 }
 
 void shm_stream_destroy(shm_stream *stream) {
+    free(stream->name);
+
     if (stream->destroy)
         stream->destroy(stream);
 }

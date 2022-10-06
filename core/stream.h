@@ -17,7 +17,8 @@ typedef void (*shm_stream_alter_fn)(shm_stream *, shm_event *, shm_event *);
 // TODO: make this opaque
 typedef struct _shm_stream {
     uint64_t id;
-    const char *name;
+    char *name;
+    const char *type;
     size_t event_size;
     struct buffer *incoming_events_buffer;
     /* callbacks */
@@ -41,9 +42,11 @@ typedef struct _shm_stream {
 void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
                      size_t event_size, shm_stream_is_ready_fn is_ready,
                      shm_stream_filter_fn filter, shm_stream_alter_fn alter,
-                     shm_stream_destroy_fn destroy, const char *const name);
+                     shm_stream_destroy_fn destroy,
+                     const char *const type, const char *const name);
 
 const char *shm_stream_get_name(shm_stream *);
+const char *shm_stream_get_type(shm_stream *);
 size_t shm_stream_event_size(shm_stream *);
 size_t shm_stream_id(shm_stream *);
 struct event_record *shm_stream_get_avail_events(shm_stream *, size_t *);

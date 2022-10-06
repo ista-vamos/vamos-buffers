@@ -89,7 +89,7 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec) {
             return NULL;
         }
 
-        return shm_create_funs_stream(key);
+        return shm_create_funs_stream(key, stream_name);
     } else if (strncmp(source, "regex", 6) == 0) {
         if (!next || *next == 0) {
             fprintf(
@@ -104,7 +104,7 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec) {
                             "parameter (FOR NOW)\n");
         }
 
-        return shm_create_sregex_stream(key);
+        return shm_create_sregex_stream(key, stream_name);
     } else if (strncmp(source, "regexrw", 8) == 0) {
         if (!next || *next == 0) {
             fprintf(
@@ -119,7 +119,7 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec) {
                             "parameter (FOR NOW)\n");
         }
 
-        return shm_create_sregexrw_stream(key);
+        return shm_create_sregexrw_stream(key, stream_name);
     } else if (strncmp(source, "drregex", 8) == 0) {
         if (!next || *next == 0) {
             fprintf(
@@ -134,7 +134,7 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec) {
                             "parameter (FOR NOW)\n");
         }
 
-        return shm_create_drregex_stream(key);
+        return shm_create_drregex_stream(key, stream_name);
     } else if (strncmp(source, "generic", 8) == 0) {
         if (!next || *next == 0) {
             fprintf(
@@ -149,7 +149,7 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec) {
                             "parameter (FOR NOW)\n");
         }
 
-        return shm_create_generic_stream(key);
+        return shm_create_generic_stream(key, stream_name);
     }
 
     fprintf(stderr, "Unknown stream. Available streams:\n");
