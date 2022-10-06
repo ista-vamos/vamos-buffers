@@ -10,8 +10,8 @@
 #define DROP_SPACE_THRESHOLD 1
 
 typedef struct _shm_arbiter_buffer {
-    shm_stream *stream;         // the source for the buffer
     shm_par_queue buffer;       // the buffer itself
+    shm_stream *stream;         // the source for the buffer
     size_t dropped_num;         // the number of dropped events
     size_t total_dropped_times; // the number of dropped events
     size_t total_dropped_num;   // the number of dropped events
@@ -107,6 +107,8 @@ size_t shm_arbiter_buffer_written_num(shm_arbiter_buffer *buffer) {
 
 void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
                              size_t out_event_size, size_t capacity) {
+    assert((unsigned long long)buffer % CACHELINE_SIZE == 0
+           && "The memory for the buffer is missaligned");
     assert(capacity >= 3 && "We need at least 3 elements in the buffer");
     size_t event_size = out_event_size > stream->event_size
                             ? out_event_size
@@ -133,8 +135,10 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
 shm_arbiter_buffer *shm_arbiter_buffer_create(shm_stream *stream,
                                               size_t out_event_size,
                                               size_t capacity) {
-    shm_arbiter_buffer *b = malloc(shm_arbiter_buffer_sizeof());
-    assert(b && "Malloc failed");
+    /* some elements are cache-aligned, so we must make sure
+     * that the memory is not allocated mis-aligned */
+    shm_arbiter_buffer *b = xalloc_aligned(shm_arbiter_buffer_sizeof(),
+                                           CACHELINE_SIZE);
     shm_arbiter_buffer_init(b, stream, out_event_size, capacity);
     return b;
 }

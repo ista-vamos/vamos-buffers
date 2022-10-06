@@ -48,13 +48,15 @@ struct buffer_info {
     /* the monitored program exited/destroyed the buffer */
     volatile _Bool destroyed;
     volatile _Bool monitor_attached;
-} __attribute__((aligned(8)));
+
+    char __padding[64 - sizeof(_Bool)];
+};
 
 /* TODO: not all systems have the size of page 4kB */
 #define MEM_SIZE (SHM_BUFFER_SIZE_PAGES * 4096)
 
 struct shmbuffer {
-    _Alignas(64) struct buffer_info info;
+    struct buffer_info info;
     /* pointer to the beginning of data */
     unsigned char data[MEM_SIZE];
 };
@@ -274,9 +276,10 @@ struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
     assert(elem_size > 0 && "Element size is 0");
     printf("Initializing LOCAL buffer '%s' with elem size '%lu'\n", key,
            elem_size);
-    void *mem = malloc(buffer_allocation_size());
-    if (mem == NULL) {
-        perror("malloc failure");
+    void *mem;
+    int succ = posix_memalign(&mem, 64, buffer_allocation_size());
+    if (succ != 0) {
+        perror("allocation failure");
         return NULL;
     }
 

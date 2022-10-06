@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 #include <assert.h>
 #include <unistd.h>
@@ -19,4 +21,17 @@ int sleep_ns(uint64_t ns) {
 
 int sleep_ms(uint64_t ms) {
     return sleep_ns(ms * 1000000);
+}
+
+
+void *xalloc_aligned(size_t size, size_t alignment) {
+    void *mem;
+    int succ = posix_memalign(&mem, alignment, size);
+    if (succ != 0) {
+        perror("posix_memalign");
+        assert(0 && "Allocation failed");
+        abort();
+    }
+
+    return mem;
 }

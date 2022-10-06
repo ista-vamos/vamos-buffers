@@ -4,11 +4,7 @@
 #include <stdbool.h>
 #include <stdatomic.h>
 #include <unistd.h>
-
-/* On x86 and ARM the cache line has 64 bytes,
-   change if needed. */
-#define CACHELINE_SIZE 64
-#define CACHELINE_ALIGNED _Alignas(CACHELINE_SIZE)
+#include "utils.h"
 
 /**
  * Single-producer single-consumer (SPSC) lock-free concurrent ring-buffer.
