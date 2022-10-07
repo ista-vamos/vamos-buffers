@@ -1,6 +1,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "shmbuf/buffer.h"
 #include "stream.h"
@@ -193,6 +194,18 @@ void shm_stream_notify_dropped(shm_stream *stream, uint64_t begin_id,
 void shm_stream_detach(shm_stream *stream) {
     buffer_set_attached(stream->incoming_events_buffer, false);
 }
+
+void shm_stream_dump_events(shm_stream *stream) {
+    size_t evs_num;
+    struct event_record *events = buffer_get_avail_events(stream->incoming_events_buffer, &evs_num);
+    for (size_t i = 0; i < evs_num; ++i) {
+        fprintf(stderr,
+                "[%s:%s] event: %-20s, kind: %-3lu, size: %-3lu, sig: %s\n",
+               stream->name, stream->type,
+               events[i].name, events[i].kind, events[i].size, events[i].signature);
+    }
+}
+
 
 void shm_stream_destroy(shm_stream *stream) {
     shm_stream_detach(stream);

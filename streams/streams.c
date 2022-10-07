@@ -172,26 +172,3 @@ shm_stream *shm_stream_create_from_argv(const char *stream_name, int argc, char 
 
     return shm_stream_create(stream_name, spec);
 }
-
-/* This is something that most of the streams do, so have it as a helper fun */
-size_t stream_mk_event_kinds(const char *stream_name, struct buffer *shmbuffer,
-                             size_t *max_ev_size) {
-    size_t evs_num;
-    size_t ev_size, max_size = 0;
-    struct event_record *events = buffer_get_avail_events(shmbuffer, &evs_num);
-    for (size_t i = 0; i < evs_num; ++i) {
-        ev_size = events[i].size;
-        events[i].kind = 0;
-        if (ev_size > max_size)
-            max_size = ev_size;
-
-        printf("[%s] event '%s', kind: '%lu', size: '%lu', signature: '%s'\n",
-               stream_name, events[i].name, events[i].kind, events[i].size,
-               events[i].signature);
-    }
-
-    if (max_ev_size)
-        *max_ev_size = max_size;
-
-    return evs_num;
-}

@@ -96,4 +96,6 @@ inline size_t shm_stream_last_event_id(shm_stream *s) {
     return s->last_event_id;
 }
 #endif
+
+void shm_stream_dump_events(shm_stream *stream);
 #endif // SHAMON_STREAMS_H

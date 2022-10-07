@@ -39,13 +39,7 @@ shm_stream *shm_create_funs_stream(const char *key, const char *name) {
                     "funs-stream", name);
     ss->shmbuffer = shmbuffer;
 
-    size_t max_size;
-    ss->spec_count = stream_mk_event_kinds("funs-stream", shmbuffer, &max_size);
-    assert(max_size > 0);
-    assert(ss->spec_count > 0);
-
-    ss->ev_buff = malloc(max_size);
-    assert(ss->ev_buff);
+    ss->ev_buff = NULL;
 
     buffer_set_attached(ss->shmbuffer, true);
     return (shm_stream *)ss;
