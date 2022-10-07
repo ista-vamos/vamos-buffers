@@ -424,10 +424,6 @@ void buffer_set_attached(struct buffer *buff, bool val) {
         buff->shmbuffer->info.monitor_attached = val;
 }
 
-int buffer_is_attached(struct buffer *buff) {
-    return buff->shmbuffer->info.monitor_attached;
-}
-
 /* set the ID of the last processed event */
 void buffer_set_last_processed_id(struct buffer *buff, shm_eventid id) {
     assert(buff->shmbuffer->info.last_processed_id <= id &&
@@ -1000,4 +996,31 @@ void buffer_notify_dropped(struct buffer *buff, uint64_t begin_id,
     r->begin = begin_id;
     r->end = end_id;
     drop_ranges_unlock(buff);
+}
+
+int buffer_register_event(struct buffer *b, const char *name, shm_kind kind) {
+    struct event_record *rec = source_control_get_event(b->control, name);
+    if (rec == NULL) {
+        return -1;
+    }
+
+    rec->kind = kind;
+}
+
+int buffer_register_events(size_t ev_nums, ...) {
+    va_list ap;
+    va_start(ap, ev_nums);
+
+    for (size_t i = 0; i < ev_nums; ++i) {
+        const char *name = va_arg(ap, const char *);
+        shm_kind kind = va_arg(ap, shm_kind);
+        if (buffer_register_event(b, name, kind) < 0) {
+            va_end(ap);
+            return -1;
+        }
+    }
+
+    va_end(ap);
+
+    return 0;
 }
