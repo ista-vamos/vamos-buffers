@@ -40,6 +40,7 @@ void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
 #ifndef NDEBUG
     stream->last_event_id = 0;
 #endif
+    stream->events_cache = NULL;
 #ifdef DUMP_STATS
     stream->read_events = 0;
     stream->fetched_events = 0;
@@ -55,6 +56,59 @@ size_t shm_stream_id(shm_stream *stream) {
 
 struct event_record *shm_stream_get_avail_events(shm_stream *s, size_t *sz) {
     return buffer_get_avail_events(s->incoming_events_buffer, sz);
+}
+
+#define MAX_EVENTS_CACHE_SIZE 128
+
+static shm_kind get_max_kind(struct event_record *recs, size_t size) {
+    shm_kind ret = 0;
+    for (size_t i = 0; i < size; ++i) {
+        if (recs[i].kind > ret)
+            ret = recs[i].kind;
+    }
+
+    return ret;
+}
+
+struct event_record *shm_stream_get_event_record(shm_stream *stream, shm_kind kind) {
+    struct event_record *rec = NULL;
+    if (stream->events_cache) {
+        if (kind < MAX_EVENTS_CACHE_SIZE) {
+            rec = &stream->events_cache[kind];
+            assert(rec->kind == kind);
+            return rec;
+        } else {
+            return shm_stream_get_event_record_no_cache(stream, kind);
+        }
+    } else {
+        /* create cache */
+        size_t sz;
+        struct event_record *recs
+                = buffer_get_avail_events(stream->incoming_events_buffer, &sz);
+        size_t max_kind = get_max_kind(recs, sz);
+        size_t cache_sz = max_kind > MAX_EVENTS_CACHE_SIZE ? MAX_EVENTS_CACHE_SIZE : max_kind;
+        stream->events_cache = malloc(cache_sz * sizeof(struct event_record));
+        /* cache elements that fit into the cache (cache is indexed by kinds) */
+        for (size_t i = 0; i < sz; ++i) {
+            if (recs[i].kind < cache_sz) {
+                stream->events_cache[recs[i].kind] = recs[i];
+            }
+            if (recs[i].kind == kind)
+                rec = &recs[i];
+        }
+        return rec;
+    }
+}
+
+struct event_record *shm_stream_get_event_record_no_cache(shm_stream *stream, shm_kind kind) {
+        size_t sz;
+        struct event_record *recs
+                = buffer_get_avail_events(stream->incoming_events_buffer, &sz);
+        for (size_t i = 0; i < sz; ++i) {
+            if (recs[i].kind == kind)
+                return &recs[i];
+        }
+        return NULL;
 }
 
 /* the number of elements in the (shared memory) buffer of the stream */
@@ -128,6 +182,7 @@ void shm_stream_destroy(shm_stream *stream) {
     shm_stream_detach(stream);
 
     free(stream->name);
+    free(stream->events_cache);
 
     if (stream->destroy)
         stream->destroy(stream);

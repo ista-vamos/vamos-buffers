@@ -29,7 +29,7 @@ struct event {
 void *filler_thread(void *data) {
         struct buffer *buffer = (struct buffer *)data;
         struct event ev;
-        ev.base.kind = shm_mk_event_kind("dummy-ev", sizeof(ev), "d");
+        ev.base.kind = shm_get_last_special_kind() + 1;
         for (int i = 0; i < 4; ++i) {
                 ev.base.id = i + 1;
                 ev.n = i;
@@ -41,8 +41,6 @@ void *filler_thread(void *data) {
 }
 
 int main(void) {
-        initialize_events();
-
         struct buffer *buffer
                 = initialize_local_buffer("/dummy", sizeof(struct event), NULL);
         assert(buffer);

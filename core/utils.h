@@ -15,4 +15,17 @@ int sleep_ms(uint64_t ms);
 
 void *xalloc_aligned(size_t size, size_t alignment);
 
+// auxiliary structs
+typedef struct _shm_string_ref {
+    size_t size;
+    const char *data;
+} shm_string_ref;
+
+typedef struct _shm_string {
+    size_t size;
+    size_t alloc_size;
+    char *data;
+} shm_string;
+
+
 #endif /* SHAMON_UTILS_H_ */

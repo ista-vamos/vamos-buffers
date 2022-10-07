@@ -181,8 +181,7 @@ size_t stream_mk_event_kinds(const char *stream_name, struct buffer *shmbuffer,
     struct event_record *events = buffer_get_avail_events(shmbuffer, &evs_num);
     for (size_t i = 0; i < evs_num; ++i) {
         ev_size = events[i].size;
-        events[i].kind = shm_mk_event_kind(events[i].name, ev_size,
-                                           (const char *)events[i].signature);
+        events[i].kind = 0;
         if (ev_size > max_size)
             max_size = ev_size;
 

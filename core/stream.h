@@ -21,6 +21,8 @@ typedef struct _shm_stream {
     const char *type;
     size_t event_size;
     struct buffer *incoming_events_buffer;
+    /* cached info about events in 'incoming_events_buffer' */
+    struct event_record *events_cache;
     /* callbacks */
     shm_stream_is_ready_fn is_ready;
     shm_stream_filter_fn filter;
@@ -49,7 +51,10 @@ const char *shm_stream_get_name(shm_stream *);
 const char *shm_stream_get_type(shm_stream *);
 size_t shm_stream_event_size(shm_stream *);
 size_t shm_stream_id(shm_stream *);
+
 struct event_record *shm_stream_get_avail_events(shm_stream *, size_t *);
+struct event_record *shm_stream_get_event_record(shm_stream *, shm_kind);
+struct event_record *shm_stream_get_event_record_no_cache(shm_stream *, shm_kind);
 
 /* the number of elements in the (shared memory) buffer of the stream */
 size_t shm_stream_buffer_size(shm_stream *);

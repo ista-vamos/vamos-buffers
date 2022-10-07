@@ -139,8 +139,6 @@ static shm_event *default_process_events(shm_vector *buffers, void *data,
 
 shamon *shamon_create(shamon_process_events_fn process_events,
                       void *process_events_data) {
-    initialize_events();
-
     shamon *shmn = malloc(sizeof(shamon));
     assert(shmn);
 
@@ -196,8 +194,6 @@ void shamon_destroy(shamon *shmn) {
     shm_vector_destroy(_buffers(shmn));
     free(shmn->_ev);
     free(shmn);
-
-    deinitialize_events();
 }
 
 bool shamon_is_ready(shamon *shmn) {
