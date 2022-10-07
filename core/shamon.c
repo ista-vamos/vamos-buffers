@@ -165,6 +165,15 @@ shm_stream **shamon_get_streams(shamon *shmn, size_t *size) {
     return shmn->streams;
 }
 
+/* detach streams, but do not destroy them
+ * -- this is for use in signal handlers when
+ * the program is about to be killed */
+void shamon_detach(shamon *shmn) {
+    for (size_t i = 0; i < VEC_SIZE(shmn->streams); ++i) {
+        shm_stream_detach(shmn->streams[i]);
+    }
+}
+
 void shamon_destroy(shamon *shmn) {
     assert(VEC_SIZE(shmn->buffer_threads) == shm_vector_size(_buffers(shmn)));
     for (size_t i = 0; i < VEC_SIZE(shmn->buffer_threads); ++i) {

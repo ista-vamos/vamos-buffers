@@ -16,6 +16,8 @@ shamon *shamon_create(shamon_process_events_fn process_events,
                       void *process_events_data);
 void shamon_destroy(shamon *);
 bool shamon_is_ready(shamon *);
+/* for error handling only... */
+void shamon_detach(shamon *shmn);
 
 void shamon_add_stream(shamon *shmn, shm_stream *stream,
                        size_t buffer_capacity);

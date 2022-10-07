@@ -420,7 +420,12 @@ struct event_record *buffer_get_avail_events(struct buffer *buff,
 }
 
 void buffer_set_attached(struct buffer *buff, bool val) {
-    buff->shmbuffer->info.monitor_attached = val;
+    if (!buff->shmbuffer->info.destroyed)
+        buff->shmbuffer->info.monitor_attached = val;
+}
+
+int buffer_is_attached(struct buffer *buff) {
+    return buff->shmbuffer->info.monitor_attached;
 }
 
 /* set the ID of the last processed event */
