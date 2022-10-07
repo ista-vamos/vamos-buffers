@@ -70,7 +70,7 @@ void buffer_set_last_processed_id(struct buffer *buff, uint64_t id);
 void buffer_notify_dropped(struct buffer *buffer, uint64_t begin_id,
                            uint64_t end_id);
 
-int buffer_register_event(struct buffer *b, const char *name, shm_kind kind);
+int buffer_register_event(struct buffer *b, const char *name, uint64_t kind);
 int buffer_register_events(struct buffer *b, size_t ev_nums, ...);
 
 #endif /* SHAMON_SHM_BUFFER_H */

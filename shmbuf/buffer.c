@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <sys/file.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -998,16 +999,17 @@ void buffer_notify_dropped(struct buffer *buff, uint64_t begin_id,
     drop_ranges_unlock(buff);
 }
 
-int buffer_register_event(struct buffer *b, const char *name, shm_kind kind) {
+int buffer_register_event(struct buffer *b, const char *name, uint64_t kind) {
     struct event_record *rec = source_control_get_event(b->control, name);
     if (rec == NULL) {
         return -1;
     }
 
     rec->kind = kind;
+    return 0;
 }
 
-int buffer_register_events(size_t ev_nums, ...) {
+int buffer_register_events(struct buffer *b, size_t ev_nums, ...) {
     va_list ap;
     va_start(ap, ev_nums);
 
