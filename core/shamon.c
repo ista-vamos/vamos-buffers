@@ -205,12 +205,12 @@ bool shamon_is_ready(shamon *shmn) {
         shm_stream *s = shmn->streams[i];
         if (shm_stream_is_ready(s)) {
             return true;
-        } /* else {
-             shm_arbiter_buffer *buff
-                 = *((shm_arbiter_buffer **)shm_vector_at(&shmn->buffers, i));
-             shm_arbiter_buffer_set_active(buff, false);
+        } else {
+             shm_arbiter_buffer *buff = shm_vector_at(_buffers(shmn), i);
+             if (shm_arbiter_buffer_size(buff) > 0) {
+                 return true;
+             }
          }
-         */
     }
 
     return false;
