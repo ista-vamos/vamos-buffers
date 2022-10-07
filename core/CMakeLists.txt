@@ -17,8 +17,12 @@ add_library(shamon-monitor STATIC monitor.c)
 target_compile_options(shamon-source PRIVATE -fPIC)
 target_link_libraries(shamon-source PRIVATE shamon-signature)
 
-add_library(shamon-arbiter STATIC shamon.c arbiter.c stream.c)
-target_link_libraries(shamon-arbiter PRIVATE shamon-event)
+add_library(shamon-stream STATIC stream.c)
+target_link_libraries(shamon-stream PRIVATE shamon-shmbuf)
+target_compile_definitions(shamon-stream PUBLIC -D_POSIX_C_SOURCE=200809L)
+
+add_library(shamon-arbiter STATIC shamon.c arbiter.c)
+target_link_libraries(shamon-arbiter PRIVATE shamon-event shamon-stream)
 target_compile_options(shamon-arbiter PRIVATE -fPIC)
 target_compile_definitions(shamon-arbiter PUBLIC -D_POSIX_C_SOURCE=200809L)
 
@@ -32,9 +36,10 @@ target_link_libraries(shamon-parallel-queue PUBLIC shamon-ringbuf)
 add_library(shamon STATIC shamon.c)
 target_link_libraries(shamon PRIVATE shamon-vector)
 
-add_library(shamon-lib SHARED arbiter.c stream.c)
+add_library(shamon-lib SHARED arbiter.c)
 target_compile_definitions(shamon-lib PUBLIC -D_POSIX_C_SOURCE=200809L)
 target_link_libraries(shamon-lib PUBLIC shamon-parallel-queue
+		                 PUBLIC shamon-stream
 		                 PUBLIC shamon-event
 		                 PUBLIC shamon-shmbuf)
 

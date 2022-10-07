@@ -57,9 +57,9 @@ struct event_record *shm_stream_get_event_record(shm_stream *, shm_kind);
 struct event_record *shm_stream_get_event_record_no_cache(shm_stream *, shm_kind);
 
 /* register to receiving events particular events */
-int stream_register_event(shm_stream *, const char *, shm_kind);
-int stream_register_events(shm_stream *, size_t sz, ...);
-int stream_register_all_events(shm_stream *);
+int shm_stream_register_event(shm_stream *, const char *, shm_kind);
+int shm_stream_register_events(shm_stream *, size_t sz, ...);
+int shm_stream_register_all_events(shm_stream *);
 
 /* the number of elements in the (shared memory) buffer of the stream */
 size_t shm_stream_buffer_size(shm_stream *);

@@ -166,17 +166,17 @@ size_t shm_stream_event_size(shm_stream *s) {
     return s->event_size;
 }
 
-int stream_register_event(shm_stream *stream, const char *name, size_t kind) {
+int shm_stream_register_event(shm_stream *stream, const char *name, size_t kind) {
     return buffer_register_event(stream->incoming_events_buffer, name, kind);
 }
 
-int stream_register_events(shm_stream *stream, size_t ev_nums, ...) {
+int shm_stream_register_events(shm_stream *stream, size_t ev_nums, ...) {
     va_list ap;
     va_start(ap, ev_nums);
     return buffer_register_events(stream->incoming_events_buffer, ev_nums, ap);
 }
 
-int stream_register_all_events(shm_stream *stream) {
+int shm_stream_register_all_events(shm_stream *stream) {
     return buffer_register_all_events(stream->incoming_events_buffer);
 }
 
