@@ -27,4 +27,7 @@ struct source_control *source_control_define_str(const char *str);
 
 size_t source_control_max_event_size(struct source_control *control);
 
+struct event_record *source_control_get_event(struct source_control *control,
+                                              const char *name);
+
 #endif /* SHAMON_SOURCE_H_ */

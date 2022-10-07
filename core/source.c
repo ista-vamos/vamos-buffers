@@ -21,6 +21,18 @@ size_t source_control_max_event_size(struct source_control *control) {
     return max_size;
 }
 
+struct event_record *source_control_get_event(struct source_control *control,
+                                              const char *name) {
+    const size_t en = source_control_get_records_num(control);
+    for (size_t i = 0; i < en; ++i) {
+        if (strncmp(control->events[i].name, name,
+                    sizeof(control->events[0].name)) == 0) {
+            return &control->events[i];
+        }
+    }
+    return NULL;
+}
+
 static inline void init_record(struct event_record *ev, const char *name,
                                const char *sig) {
     const size_t max_name_size = sizeof(ev->name) - 1;
