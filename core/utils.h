@@ -2,6 +2,7 @@
 #define SHAMON_UTILS_H_
 
 #include <stdint.h>
+#include <stddef.h> /* size_t */
 
 int sleep_ns(uint64_t ns);
 int sleep_ms(uint64_t ms);
