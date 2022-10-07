@@ -72,5 +72,6 @@ void buffer_notify_dropped(struct buffer *buffer, uint64_t begin_id,
 
 int buffer_register_event(struct buffer *b, const char *name, uint64_t kind);
 int buffer_register_events(struct buffer *b, size_t ev_nums, ...);
+int buffer_register_all_events(struct buffer *b);
 
 #endif /* SHAMON_SHM_BUFFER_H */

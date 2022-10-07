@@ -1026,3 +1026,14 @@ int buffer_register_events(struct buffer *b, size_t ev_nums, ...) {
 
     return 0;
 }
+
+int buffer_register_all_events(struct buffer *b) {
+    struct event_record *recs = b->control->events;
+    const size_t ev_nums = source_control_get_records_num(b->control);
+
+    for (size_t i = 0; i < ev_nums; ++i) {
+        recs[i].kind = 1 + i + shm_get_last_special_kind();
+    }
+
+    return 0;
+}

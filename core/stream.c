@@ -1,5 +1,6 @@
 #include <string.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include "shmbuf/buffer.h"
 #include "stream.h"
@@ -86,7 +87,7 @@ struct event_record *shm_stream_get_event_record(shm_stream *stream, shm_kind ki
         struct event_record *recs
                 = buffer_get_avail_events(stream->incoming_events_buffer, &sz);
         size_t max_kind = get_max_kind(recs, sz);
-        size_t cache_sz = max_kind > MAX_EVENTS_CACHE_SIZE ? MAX_EVENTS_CACHE_SIZE : max_kind;
+        size_t cache_sz = (max_kind > MAX_EVENTS_CACHE_SIZE ? MAX_EVENTS_CACHE_SIZE : max_kind) + 1;
         stream->events_cache = malloc(cache_sz * sizeof(struct event_record));
         /* cache elements that fit into the cache (cache is indexed by kinds) */
         for (size_t i = 0; i < sz; ++i) {
@@ -165,6 +166,21 @@ size_t shm_stream_event_size(shm_stream *s) {
     return s->event_size;
 }
 
+int stream_register_event(shm_stream *stream, const char *name, size_t kind) {
+    return buffer_register_event(stream->incoming_events_buffer, name, kind);
+}
+
+int stream_register_events(shm_stream *stream, size_t ev_nums, ...) {
+    va_list ap;
+    va_start(ap, ev_nums);
+    return buffer_register_events(stream->incoming_events_buffer, ev_nums, ap);
+}
+
+int stream_register_all_events(shm_stream *stream) {
+    return buffer_register_all_events(stream->incoming_events_buffer);
+}
+
+
 void shm_stream_notify_last_processed_id(shm_stream *stream, shm_eventid id) {
     buffer_set_last_processed_id(stream->incoming_events_buffer, id);
 }
@@ -184,6 +200,7 @@ void shm_stream_destroy(shm_stream *stream) {
     free(stream->name);
     free(stream->events_cache);
 
-    if (stream->destroy)
+    if (stream->destroy) {
         stream->destroy(stream);
+    }
 }
