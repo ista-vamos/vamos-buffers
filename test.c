@@ -213,7 +213,7 @@ bool are_streams_done() {
 }
 
 
-bool check_n_events(size_t count, size_t n) {
+bool check_at_least_n_events(size_t count, size_t n) {
     // count is the result after calling shm_arbiter_buffer_peek
 	return count == n;
 }
