@@ -39,6 +39,5 @@ shm_stream *shm_create_generic_stream(const char *key, const char *name) {
                     "generic-stream", name);
     ss->shmbuffer = shmbuffer;
 
-    buffer_set_attached(ss->shmbuffer, true);
     return (shm_stream *)ss;
 }

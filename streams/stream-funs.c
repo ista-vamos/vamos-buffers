@@ -41,7 +41,6 @@ shm_stream *shm_create_funs_stream(const char *key, const char *name) {
 
     ss->ev_buff = NULL;
 
-    buffer_set_attached(ss->shmbuffer, true);
     return (shm_stream *)ss;
 }
 

@@ -80,6 +80,7 @@ void shm_stream_get_dropped_event(shm_stream *stream,
                                   uint64_t n);
 
 bool shm_stream_is_ready(shm_stream *);
+void shm_stream_attach(shm_stream *stream);
 void shm_stream_detach(shm_stream *stream);
 
 /*

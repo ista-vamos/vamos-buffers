@@ -203,6 +203,11 @@ bool shm_arbiter_buffer_active(shm_arbiter_buffer *buffer) {
 
 void shm_arbiter_buffer_set_active(shm_arbiter_buffer *buffer, bool val) {
     buffer->active = val;
+    if (val) {
+    	shm_stream_attach(buffer->stream);
+    } else {
+    	shm_stream_attach(buffer->stream);
+    }
 }
 
 shm_stream *shm_arbiter_buffer_stream(shm_arbiter_buffer *buffer) {

@@ -193,6 +193,10 @@ void shm_stream_notify_dropped(shm_stream *stream, uint64_t begin_id,
     buffer_notify_dropped(stream->incoming_events_buffer, begin_id, end_id);
 }
 
+void shm_stream_attach(shm_stream *stream) {
+    buffer_set_attached(stream->incoming_events_buffer, true);
+}
+
 void shm_stream_detach(shm_stream *stream) {
     buffer_set_attached(stream->incoming_events_buffer, false);
 }

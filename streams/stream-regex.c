@@ -36,6 +36,5 @@ shm_stream *shm_create_sregex_stream(const char *key, const char *name) {
                     "regex-stream", name);
     ss->shmbuffer = shmbuffer;
 
-    buffer_set_attached(ss->shmbuffer, true);
     return (shm_stream *)ss;
 }
