@@ -110,9 +110,9 @@ size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
     if (__predict_true(cur_elem_num > 0)) {
         *ptr1 = q->data + (off * q->elem_size);
 
-    }
-    if (__predict_false(*len2 > 0)) {
-        *ptr2 = q->data;
+        if (__predict_false(*len2 > 0)) {
+            *ptr2 = q->data;
+        }
     }
     return cur_elem_num;
 }
@@ -152,6 +152,10 @@ shm_event *shm_par_queue_peek_atmost_at(shm_par_queue *q, size_t *want_k) {
 
     size_t n = shm_par_queue_peek(q, k == (~((size_t)0)) ? k : k + 1,
                                   &ptr1, &len1, &ptr2, &len2);
+    if (n == 0) {
+	*want_k = 0;
+	return 0;
+    }
     if (n <= k) {
         k = n - 1;
         *want_k = k;

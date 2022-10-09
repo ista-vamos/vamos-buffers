@@ -215,6 +215,7 @@ size_t shm_spsc_ringbuf_consume_upto(shm_spsc_ringbuf *b, size_t n) {
     return n;
 }
 
+/* If return value is 0, values *off, *len1 and *len2 may not have been set */
 size_t shm_spsc_ringbuf_peek(shm_spsc_ringbuf *b,
                              size_t n, size_t *off,
                              size_t *len1, size_t *len2) {

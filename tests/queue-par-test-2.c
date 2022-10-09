@@ -4,24 +4,97 @@
 #include "par_queue.h"
 
 int main(void) {
-    int i;
+    size_t i;
+    int *p;
     int num[] = {0, 1, 2, 3, 4, 5, 6};
     shm_par_queue q;
     shm_par_queue_init(&q, 3, sizeof(int));
+    assert(shm_par_queue_peek_at(&q, 2) == NULL);
+    i = 2;
+    assert(shm_par_queue_peek_atmost_at(&q, &i) == NULL);
+    assert(i == 0);
+
     assert(shm_par_queue_push(&q, num + 1, sizeof(int)) == true);
+    assert(shm_par_queue_peek_at(&q, 2) == NULL);
+    i = 2;
+    assert((p = (int*)shm_par_queue_peek_atmost_at(&q, &i)) != NULL);
+    assert(i == 0);
+    assert(*p == 1);
+
     assert(shm_par_queue_push(&q, num + 2, sizeof(int)) == true);
+    assert(shm_par_queue_peek_at(&q, 2) == NULL);
+    i = 2;
+    assert((p = (int*)shm_par_queue_peek_atmost_at(&q, &i)) != NULL);
+    assert(i == 1);
+    assert(*p == 2);
+
     assert(shm_par_queue_push(&q, num + 3, sizeof(int)) == true);
+    assert((p = (int*)shm_par_queue_peek_at(&q, 2)) != NULL);
+    assert(*p == 3);
+    i = 2;
+    assert((p = (int*)shm_par_queue_peek_atmost_at(&q, &i)) != NULL);
+    assert(i == 2);
+    assert(*p == 3);
+    i = 5;
+    assert((p = (int*)shm_par_queue_peek_atmost_at(&q, &i)) != NULL);
+    assert(i == 2);
+    assert(*p == 3);
+    i = 0;
+    assert((p = (int*)shm_par_queue_peek_atmost_at(&q, &i)) != NULL);
+    assert(i == 0);
+    assert(*p == 1);
+    assert((p = (int*)shm_par_queue_peek_at(&q, 0)) != NULL);
+    assert(*p == 1);
+    i = 1;
+    assert((p = (int*)shm_par_queue_peek_atmost_at(&q, &i)) != NULL);
+    assert(i == 1);
+    assert(*p == 2);
+    assert((p = (int*)shm_par_queue_peek_at(&q, 1)) != NULL);
+    assert(*p == 2);
+
     assert(shm_par_queue_push(&q, num + 4, sizeof(int)) == false);
-    for (i = 0; i < (int)shm_par_queue_size(&q); ++i) {
-        int *p = (int*)shm_par_queue_peek_at(&q, i);
-        assert(*p == i + 1);
+    for (i = 0; i < shm_par_queue_size(&q); ++i) {
+	size_t j = i;
+        p = (int*)shm_par_queue_peek_at(&q, i);
+        assert(*p == (int)i + 1);
+        p = (int*)shm_par_queue_peek_atmost_at(&q, &j);
+	assert(j == i);
+        assert(*p == (int)i + 1);
     }
     assert(shm_par_queue_pop(&q, &i) == true && i == 1);
     assert(shm_par_queue_pop(&q, &i) == true && i == 2);
+
+    assert((p = (int*)shm_par_queue_peek_at(&q, 1)) == NULL);
+    i = 1;
+    assert((p = (int*)shm_par_queue_peek_atmost_at(&q, &i)) != NULL);
+    assert(i == 0);
+    assert(*p == 3);
+
+    assert((p = (int*)shm_par_queue_peek_at(&q, 0)) != NULL);
+    assert(*p == 3);
+    i = 0;
+    assert((p = (int*)shm_par_queue_peek_atmost_at(&q, &i)) != NULL);
+    assert(i == 0);
+    assert(*p == 3);
+    i = 2;
+    assert((p = (int*)shm_par_queue_peek_atmost_at(&q, &i)) != NULL);
+    assert(i == 0);
+    assert(*p == 3);
+
+
     assert(shm_par_queue_pop(&q, &i) == true && i == 3);
     assert(shm_par_queue_size(&q) == 0);
-    assert(shm_par_queue_push(&q, num + 0 , sizeof(i)) == true);
-    assert(shm_par_queue_push(&q, num + 1 , sizeof(i)) == true);
+    assert((p = (int*)shm_par_queue_peek_at(&q, 1)) == NULL);
+    i = 1;
+    assert((p = (int*)shm_par_queue_peek_atmost_at(&q, &i)) == NULL);
+    assert(i == 0);
+    assert((p = (int*)shm_par_queue_peek_at(&q, 0)) == NULL);
+    i = 0;
+    assert((p = (int*)shm_par_queue_peek_atmost_at(&q, &i)) == NULL);
+    assert(i == 0);
+
+    assert(shm_par_queue_push(&q, num + 0 , sizeof(int)) == true);
+    assert(shm_par_queue_push(&q, num + 1 , sizeof(int)) == true);
     assert(shm_par_queue_pop(&q, &i) == true && i == 0);
     assert(shm_par_queue_push(&q, num + 2, sizeof(int)) == true);
     assert(shm_par_queue_push(&q, num + 3, sizeof(int)) == true);
