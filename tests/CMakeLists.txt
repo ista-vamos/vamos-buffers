@@ -59,6 +59,12 @@ add_test(NAME queue-par-cbmc-2
 		 ${CMAKE_SOURCE_DIR}/core/par_queue.c
 		 ${CMAKE_SOURCE_DIR}/core/spsc_ringbuf.c)
 
+add_executable(arbiter-buffer-test arbiter-buffer.c)
+target_link_libraries(arbiter-buffer-test shamon-arbiter)
+target_include_directories(arbiter-buffer-test PRIVATE ${CMAKE_SOURCE_DIR})
+add_test(arbiter-buffer-test arbiter-test)
+
+
 add_executable(fetch-test fetch-test.c)
 target_link_libraries(fetch-test shamon-shmbuf shamon-arbiter shamon-parallel-queue pthread)
 target_include_directories(fetch-test PRIVATE ${CMAKE_SOURCE_DIR})
