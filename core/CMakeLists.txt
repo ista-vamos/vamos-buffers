@@ -22,7 +22,7 @@ target_link_libraries(shamon-stream PRIVATE shamon-shmbuf)
 target_compile_definitions(shamon-stream PUBLIC -D_POSIX_C_SOURCE=200809L)
 
 add_library(shamon-arbiter STATIC shamon.c arbiter.c)
-target_link_libraries(shamon-arbiter PRIVATE shamon-event shamon-stream)
+target_link_libraries(shamon-arbiter PRIVATE shamon-event shamon-stream PUBLIC shamon-parallel-queue)
 target_compile_options(shamon-arbiter PRIVATE -fPIC)
 target_compile_definitions(shamon-arbiter PUBLIC -D_POSIX_C_SOURCE=200809L)
 

@@ -79,6 +79,124 @@ size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t k) {
     return k;
 }
 
+/* Drop all events with ID less or equal to the one of ev.
+ * Return how many events were dropped */
+size_t shm_arbiter_buffer_drop_older_than(shm_arbiter_buffer *buffer, shm_eventid id) {
+    /* we first must find the event in the queue */
+    void *ptr1, *ptr2;
+    size_t len1, len2;
+    const size_t n = shm_par_queue_peek(&buffer->buffer, 0,
+		                        &ptr1, &len1, &ptr2, &len2);
+    if (n == 0)
+	    return 0;
+
+    const size_t elem_size = shm_par_queue_elem_size(&buffer->buffer);
+    size_t k; /* the number of events to be dropped */
+    size_t bot = 0, top;
+    unsigned char *events;
+
+    assert(len1 > 0 && "Underflow");
+    top = len1 - 1;
+    shm_event *ev = (shm_event*)((unsigned char *)ptr1 + (top)*elem_size);
+    /* in which part of the buffer may the event be? */
+    if (id <= shm_event_id(ev)) {
+        events = ptr1;
+    } else if (len2 > 0){
+        events = ptr2;
+        top = len2 - 1;
+    } else {
+        /* the sought event should be in ptr2 part, but it is empty,
+         * therefore we should drop the whole first part */
+        k = len1;
+        /* now consume everything up to the found event */
+        if (k > 0) {
+            shm_par_queue_drop(&buffer->buffer, k);
+            shm_stream_notify_last_processed_id(buffer->stream, id);
+
+#ifdef DUMP_STATS
+            buffer->volunt_dropped_num_asked += k;
+            buffer->volunt_dropped_num += k;
+#endif
+        }
+
+        return k;
+    }
+
+    /* find the event (or the first event with smaller ID) */
+
+    size_t pivot = (bot + top) / 2;
+#ifndef NDEBUG
+    size_t steps = 0;
+#endif
+    while (true) {
+        assert(bot <= top);
+        /* the search should terminate much earlier then after n steps */
+        assert(steps++ < n && "BUG in binary search");
+
+        ev = (shm_event *)(events + pivot*elem_size);
+        if (id < shm_event_id(ev)) {
+            if (pivot == 0) {
+                assert(bot == 0);
+                assert(top == 1);
+                top = 0;
+            } else {
+                assert(pivot > 0);
+                top = pivot - 1;
+            }
+        } else {
+            if (bot == pivot) {
+                assert(top == bot + 1);
+                if (shm_event_id(ev) == id) {
+                    top = bot;
+                } else {
+                    bot = top;
+                }
+            } else {
+                bot = pivot;
+            }
+        }
+
+        assert(bot <= top);
+        if (top == bot) {
+            ev = (shm_event *)(events + top*elem_size);
+            if (id < shm_event_id(ev)) {
+                /* the found event is the one to the left */
+                if (bot == 0) {
+                    /* There is no event to the left in this part of the buffer.
+                     * If we are in the ptr1 part of buffer,
+                     * it means there are no events to be dropped, if we're in ptr2,
+                     * we should drop the whole ptr1 part */
+                    k = (events == ptr1) ? 0 : len1;
+                } else {
+                    k = (events == ptr1) ? top : len1 + top;
+                }
+            } else {
+                /* the found event is the one at index top,
+                   so we must drop top + 1 events */
+                k = (events == ptr1) ? top + 1 : len1 + top + 1;
+            }
+            break;
+        }
+
+        pivot = (bot + top) / 2;
+    }
+
+    assert(k <= n);
+
+    /* now consume everything up to the found event */
+    if (k > 0) {
+        shm_par_queue_drop(&buffer->buffer, k);
+        shm_stream_notify_last_processed_id(buffer->stream, id);
+
+#ifdef DUMP_STATS
+        buffer->volunt_dropped_num_asked += k;
+        buffer->volunt_dropped_num += k;
+#endif
+    }
+
+    return k;
+}
+
 bool shm_arbiter_buffer_active(shm_arbiter_buffer *buffer) {
     return buffer->active;
 }
