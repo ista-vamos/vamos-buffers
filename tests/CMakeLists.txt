@@ -62,7 +62,7 @@ add_test(NAME queue-par-cbmc-2
 add_executable(arbiter-buffer-test arbiter-buffer.c)
 target_link_libraries(arbiter-buffer-test shamon-arbiter)
 target_include_directories(arbiter-buffer-test PRIVATE ${CMAKE_SOURCE_DIR})
-add_test(arbiter-buffer-test arbiter-test)
+add_test(arbiter-buffer-test arbiter-buffer-test)
 
 
 add_executable(fetch-test fetch-test.c)
