@@ -17,6 +17,8 @@ typedef struct _shm_par_queue {
     size_t elem_size;
     size_t capacity;
     unsigned char *data;
+
+    char __padding[CACHELINE_SIZE - 2*sizeof(size_t) - sizeof(unsigned char *)];
 } shm_par_queue;
 
 void shm_par_queue_init(shm_par_queue *q, size_t capacity, size_t elem_size);
