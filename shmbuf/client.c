@@ -9,7 +9,7 @@
 #include "shm.h"
 #include "utils.h"
 
-#define SLEEP_TIME 1000
+#define SLEEP_TIME 20
 
 static volatile sig_atomic_t interrupted = 0;
 
