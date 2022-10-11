@@ -1,6 +1,8 @@
 #ifndef SHAMON_VECTOR_MACRO_H_
 #define SHAMON_VECTOR_MACRO_H_
 
+#include <string.h>
+
 #define VEC(name, elem_ty)                                                     \
     elem_ty *name;                                                             \
     size_t name##_size;                                                        \
@@ -24,10 +26,19 @@
 
 #define VEC_AT(vec, idx) (*((vec) + idx))
 
-#define VEC_EXTEND(vec, outptr)                                                \
+#define VEC_GROW(vec, new_size)                                                \
+    do {                                                                       \
+        if (new_size > VEC_ALLOC_SIZE(vec)) {                                  \
+            VEC_ALLOC_SIZE(vec) = (new_size);                                  \
+            (vec) = realloc((vec), VEC_ALLOC_SIZE(vec) * VEC_ELEM_SIZE(vec));  \
+            assert((vec) != NULL && "Memory re-allocation failed");            \
+        }                                                                      \
+    } while (0)
+
+#define VEC_EXTEND_N(vec, outptr, n)                                           \
     do {                                                                       \
         if (VEC_SIZE(vec) >= VEC_ALLOC_SIZE(vec)) {                            \
-            VEC_ALLOC_SIZE(vec) += 10;                                         \
+            VEC_ALLOC_SIZE(vec) += (n);                                        \
             (vec) = realloc((vec), VEC_ALLOC_SIZE(vec) * VEC_ELEM_SIZE(vec));  \
             assert((vec) != NULL && "Memory re-allocation failed");            \
         }                                                                      \
@@ -36,6 +47,9 @@
             ((unsigned char *)(vec)) + VEC_SIZE(vec) * VEC_ELEM_SIZE(vec);     \
         VEC_SIZE(vec) += 1;                                                    \
     } while (0)
+
+
+#define VEC_EXTEND(vec, outptr) VEC_EXTEND_N(vec, outptr, 16)
 
 #define VEC_PUSH(vec, elemptr)                                                 \
     do {                                                                       \
@@ -53,7 +67,7 @@
 #define VEC_POP(vec)                                                           \
     do {                                                                       \
         --VEC_SIZE(vec);                                                       \
-        while (0)
+    } while (0)
 
 #define VEC_TOP_PTR(vec) ((vec) + VEC_SIZE(vec) - 1)
 #define VEC_TOP(vec) (*VEC_TOP_PTR(vec))

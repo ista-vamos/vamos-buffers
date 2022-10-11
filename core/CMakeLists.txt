@@ -11,6 +11,8 @@ add_library(shamon-queue-spsc OBJECT queue_spsc.c)
 add_library(shamon-vector STATIC vector.c vector-aligned.c)
 target_link_libraries(shamon-vector PRIVATE shamon-utils)
 
+add_library(shamon-string STATIC shm_string.c)
+
 add_library(shamon-source OBJECT source.c)
 add_library(shamon-monitor STATIC monitor.c)
 
