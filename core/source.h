@@ -30,4 +30,14 @@ size_t source_control_max_event_size(struct source_control *control);
 struct event_record *source_control_get_event(struct source_control *control,
                                               const char *name);
 
+struct source_control *source_control_allocate(size_t ev_nums);
+
+_Bool
+source_control_define_pairwise_partially(struct source_control *control,
+                                         size_t from, size_t ev_nums,
+                                         const char *names[],
+                                         const char *signatures[]);
+
+_Bool source_control_define_partially(struct source_control *control,
+                                      size_t from, size_t ev_nums, ...);
 #endif /* SHAMON_SOURCE_H_ */

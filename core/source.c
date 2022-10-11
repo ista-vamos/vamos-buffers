@@ -51,14 +51,22 @@ static inline void init_record(struct event_record *ev, const char *name,
     ev->kind = 0;
 }
 
-struct source_control *source_control_define(size_t ev_nums, ...) {
+struct source_control *source_control_allocate(size_t ev_nums) {
     size_t control_size =
         sizeof(size_t) + ev_nums * sizeof(struct event_record);
     struct source_control *control = malloc(control_size);
-    assert(control);
+    if (!control) {
+        assert(0 && "Allocation failed");
+        abort();
+    }
 
     control->size = control_size;
 
+    return control;
+}
+
+struct source_control *source_control_define(size_t ev_nums, ...) {
+    struct source_control *control = source_control_allocate(ev_nums);
     va_list ap;
     va_start(ap, ev_nums);
 
@@ -76,13 +84,7 @@ struct source_control *source_control_define(size_t ev_nums, ...) {
 struct source_control *
 source_control_define_pairwise(size_t ev_nums, const char *names[],
                                const char *signatures[]) {
-    size_t control_size =
-        sizeof(size_t) + ev_nums * sizeof(struct event_record);
-    struct source_control *control = malloc(control_size);
-    assert(control);
-
-    control->size = control_size;
-
+    struct source_control *control = source_control_allocate(ev_nums);
     for (size_t i = 0; i < ev_nums; ++i) {
         init_record(control->events + i, names[i], signatures[i]);
     }
@@ -174,4 +176,53 @@ err:
     free(control);
     fprintf(stderr, "%s:%d: wrong format of events\n", __func__, __LINE__);
     return NULL;
+}
+
+
+_Bool source_control_define_partially(struct source_control *control, size_t from, size_t ev_nums, ...) {
+    va_list ap;
+    va_start(ap, ev_nums);
+
+#ifndef NDEBUG
+    for (size_t i = 0; i < from; ++i) {
+        assert(control->events[i].size > 0
+               && "Gap in partially defining source control");
+    }
+#endif
+
+    const size_t end = from + ev_nums;
+    for (size_t i = from; i < end; ++i) {
+        assert(i < source_control_get_records_num(control));
+        const char *name = va_arg(ap, const char *);
+        const char *sig = va_arg(ap, const char *);
+        init_record(control->events + i, name, sig);
+    }
+
+    va_end(ap);
+
+    return 1;
+}
+
+_Bool
+source_control_define_pairwise_partially(struct source_control *control,
+                                         size_t from, size_t ev_nums,
+                                         const char *names[],
+                                         const char *signatures[]) {
+
+#ifndef NDEBUG
+    for (size_t i = 0; i < from; ++i) {
+        assert(control->events[i].size > 0
+               && "Gap in partially defining source control");
+    }
+#endif
+
+    size_t n = 0;
+    const size_t end = from + ev_nums;
+    for (size_t i = from; i < end; ++i) {
+        assert(i < source_control_get_records_num(control));
+        init_record(control->events + i, names[n], signatures[n]);
+        ++n;
+    }
+
+    return 1;
 }
