@@ -19,6 +19,8 @@ size_t signature_op_get_size(unsigned char c) {
         return sizeof(op.l);
     case 'p':
         return sizeof(op.p);
+    case 't':
+        return sizeof(op.t);
     case 'S':
     case 'L': /* aliases for strings: line and match */
     case 'M':

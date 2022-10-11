@@ -32,6 +32,7 @@ typedef union _signature_operand {
         uint64_t shared;
         const char *local;
     } S;
+    uint64_t t; /* timestamp */
     /* any of those types */
 } signature_operand;
 
