@@ -16,4 +16,5 @@ __pycache__
 build/
 experiments/primes/programs/
 *.tcl
+shmbuf/buffer-size.h
 
