@@ -24,6 +24,8 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
 shm_arbiter_buffer *shm_arbiter_buffer_create(shm_stream *stream,
                                               size_t out_event_size,
                                               size_t capacity);
+size_t shm_arbiter_buffer_set_drop_space_threshold(shm_arbiter_buffer *buffer, size_t thr);
+
 void shm_arbiter_buffer_free(shm_arbiter_buffer *buffer);
 void shm_arbiter_buffer_destroy(shm_arbiter_buffer *buffer);
 void shm_arbiter_buffer_set_active(shm_arbiter_buffer *buffer, bool val);
