@@ -176,7 +176,7 @@ static struct buffer *initialize_shared_buffer(const char *key,
     assert(elem_size >= sizeof(shm_event_dropped) && "The size must be enough to contain the dropped event");
 
     printf("Initializing buffer '%s' with elem size '%lu'\n", key, elem_size);
-    int fd = shamon_shm_open(key, O_RDWR | O_CREAT, mode);
+    int fd = shamon_shm_open(key, O_RDWR | O_CREAT | O_TRUNC, mode);
     if (fd < 0) {
         perror("shm_open");
         return NULL;

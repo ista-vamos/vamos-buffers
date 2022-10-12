@@ -176,14 +176,12 @@ void shamon_destroy(shamon *shmn) {
     assert(VEC_SIZE(shmn->buffer_threads) == shm_vector_size(_buffers(shmn)));
     for (size_t i = 0; i < VEC_SIZE(shmn->buffer_threads); ++i) {
         thrd_join(shmn->buffer_threads[i], NULL);
-        /*
+	/*
         shm_arbiter_buffer *buff
-            = *((shm_arbiter_buffer **)shm_vector_at(&shmn->buffers, i));
+            = *((shm_arbiter_buffer **)shm_vector_at(_buffers(shmn), i));
         shm_arbiter_buffer_set_active(buff, false);
-        assert(shm_arbiter_buffer_size(buff) == 0 &&
-               "Not all items were consumed");
         shm_arbiter_buffer_destroy(buff);
-               */
+	*/
     }
 
     for (size_t i = 0; i < VEC_SIZE(shmn->streams); ++i) {
