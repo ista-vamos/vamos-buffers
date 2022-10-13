@@ -348,6 +348,7 @@ struct buffer *try_get_shared_buffer(const char *key, size_t retry) {
 
     if (fd == -1) {
         perror("shm_open");
+        fprintf(stderr, "Failed getting shared buffer '%s'\n", key);
         return NULL;
     }
 

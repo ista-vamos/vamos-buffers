@@ -7,11 +7,11 @@
 #include "stream.h"
 #include "utils.h"
 
-#define DROP_SPACE_THRESHOLD 1
+#define DROP_SPACE_DEFAULT_THRESHOLD 1
 
 typedef struct _shm_arbiter_buffer {
     shm_par_queue buffer;       // the buffer itself
-    shm_stream *stream;         // the source for the buffer
+    size_t drop_space_threshold;  // the number of elements to keep free before pushing dropped() event
     size_t dropped_num;         // the number of dropped events
     size_t total_dropped_times; // the number of dropped events
     size_t total_dropped_num;   // the number of dropped events
@@ -23,6 +23,8 @@ typedef struct _shm_arbiter_buffer {
     int last_was_drop; // true if the last event written was drop()
 #endif
     shm_eventid drop_begin_id; // the id of the next 'dropped' event
+
+    shm_stream *stream;         // the source for the buffer
     bool active;               // true while the events are being queued
 } shm_arbiter_buffer;
 
@@ -53,6 +55,15 @@ size_t shm_arbiter_buffer_free_space(shm_arbiter_buffer *buffer) {
 
 size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *buffer) {
     return shm_par_queue_capacity(&buffer->buffer);
+}
+
+size_t shm_arbiter_buffer_set_drop_space_threshold(shm_arbiter_buffer *buffer, size_t thr) {
+    assert(thr >= 1);
+    assert(thr < shm_arbiter_buffer_capacity(buffer));
+
+    size_t old = buffer->drop_space_threshold;
+    buffer->drop_space_threshold = thr;
+    return old;
 }
 
 /* drop an event and notify buffer the buffer that it may free up
@@ -241,6 +252,8 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
 
     shm_par_queue_init(&buffer->buffer, capacity, event_size);
 
+    buffer->drop_space_threshold = DROP_SPACE_DEFAULT_THRESHOLD;
+
     buffer->stream = stream;
     buffer->active = false;
     buffer->dropped_num = 0;
@@ -421,8 +434,8 @@ void *handle_stream_end(shm_stream *stream, shm_arbiter_buffer *buffer,
                         size_t last_ev_id) {
     uint64_t sleep_time = SLEEP_TIME_INIT_NS;
     while (buffer->dropped_num > 0) {
-        assert(DROP_SPACE_THRESHOLD < shm_arbiter_buffer_capacity(buffer));
-        if (shm_arbiter_buffer_free_space(buffer) > DROP_SPACE_THRESHOLD) {
+        assert(buffer->drop_space_threshold < shm_arbiter_buffer_capacity(buffer));
+        if (shm_arbiter_buffer_free_space(buffer) > buffer->drop_space_threshold) {
             /* the end id may not be precise, but we need just the upper
              * bound */
             push_dropped_event(stream, buffer, last_ev_id - 1);
@@ -495,8 +508,8 @@ static bool handle_dropping_event(shm_stream *stream,
                                   shm_arbiter_buffer *buffer,
                                   size_t last_ev_id) {
     if (buffer->dropped_num > 0) {
-        assert(DROP_SPACE_THRESHOLD < shm_arbiter_buffer_capacity(buffer));
-        if (shm_arbiter_buffer_free_space(buffer) > DROP_SPACE_THRESHOLD) {
+        assert(buffer->drop_space_threshold < shm_arbiter_buffer_capacity(buffer));
+        if (shm_arbiter_buffer_free_space(buffer) > buffer->drop_space_threshold) {
             send_dropped_event(stream, buffer, last_ev_id);
             return false; /* forward the current event */
         }
