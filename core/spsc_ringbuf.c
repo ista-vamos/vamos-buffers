@@ -69,6 +69,7 @@ bool shm_spsc_ringbuf_full(shm_spsc_ringbuf *b) {
     return __predict_false(head == tail + 1 || (head == b->capacity - 1 && tail == 0));
 }
 
+/* Compute the write offset (with wrapping). Returns the num of free elements */
 static inline size_t get_write_off(size_t head, size_t tail, size_t capacity,
                                    size_t *n, size_t *wrap_n) {
     if (tail < head) {
@@ -134,6 +135,44 @@ size_t shm_spsc_ringbuf_write_off_nowrap(shm_spsc_ringbuf *b, size_t *n) {
     return head;
 }
 
+/* Ask for at least *n elements */
+size_t shm_spsc_ringbuf_acquire(shm_spsc_ringbuf *b, size_t *n, size_t *wrap_n) {
+    const size_t head = atomic_load_explicit(&b->head, memory_order_acquire);
+
+    size_t req = *n;
+    if (get_write_off(head, b->seen_tail, b->capacity, n, wrap_n) < req) {
+        b->seen_tail = atomic_load_explicit(&b->tail, memory_order_relaxed);
+        get_write_off(head, b->seen_tail, b->capacity, n, wrap_n);
+    }
+
+#ifndef NDEBUG
+     b->write_in_progress.head = head;
+     b->write_in_progress.n = *n + *wrap_n;
+#endif
+
+    return head;
+}
+
+/* Ask for at least *n elements */
+size_t shm_spsc_ringbuf_acquire_nowrap(shm_spsc_ringbuf *b, size_t *n) {
+    const size_t head = atomic_load_explicit(&b->head, memory_order_acquire);
+
+    size_t req = *n;
+    if (get_write_off(head, b->seen_tail, b->capacity, n, NULL) < req) {
+        b->seen_tail = atomic_load_explicit(&b->tail, memory_order_relaxed);
+        get_write_off(head, b->seen_tail, b->capacity, n, NULL);
+    }
+
+#ifndef NDEBUG
+     b->write_in_progress.head = head;
+     b->write_in_progress.n = *n;
+#endif
+
+    return head;
+}
+
+
+
 void shm_spsc_ringbuf_write_finish(shm_spsc_ringbuf *b, size_t n) {
     assert(n <= b->capacity);
     assert((b->capacity < (~((size_t)0)) - n) && "Possible overflow");
@@ -171,6 +210,18 @@ size_t shm_spsc_ringbuf_read_off_nowrap(shm_spsc_ringbuf *b, size_t *n) {
     return tail;
 }
 
+size_t shm_spsc_ringbuf_read_acquire(shm_spsc_ringbuf *b, size_t *n) {
+    const size_t tail = atomic_load_explicit(&b->tail, memory_order_acquire);
+    size_t tmp = get_written_num(b->seen_head, tail, b->capacity);
+    if (tmp < *n) {
+        b->seen_head = atomic_load_explicit(&b->head, memory_order_acquire);
+        tmp = get_written_num(b->seen_head, tail, b->capacity);
+    }
+
+    *n = tmp;
+
+    return tail;
+}
 
 /*
  * Consume n items from the ringbuffer. There must be at least n items.
