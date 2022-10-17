@@ -48,11 +48,10 @@ void shm_par_queue_write_finish(shm_par_queue *q) {
 bool shm_par_queue_push(shm_par_queue *q, const void *elem, size_t size) {
     assert(q->elem_size >= size && "Size does not fit the slot");
 
-    size_t n;
-    size_t off = shm_spsc_ringbuf_write_off_nowrap(&q->ringbuf, &n);
-    if (__predict_true(n > 0)) {
-        memcpy(q->data + (off * q->elem_size), elem, size);
-        shm_spsc_ringbuf_write_finish(&q->ringbuf, 1);
+    void *ptr = shm_par_queue_write_ptr(q);
+    if (__predict_true(ptr)) {
+        memcpy(ptr, elem, size);
+        shm_par_queue_write_finish(q);
         return true;
     }
 
