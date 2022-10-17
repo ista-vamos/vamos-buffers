@@ -269,6 +269,10 @@ struct buffer *create_shared_buffer_adv(const char *key,
             elem_size = sizeof(shm_event_dropped);
     }
 
+    if (mode == 0) {
+        mode = S_IRWXU;
+    }
+
     return initialize_shared_buffer(key, mode, elem_size, ctrl);
 }
 

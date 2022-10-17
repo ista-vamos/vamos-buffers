@@ -15,8 +15,10 @@ int main(void) {
     ctrl->events[0].name[0] = '\0';
     ctrl->events[0].signature[0] = '\0';
 
-    struct buffer *b = create_shared_buffer("/testkey", ctrl);
+    struct buffer *b = create_shared_buffer_adv("/testkey", /* mode = */ 0,
+		                                sizeof(size_t), ctrl);
     assert(b);
+    assert(buffer_elem_size(b) == sizeof(size_t));
     free(ctrl);
 
     assert(buffer_size(b) == 0);
