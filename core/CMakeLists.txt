@@ -4,7 +4,7 @@ add_library(shamon-utils STATIC utils.c)
 target_compile_definitions(shamon-utils PUBLIC -D_POSIX_C_SOURCE=200809L)
 target_compile_options(shamon-utils PRIVATE -fPIC)
 
-add_library(shamon-list OBJECT list.c)
+add_library(shamon-list OBJECT list.c list-embedded.c)
 add_library(shamon-event OBJECT event.c)
 add_library(shamon-queue-spsc OBJECT queue_spsc.c)
 

@@ -72,4 +72,6 @@
 #define VEC_TOP_PTR(vec) ((vec) + VEC_SIZE(vec) - 1)
 #define VEC_TOP(vec) (*VEC_TOP_PTR(vec))
 
+#define VEC_POP_TOP(vec) (--VEC_SIZE(vec), *((vec) + VEC_SIZE(vec)))
+
 #endif /* SHAMON_VECTOR_H_ */

@@ -22,7 +22,7 @@
             assert((s) != NULL && "Memory re-allocation failed");               \
         }                                                                       \
         assert((STRING_SIZE(s) < STRING_ALLOC_SIZE(s)) && "Vector too small");  \
-        outptr = (s) + STRING_SIZE(s);                                          \
+        outptr = ((s) + STRING_SIZE(s));                                        \
         STRING_SIZE(s) += 1;                                                    \
     } while (0)
 
@@ -31,10 +31,9 @@
     do {                                                                            \
         char *__w;                                                                  \
         STRING_EXTEND(s, __w);                                                      \
-        assert((STRING_SIZE(s) < STRING_ALLOC_SIZE(s)) && "String too small");      \
-        assert(__w == s + STRING_SIZE(s));                                           \
+        assert((STRING_SIZE(s) <= STRING_ALLOC_SIZE(s)) && "String too small");     \
+        assert(__w == s + STRING_SIZE(s) - 1);                                      \
         *__w = c;                                                                   \
-        ++STRING_SIZE(s);                                                         \
     } while (0)
 
 #define STRING_POP(s)                                                             \
