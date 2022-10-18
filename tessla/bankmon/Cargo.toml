@@ -1,0 +1,13 @@
+[workspace]
+
+[package]
+name = "tessla_monitor"
+version = "0.0.0"
+
+[dependencies]
+tessla_stdlib = { path = "./lib_tessla" }
+
+[lib]
+name = "monitor"
+path = "src/monitor.rs"
+crate-type = ["staticlib"]
