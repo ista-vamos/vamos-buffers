@@ -27,8 +27,7 @@
         STRING_SIZE(s) += 1;                                                    \
     } while (0)
 
-// like EXTEND, just does not change the size
-#define STRING_ENSURE_SPACE(s, outptr)                                          \
+#define STRING_ENSURE_SPACE(s)                                                  \
     do {                                                                        \
         if (STRING_SIZE(s) >= STRING_ALLOC_SIZE(s)) {                           \
             STRING_ALLOC_SIZE(s)                                                \
@@ -37,9 +36,7 @@
             assert((s) != NULL && "Memory re-allocation failed");               \
         }                                                                       \
         assert((STRING_SIZE(s) < STRING_ALLOC_SIZE(s)) && "Vector too small");  \
-        outptr = ((s) + STRING_SIZE(s));                                        \
     } while (0)
-
 
 
 #define STRING_APPEND(s, c)                                                         \
