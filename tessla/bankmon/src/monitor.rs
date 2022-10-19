@@ -6,19 +6,24 @@ extern crate tessla_stdlib;
 use std::borrow::BorrowMut;
 use std::marker::PhantomData;
 
-// For newer rust
-//use std::ffi::c_int;
-//use std::ffi::c_long;
 use std::os::raw::c_int;
 use std::os::raw::c_long;
-
 use tessla_stdlib::*;
 
-pub struct State<E, Fbalancemismatch, BFbalancemismatch, Fbalancenegative, BFbalancenegative>
-where
+pub struct State<
+    E,
+    Fbalancemismatch,
+    BFbalancemismatch,
+    Fbalances,
+    BFbalances,
+    Fbalancenegative,
+    BFbalancenegative,
+> where
     Fbalancemismatch:
         (FnMut(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), E>) + ?Sized,
     BFbalancemismatch: BorrowMut<Fbalancemismatch>,
+    Fbalances: (FnMut(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), E>) + ?Sized,
+    BFbalances: BorrowMut<Fbalances>,
     Fbalancenegative:
         (FnMut(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), E>) + ?Sized,
     BFbalancenegative: BorrowMut<Fbalancenegative>,
@@ -27,6 +32,7 @@ where
     last_processed_ts: i64,
     _marker: PhantomData<E>,
     out_balancemismatch: BFbalancemismatch, /* balancemismatch */
+    out_balances: BFbalances,               /* balances */
     out_balancenegative: BFbalancenegative, /* balancenegative */
     var_1226_: EventContainer<TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>>,
     var_1174_: EventContainer<TesslaUnit>,
@@ -41,6 +47,7 @@ where
     var_adjwithdraw_1188_: EventContainer<TesslaValue<(TesslaInt, TesslaInt, TesslaBool)>>,
     var_1190_: EventContainer<TesslaMap<TesslaInt, TesslaInt>>,
     var_balances_1172_: EventContainer<TesslaMap<TesslaInt, TesslaInt>>,
+    _marker_balances: PhantomData<Fbalances>,
     var_balancehistory_1222_:
         EventContainer<TesslaMap<TesslaInt, TesslaValue<(TesslaInt, TesslaInt)>>>,
     var_1225_: EventContainer<TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>>,
@@ -307,18 +314,37 @@ fn var_1224_(
     return var_1352_.clone();
 }
 
-impl<E, Fbalancemismatch, BFbalancemismatch, Fbalancenegative, BFbalancenegative>
-    State<E, Fbalancemismatch, BFbalancemismatch, Fbalancenegative, BFbalancenegative>
+impl<
+        E,
+        Fbalancemismatch,
+        BFbalancemismatch,
+        Fbalances,
+        BFbalances,
+        Fbalancenegative,
+        BFbalancenegative,
+    >
+    State<
+        E,
+        Fbalancemismatch,
+        BFbalancemismatch,
+        Fbalances,
+        BFbalances,
+        Fbalancenegative,
+        BFbalancenegative,
+    >
 where
     Fbalancemismatch:
         (FnMut(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), E>) + ?Sized,
     BFbalancemismatch: BorrowMut<Fbalancemismatch>,
+    Fbalances: (FnMut(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), E>) + ?Sized,
+    BFbalances: BorrowMut<Fbalances>,
     Fbalancenegative:
         (FnMut(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), E>) + ?Sized,
     BFbalancenegative: BorrowMut<Fbalancenegative>,
 {
     pub fn new(
         out_balancemismatch: BFbalancemismatch, /* balancemismatch */
+        out_balances: BFbalances,               /* balances */
         out_balancenegative: BFbalancenegative, /* balancenegative */
     ) -> Self {
         Self {
@@ -339,6 +365,8 @@ where
             var_adjwithdraw_1188_: init(),
             var_1190_: init(),
             var_balances_1172_: init(),
+            out_balances: out_balances,
+            _marker_balances: PhantomData,
             var_balancehistory_1222_: init(),
             var_1225_: init_with_value(Value(None)),
             var_1229_: init(),
@@ -446,6 +474,8 @@ where
                         &self.var_1190_,
                         TesslaValue::wrap(var_1192_ as fn(_, _, _, _, _) -> _),
                     );
+                    self.var_balances_1172_
+                        .call_output(self.out_balances.borrow_mut(), self.current_ts)?;
                     lift2(
                         &mut self.var_balancehistory_1222_,
                         &self.var_balances_1172_,
@@ -536,6 +566,8 @@ impl Default
         (),
         fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
         fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
+        fn(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), ()>,
+        fn(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), ()>,
         fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
         fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
     >
@@ -543,6 +575,7 @@ impl Default
     fn default() -> Self {
         Self::new(
             |value, ts| Ok(output_var(value, "balancemismatch", ts, false)),
+            |value, ts| Ok(output_var(value, "balances", ts, false)),
             |value, ts| Ok(output_var(value, "balancenegative", ts, false)),
         )
     }
@@ -553,6 +586,8 @@ extern "C" fn moninit() -> Box<State<
 (),
 fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
 fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
+fn(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), ()>,
+fn(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), ()>,
 fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
 fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
 >>
@@ -561,13 +596,15 @@ fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
 }
 
 #[no_mangle]
-extern "C" fn mondeposit(mut bs : Box<State<
+extern "C" fn mondeposit(mut bs : &mut State<
     (),
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
+    fn(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), ()>,
+    fn(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
-    >>, acc : c_int, amnt : c_int, ts : c_long)
+    >, acc : c_int, amnt : c_int, ts : c_long)
 {
     bs.step(ts.into(), false).expect("Step failed");
     bs.set_deposit(Value((Value(acc.into()), Value(amnt.into()))));
@@ -575,13 +612,15 @@ extern "C" fn mondeposit(mut bs : Box<State<
 }
 
 #[no_mangle]
-extern "C" fn monwithdraw(mut bs : Box<State<
+extern "C" fn monwithdraw(mut bs : &mut State<
     (),
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
+    fn(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), ()>,
+    fn(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
-    >>, acc : c_int, amnt : c_int, success : c_int, ts : c_long)
+    >, acc : c_int, amnt : c_int, success : c_int, ts : c_long)
 {
     bs.step(ts.into(), false).expect("Step failed");
     bs.set_withdraw(Value((Value(acc.into()), Value(amnt.into()), Value(success==1))));
@@ -589,13 +628,15 @@ extern "C" fn monwithdraw(mut bs : Box<State<
 }
 
 #[no_mangle]
-extern "C" fn montransfer(mut bs : Box<State<
+extern "C" fn montransfer(mut bs : &mut State<
     (),
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
+    fn(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), ()>,
+    fn(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
-    >>, src : c_int, tgt : c_int, amnt : c_int, success : c_int, ts : c_long)
+    >, src : c_int, tgt : c_int, amnt : c_int, success : c_int, ts : c_long)
 {
     bs.step(ts.into(), false).expect("Step failed");
     bs.set_transfer(Value((Value(src.into()), Value(tgt.into()), Value(amnt.into()), Value(success==1))));
@@ -603,13 +644,15 @@ extern "C" fn montransfer(mut bs : Box<State<
 }
 
 #[no_mangle]
-extern "C" fn monbalance(mut bs : Box<State<
+extern "C" fn monbalance(mut bs : &mut State<
     (),
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
+    fn(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), ()>,
+    fn(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
-    >>, acc : c_int, amnt : c_int, ts : c_long)
+    >, acc : c_int, amnt : c_int, ts : c_long)
 {
     bs.step(ts.into(), false).expect("Step failed");
     bs.set_balance(Value((Value(acc.into()), Value(amnt.into()))));
@@ -617,13 +660,15 @@ extern "C" fn monbalance(mut bs : Box<State<
 }
 
 #[no_mangle]
-extern "C" fn monreset(mut bs : Box<State<
+extern "C" fn monreset(mut bs : &mut State<
     (),
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
+    fn(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), ()>,
+    fn(TesslaMap<TesslaInt, TesslaInt>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
-    >>, ts : c_long)
+    >, ts : c_long)
 {
     bs.step(ts.into(), false).expect("Step failed");
     bs.set_reset(Value(()));
