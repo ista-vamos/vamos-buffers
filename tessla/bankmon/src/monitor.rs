@@ -6,6 +6,12 @@ extern crate tessla_stdlib;
 use std::borrow::BorrowMut;
 use std::marker::PhantomData;
 
+// For newer rust
+//use std::ffi::c_int;
+//use std::ffi::c_long;
+use std::os::raw::c_int;
+use std::os::raw::c_long;
+
 use tessla_stdlib::*;
 
 pub struct State<E, Fbalancemismatch, BFbalancemismatch, Fbalancenegative, BFbalancenegative>
@@ -561,7 +567,7 @@ extern "C" fn mondeposit(mut bs : Box<State<
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
-    >>, acc : std::ffi::c_int, amnt : std::ffi::c_int, ts : std::ffi::c_long)
+    >>, acc : c_int, amnt : c_int, ts : c_long)
 {
     bs.step(ts.into(), false).expect("Step failed");
     bs.set_deposit(Value((Value(acc.into()), Value(amnt.into()))));
@@ -575,7 +581,7 @@ extern "C" fn monwithdraw(mut bs : Box<State<
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
-    >>, acc : std::ffi::c_int, amnt : std::ffi::c_int, success : std::ffi::c_int, ts : std::ffi::c_long)
+    >>, acc : c_int, amnt : c_int, success : c_int, ts : c_long)
 {
     bs.step(ts.into(), false).expect("Step failed");
     bs.set_withdraw(Value((Value(acc.into()), Value(amnt.into()), Value(success==1))));
@@ -589,7 +595,7 @@ extern "C" fn montransfer(mut bs : Box<State<
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
-    >>, src : std::ffi::c_int, tgt : std::ffi::c_int, amnt : std::ffi::c_int, success : std::ffi::c_int, ts : std::ffi::c_long)
+    >>, src : c_int, tgt : c_int, amnt : c_int, success : c_int, ts : c_long)
 {
     bs.step(ts.into(), false).expect("Step failed");
     bs.set_transfer(Value((Value(src.into()), Value(tgt.into()), Value(amnt.into()), Value(success==1))));
@@ -603,7 +609,7 @@ extern "C" fn monbalance(mut bs : Box<State<
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
-    >>, acc : std::ffi::c_int, amnt : std::ffi::c_int, ts : std::ffi::c_long)
+    >>, acc : c_int, amnt : c_int, ts : c_long)
 {
     bs.step(ts.into(), false).expect("Step failed");
     bs.set_balance(Value((Value(acc.into()), Value(amnt.into()))));
@@ -617,7 +623,7 @@ extern "C" fn monreset(mut bs : Box<State<
     fn(TesslaValue<(TesslaInt, TesslaInt, TesslaInt)>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
     fn(TesslaOption<TesslaValue<(TesslaInt, TesslaInt)>>, i64) -> Result<(), ()>,
-    >>, ts : std::ffi::c_long)
+    >>, ts : c_long)
 {
     bs.step(ts.into(), false).expect("Step failed");
     bs.set_reset(Value(()));
