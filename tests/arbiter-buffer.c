@@ -33,7 +33,7 @@ int main(void) {
     shm_stream *stream = &dummy_stream;
 
     shm_stream_init(stream, lbuffer, sizeof(struct event), is_ready,
-                    NULL, NULL, NULL, "dummy-stream", "dummy");
+                    NULL, NULL, NULL, NULL, "dummy-stream", "dummy");
 
     shm_arbiter_buffer *b
             = shm_arbiter_buffer_create(stream, sizeof(struct event), 20);

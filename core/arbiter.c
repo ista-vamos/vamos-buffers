@@ -251,8 +251,9 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
                             ? out_event_size
                             : stream->event_size;
     /* the buffer must be able to contain the event 'dropped' */
-    if (event_size < sizeof(shm_event_dropped))
-        event_size = sizeof(shm_event_dropped);
+    size_t hole_event_size = stream->hole_handling.hole_event_size;
+    if (hole_event_size > 0 && event_size < hole_event_size)
+        event_size = hole_event_size;
 
     shm_par_queue_init(&buffer->buffer, capacity, event_size);
 
@@ -303,15 +304,15 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
         if (shm_par_queue_free_num(queue) < 2) {
             ++buffer->dropped_num;
         } else {
-            shm_event_dropped dropped;
-            shm_stream_get_dropped_event(buffer->stream, &dropped,
-                                         buffer->drop_begin_id,
-                                         buffer->dropped_num);
-            assert(sizeof(dropped) <= shm_par_queue_elem_size(queue));
+            shm_stream_prepare_hole_event(buffer->stream, buffer->drop_begin_id,
+                                          buffer->dropped_num);
+            assert(buffer->stream->hole_handling.hole_event_size <=
+                   shm_par_queue_elem_size(queue));
 #ifndef NDEBUG
             bool ret =
 #endif
-                shm_par_queue_push(queue, &dropped, sizeof(dropped));
+                shm_par_queue_push(queue, buffer->stream->hole_event,
+                                   buffer->stream->hole_handling.hole_event_size);
 #ifdef DUMP_STATS
             ++buffer->written_num;
 #endif
@@ -415,10 +416,9 @@ static void *get_event(shm_stream *stream) {
 
 static void push_dropped_event(shm_stream *stream, shm_arbiter_buffer *buffer,
                                size_t notify_id) {
-    shm_event_dropped dropped_ev;
-    shm_stream_get_dropped_event(stream, &dropped_ev, notify_id,
-                                 buffer->dropped_num);
-    shm_par_queue_push(&buffer->buffer, &dropped_ev, sizeof(dropped_ev));
+    shm_stream_prepare_hole_event(stream, notify_id, buffer->dropped_num);
+    shm_par_queue_push(&buffer->buffer, stream->hole_event,
+                       stream->hole_handling.hole_event_size);
 #ifdef DUMP_STATS
     ++buffer->written_num;
 #endif
@@ -482,28 +482,34 @@ static inline void send_dropped_event(shm_stream         *stream,
 
 static inline void start_dropping(shm_stream         *stream,
                                   shm_arbiter_buffer *buffer,
-                                  size_t              last_ev_id) {
-    buffer->drop_begin_id = last_ev_id;
+                                  shm_event          *event) {
+    buffer->drop_begin_id = shm_event_id(event);
     assert(buffer->dropped_num == 0);
     ++buffer->dropped_num;
-    shm_stream_consume(stream, 1);
+
+    assert(stream->hole_event);
+    stream->hole_handling.init(stream->hole_event);
+    stream->hole_handling.update(stream->hole_event, event);
     /*
      printf("FETCH: start dropping { kind = %lu, id = %lu}\n",
             ((shm_event*)ev)->kind,
             ((shm_event*)ev)->id);
      */
+    shm_stream_consume(stream, 1);
 }
 
 static inline void continue_dropping(shm_stream         *stream,
                                      shm_arbiter_buffer *buffer,
-                                     size_t              last_ev_id) {
+                                     shm_event          *event) {
     ++buffer->dropped_num;
+    stream->hole_handling.update(stream->hole_event, event);
+
     /* notify about dropped events continuously, because it may take
      * long time to generate the dropped event */
     /* FIXME: % is slow... and make it configurable */
     if (buffer->dropped_num % 10000 == 0) {
         shm_arbiter_buffer_notify_dropped(buffer, buffer->drop_begin_id,
-                                          last_ev_id - 1);
+                                          shm_event_id(event) - 1);
     }
     /* consume the dropped event */
     shm_stream_consume(stream, 1);
@@ -513,23 +519,23 @@ static inline void continue_dropping(shm_stream         *stream,
    if the event should be forwarded */
 static bool handle_dropping_event(shm_stream         *stream,
                                   shm_arbiter_buffer *buffer,
-                                  size_t              last_ev_id) {
+                                  shm_event          *event) {
     if (buffer->dropped_num > 0) {
         assert(buffer->drop_space_threshold <
                shm_arbiter_buffer_capacity(buffer));
         if (shm_arbiter_buffer_free_space(buffer) >
             buffer->drop_space_threshold) {
-            send_dropped_event(stream, buffer, last_ev_id);
+            send_dropped_event(stream, buffer, shm_event_id(event));
             return false; /* forward the current event */
         }
 
-        continue_dropping(stream, buffer, last_ev_id);
+        continue_dropping(stream, buffer, event);
         return true; /* drop the current event */
     }
 
     assert(buffer->dropped_num == 0);
     if (shm_arbiter_buffer_free_space(buffer) == 0) {
-        start_dropping(stream, buffer, last_ev_id);
+        start_dropping(stream, buffer, event);
         return true;
     }
 
@@ -549,7 +555,7 @@ void *stream_fetch(shm_stream *stream, shm_arbiter_buffer *buffer) {
         }
 
         assert(ev && "Dont have event");
-        assert(!shm_event_is_dropped((shm_event *)ev) && "Got dropped event");
+        assert(!shm_event_is_hole((shm_event *)ev) && "Got dropped event");
 
         last_ev_id = shm_event_id(ev);
         assert(last_ev_id == ++stream->last_event_id && "IDs are inconsistent");
@@ -559,7 +565,7 @@ void *stream_fetch(shm_stream *stream, shm_arbiter_buffer *buffer) {
                   ((shm_event*)ev)->id);
          */
 
-        if (!handle_dropping_event(stream, buffer, last_ev_id)) {
+        if (!handle_dropping_event(stream, buffer, ev)) {
 #ifdef DUMP_STATS
             ++stream->fetched_events;
 #endif
@@ -582,7 +588,7 @@ void *stream_filter_fetch(shm_stream *stream, shm_arbiter_buffer *buffer,
         }
 
         assert(ev && "Dont have event");
-        assert(!shm_event_is_dropped((shm_event *)ev) && "Got dropped event");
+        assert(!shm_event_is_hole((shm_event *)ev) && "Got hole event");
 
         last_ev_id = shm_event_id(ev);
         assert(last_ev_id == ++stream->last_event_id && "IDs are inconsistent");
@@ -599,7 +605,7 @@ void *stream_filter_fetch(shm_stream *stream, shm_arbiter_buffer *buffer,
                   ((shm_event*)ev)->id);
          */
 
-        if (!handle_dropping_event(stream, buffer, last_ev_id)) {
+        if (!handle_dropping_event(stream, buffer, ev)) {
 #ifdef DUMP_STATS
             ++stream->fetched_events;
 #endif

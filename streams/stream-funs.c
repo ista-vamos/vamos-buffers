@@ -35,7 +35,7 @@ shm_stream *shm_create_funs_stream(const char *key, const char *name) {
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
     shm_stream_init((shm_stream *)ss, shmbuffer, elem_size, funs_is_ready, NULL,
-                    funs_alter, funs_destroy,
+                    funs_alter, funs_destroy, NULL,
                     "funs-stream", name);
     ss->shmbuffer = shmbuffer;
 

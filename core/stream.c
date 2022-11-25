@@ -5,27 +5,38 @@
 
 #include "shmbuf/buffer.h"
 #include "stream.h"
+#include "utils.h"
 
 /*****
  * STREAM
  *****/
 
-const char *shm_stream_get_name(shm_stream *stream) {
-    assert(stream);
-    return stream->name;
+/* FIXME: we duplicate the counter in stream here. Maybe rather set the funs to NULL? */
+static void default_hole_init(shm_event *ev) {
+    ((shm_event_default_hole *)ev)->n = 0;
 }
 
-const char *shm_stream_get_type(shm_stream *stream) {
-    assert(stream);
-    return stream->type;
+static void default_hole_update(shm_event *hole, shm_event *ev) {
+    (void)ev;
+    ++((shm_event_default_hole *)hole)->n;
 }
+
+static shm_stream_hole_handling default_hole_handling = {
+    .hole_event_size = sizeof(shm_event_default_hole),
+    .init = default_hole_init,
+    .update = default_hole_update
+};
+
 
 static uint64_t last_stream_id = 0;
 
 void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
-                     size_t event_size, shm_stream_is_ready_fn is_ready,
+                     size_t event_size,
+                     shm_stream_is_ready_fn is_ready,
                      shm_stream_filter_fn filter, shm_stream_alter_fn alter,
-                     shm_stream_destroy_fn destroy, const char *const type,
+                     shm_stream_destroy_fn     destroy,
+                     const shm_stream_hole_handling *hole_handling,
+                     const char *const type,
                      const char *const name) {
     stream->id                     = ++last_stream_id;
     stream->event_size             = event_size;
@@ -33,12 +44,12 @@ void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
     /* TODO: maybe we could just have a boolean flag that would be set
      * by a particular stream implementation instead of this function call?
      * Or a special universal event that is sent by the source...*/
-    stream->is_ready = is_ready;
-    stream->filter   = filter;
-    stream->alter    = alter;
-    stream->destroy  = destroy;
-    stream->type     = type;
-    stream->name     = strdup(name);
+    stream->is_ready        = is_ready;
+    stream->filter          = filter;
+    stream->alter           = alter;
+    stream->destroy         = destroy;
+    stream->type            = type;
+    stream->name            = strdup(name);
 #ifndef NDEBUG
     stream->last_event_id = 0;
 #endif
@@ -50,10 +61,38 @@ void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
     stream->dropped_events       = 0;
     stream->slept_waiting_for_ev = 0;
 #endif
+
+    hole_handling = hole_handling ? hole_handling : &default_hole_handling;
+    assert(hole_handling->hole_event_size > 0 && hole_handling->update && hole_handling->init);
+
+    stream->hole_handling = *hole_handling;
+    stream->hole_event = xalloc(hole_handling->hole_event_size);
+}
+
+void shm_stream_destroy(shm_stream *stream) {
+    shm_stream_detach(stream);
+
+    free(stream->name);
+    free(stream->events_cache);
+    free(stream->hole_event);
+
+    if (stream->destroy) {
+        stream->destroy(stream);
+    }
 }
 
 size_t shm_stream_id(shm_stream *stream) {
     return stream->id;
+}
+
+const char *shm_stream_get_name(shm_stream *stream) {
+    assert(stream);
+    return stream->name;
+}
+
+const char *shm_stream_get_type(shm_stream *stream) {
+    assert(stream);
+    return stream->type;
 }
 
 struct event_record *shm_stream_get_avail_events(shm_stream *s, size_t *sz) {
@@ -129,16 +168,14 @@ size_t shm_stream_buffer_capacity(shm_stream *s) {
 }
 
 /* FIXME: no longer related to stream */
-void shm_stream_get_dropped_event(shm_stream        *stream,
-                                  shm_event_dropped *dropped_ev, size_t id,
-                                  uint64_t n) {
-    dropped_ev->base.id   = id;
-    dropped_ev->base.kind = shm_get_dropped_kind();
-    dropped_ev->n         = n;
+void shm_stream_prepare_hole_event(shm_stream *stream, size_t id, uint64_t n) {
+    assert(stream->hole_event);
+    stream->hole_event->id   = id;
+    stream->hole_event->kind = shm_get_hole_kind();
 #ifdef DUMP_STATS
     stream->dropped_events += n;
 #else
-    (void)stream;
+    (void)n;
 #endif
 }
 
@@ -216,16 +253,5 @@ void shm_stream_dump_events(shm_stream *stream) {
                 "[%s:%s] event: %-20s, kind: %-3lu, size: %-3lu, sig: %s\n",
                 stream->name, stream->type, events[i].name, events[i].kind,
                 events[i].size, events[i].signature);
-    }
-}
-
-void shm_stream_destroy(shm_stream *stream) {
-    shm_stream_detach(stream);
-
-    free(stream->name);
-    free(stream->events_cache);
-
-    if (stream->destroy) {
-        stream->destroy(stream);
     }
 }

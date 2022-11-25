@@ -13,6 +13,9 @@ int sleep_ms(uint64_t ms);
 #define ADDR_IS_CACHE_ALIGNED(addr)                                            \
     (((unsigned long long)(addr)) % CACHELINE_SIZE == 0)
 
+/* Allocate memory and abort if the allocation fails */
+void *xalloc(size_t size);
+/* Allocate aligned memory and abort if the allocation fails */
 void *xalloc_aligned(size_t size, size_t alignment);
 
 #endif /* SHAMON_UTILS_H_ */

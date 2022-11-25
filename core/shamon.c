@@ -87,7 +87,6 @@ static shm_event *default_process_events(shm_vector *buffers, void *data,
     static unsigned     i      = 0;
     shm_arbiter_buffer *buffer = NULL;
     size_t              qsize;
-    shm_event_dropped   dropped;
 
     // reset counter if we're at the end
     if (i >= shm_vector_size(buffers))
@@ -114,11 +113,9 @@ static shm_event *default_process_events(shm_vector *buffers, void *data,
                 if (!shm_arbiter_buffer_drop(buffer, c / 2)) {
                     assert(0 && "Failed dropping events");
                 }
-                shm_stream_get_dropped_event(stream, &dropped, id, c / 2);
-                assert(shmn->_ev_size >= sizeof(dropped));
-                memcpy(shmn->_ev, &dropped, sizeof(dropped));
+                shm_stream_prepare_hole_event(stream, id, c / 2);
                 *streamret = stream;
-                return shmn->_ev;
+                return stream->hole_event;
             }
 
             /* TODO: ideally, we do not copy the event here but pass it directly
@@ -148,7 +145,7 @@ shamon *shamon_create(shamon_process_events_fn process_events,
     shm_vector_aligned_init(&shmn->buffers, shm_arbiter_buffer_sizeof(),
                             CACHELINE_SIZE);
     VEC_INIT(shmn->buffer_threads);
-    shmn->_ev_size = sizeof(shm_event_dropped);
+    shmn->_ev_size = sizeof(shm_event_default_hole);
     shmn->_ev      = malloc(shmn->_ev_size);
     shmn->process_events =
         process_events ? process_events : default_process_events;

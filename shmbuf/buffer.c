@@ -173,7 +173,6 @@ static struct buffer *initialize_shared_buffer(const char *key,
                                                size_t elem_size,
                                                struct source_control *control) {
     assert(elem_size > 0 && "Element size is 0");
-    assert(elem_size >= sizeof(shm_event_dropped) && "The size must be enough to contain the dropped event");
 
     printf("Initializing buffer '%s' with elem size '%lu'\n", key, elem_size);
     int fd = shamon_shm_open(key, O_RDWR | O_CREAT | O_TRUNC, mode);
@@ -247,9 +246,6 @@ struct buffer *create_shared_buffer(const char *key,
     }
 
     size_t elem_size = source_control_max_event_size(ctrl);
-    if (elem_size < sizeof(shm_event_dropped))
-        elem_size = sizeof(shm_event_dropped);
-
     return initialize_shared_buffer(key, S_IRWXU, elem_size, ctrl);
 }
 
@@ -265,8 +261,6 @@ struct buffer *create_shared_buffer_adv(const char *key,
 
     if (elem_size == 0) {
         elem_size = source_control_max_event_size(ctrl);
-        if (elem_size < sizeof(shm_event_dropped))
-            elem_size = sizeof(shm_event_dropped);
     }
 
     if (mode == 0) {

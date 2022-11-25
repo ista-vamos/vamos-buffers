@@ -52,7 +52,7 @@ void *reader_thread(void *data) {
         while (1) {
             num = shm_arbiter_buffer_peek1(arbiter_buffer_r, (void**)&ev);
             if (num > 0) {
-                 assert(!shm_event_is_dropped((shm_event*)ev));
+                 assert(!shm_event_is_hole((shm_event*)ev));
                  assert(ev->n == last_id);
                  assert(++last_id == shm_event_id((shm_event*)ev));
                  ++total;
@@ -82,7 +82,7 @@ int main(void) {
         shm_stream *stream = &dummy_stream;
 
         shm_stream_init(stream, buffer, sizeof(struct event), is_ready,
-                        NULL, NULL, NULL, "dummy-stream", "dummy");
+                        NULL, NULL, NULL, NULL, "dummy-stream", "dummy");
 
         /* into this buffer, stream_fetch() will push dropped() events if any */
         shm_arbiter_buffer *arbiter_buffer

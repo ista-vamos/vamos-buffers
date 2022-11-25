@@ -16,10 +16,10 @@ typedef struct _shm_event {
     shm_eventid id;
 } shm_event;
 
-typedef struct _shm_event_dropped {
+typedef struct _shm_event_default_hole {
     shm_event base;
-    uint64_t  n; /* how many events were dropped */
-} shm_event_dropped;
+    size_t    n; /* number of dropped events */
+} shm_event_default_hole;
 
 /* Must be called before using event API.
  * It is called from shamon_create */
@@ -32,8 +32,8 @@ shm_eventid shm_event_id(shm_event *event);
 shm_kind    shm_event_kind(shm_event *event);
 
 // DROP EVENT
-bool     shm_event_is_dropped(shm_event *);
-shm_kind shm_get_dropped_kind(void);
+bool     shm_event_is_hole(shm_event *);
+shm_kind shm_get_hole_kind(void);
 shm_kind shm_get_last_special_kind(void);
 
 #endif // SHAMON_EVENT_H_

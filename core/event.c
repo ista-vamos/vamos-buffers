@@ -5,26 +5,25 @@
 #include "event.h"
 #include "stream.h"
 
-static shm_kind dropped_kind      = 1;
+static shm_kind hole_kind         = 1;
 static shm_kind last_special_kind = 1;
 
 void initialize_events() {
-    assert(dropped_kind == 1 &&
-           "We assume that the 'dropped_kind' is 1 for now");
-    assert(dropped_kind > 0 && "Events not initialized");
+    assert(hole_kind == 1 && "We assume that the 'hole_kind' is 1 for now");
+    assert(hole_kind > 0 && "Events not initialized");
 }
 
 void deinitialize_events() {}
 
-bool shm_event_is_dropped(shm_event *ev) {
-    assert(dropped_kind > 0);
-    return shm_event_kind(ev) == dropped_kind;
+bool shm_event_is_hole(shm_event *ev) {
+    assert(hole_kind > 0);
+    return shm_event_kind(ev) == hole_kind;
 }
 
-shm_kind shm_get_dropped_kind() {
-    assert(dropped_kind > 0);
-    assert(last_special_kind >= dropped_kind);
-    return dropped_kind;
+shm_kind shm_get_hole_kind() {
+    assert(hole_kind > 0);
+    assert(last_special_kind >= hole_kind);
+    return hole_kind;
 }
 
 shm_kind shm_get_last_special_kind() {

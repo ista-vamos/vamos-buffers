@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "stream.h"
 #include "stream-drregex.h"
 #include "stream-funs.h"
 #include "stream-generic.h"
@@ -58,7 +59,7 @@ static struct stream_rec avail_streams[] = {
     {NULL, NULL} /* to mark the end */
 };
 
-shm_stream *shm_stream_create(const char *stream_name, const char *spec) {
+shm_stream *shm_stream_create(const char *stream_name, const char *spec, shm_stream_hole_handling *hole_handling) {
     const char *next = find_next_part(spec); /* skip the name */
     if (!next) {
         fprintf(stderr,
@@ -104,7 +105,7 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec) {
                             "parameter (FOR NOW)\n");
         }
 
-        return shm_create_sregex_stream(key, stream_name);
+        return shm_create_sregex_stream(key, stream_name, hole_handling);
     } else if (strncmp(source, "regexrw", 8) == 0) {
         if (!next || *next == 0) {
             fprintf(
@@ -149,7 +150,7 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec) {
                             "parameter (FOR NOW)\n");
         }
 
-        return shm_create_generic_stream(key, stream_name);
+        return shm_create_generic_stream(key, stream_name, hole_handling);
     }
 
     fprintf(stderr, "Unknown stream. Available streams:\n");
@@ -162,7 +163,7 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec) {
     return NULL;
 }
 
-shm_stream *shm_stream_create_from_argv(const char *stream_name, int argc, char *argv[]) {
+shm_stream *shm_stream_create_from_argv(const char *stream_name, int argc, char *argv[], shm_stream_hole_handling *hole_handling) {
     const char *spec = get_spec(stream_name, argc, argv);
     if (!spec) {
         fprintf(stderr, "error: did not find spec for stream '%s'\n",
@@ -170,5 +171,5 @@ shm_stream *shm_stream_create_from_argv(const char *stream_name, int argc, char 
         return NULL;
     }
 
-    return shm_stream_create(stream_name, spec);
+    return shm_stream_create(stream_name, spec, hole_handling);
 }

@@ -37,3 +37,15 @@ void *xalloc_aligned(size_t size, size_t alignment) {
 
     return mem;
 }
+
+void *xalloc(size_t size) {
+    assert(size > 0);
+
+    void *mem = malloc(size);
+    if (mem == NULL) {
+        fprintf(stderr, "Allocation failed");
+        abort();
+    }
+
+    return mem;
+}
