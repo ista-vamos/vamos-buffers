@@ -399,8 +399,9 @@ static void *get_event(shm_stream *stream) {
                  /* checking for the readiness is not cheap,
                   * so do it only after we haven't read any
                   * event for some time */
-                 if (!shm_stream_is_ready(stream))
+                 if (!shm_stream_is_ready(stream)) {
                      return NULL;
+                 }
              }
         }
     }

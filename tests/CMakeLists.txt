@@ -12,8 +12,6 @@ if(N EQUAL 0)
 endif()
 
 set(CTEST_OPTS -j${N} --output-on-failure --progress ${CTEST_OPTS})
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} ${CTEST_OPTS}
-                        USES_TERMINAL)
 
 add_executable(list-test list-test.c)
 target_link_libraries(list-test shamon-list)
