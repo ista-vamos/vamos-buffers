@@ -5,17 +5,17 @@
 
 #define VEC(name, elem_ty)                                                     \
     elem_ty *name;                                                             \
-    size_t name##_size;                                                        \
-    size_t name##_alloc_size
+    size_t   name##_size;                                                      \
+    size_t   name##_alloc_size
 
-#define VEC_SIZE(vec) vec##_size
+#define VEC_SIZE(vec)       vec##_size
 #define VEC_ALLOC_SIZE(vec) vec##_alloc_size
-#define VEC_ELEM_SIZE(vec) (sizeof(*(vec)))
+#define VEC_ELEM_SIZE(vec)  (sizeof(*(vec)))
 
 #define VEC_INIT(vec)                                                          \
     do {                                                                       \
-        (vec) = NULL;                                                          \
-        VEC_SIZE(vec) = 0;                                                     \
+        (vec)               = NULL;                                            \
+        VEC_SIZE(vec)       = 0;                                               \
         VEC_ALLOC_SIZE(vec) = 0;                                               \
     } while (0)
 
@@ -48,7 +48,6 @@
         VEC_SIZE(vec) += 1;                                                    \
     } while (0)
 
-
 #define VEC_EXTEND(vec, outptr) VEC_EXTEND_N(vec, outptr, 16)
 
 #define VEC_PUSH(vec, elemptr)                                                 \
@@ -70,7 +69,7 @@
     } while (0)
 
 #define VEC_TOP_PTR(vec) ((vec) + VEC_SIZE(vec) - 1)
-#define VEC_TOP(vec) (*VEC_TOP_PTR(vec))
+#define VEC_TOP(vec)     (*VEC_TOP_PTR(vec))
 
 #define VEC_POP_TOP(vec) (--VEC_SIZE(vec), *((vec) + VEC_SIZE(vec)))
 

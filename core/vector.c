@@ -16,14 +16,14 @@ void shm_vector_destroy(shm_vector *vec) {
 
 void shm_vector_swap(shm_vector *vec, shm_vector *with) {
     assert(vec->element_size == with->element_size);
-    void *data = vec->data;
-    size_t size = vec->size;
-    size_t asize = vec->alloc_size;
-    vec->data = with->data;
-    vec->size = with->size;
-    vec->alloc_size = with->alloc_size;
-    with->data = data;
-    with->size = size;
+    void  *data      = vec->data;
+    size_t size      = vec->size;
+    size_t asize     = vec->alloc_size;
+    vec->data        = with->data;
+    vec->size        = with->size;
+    vec->alloc_size  = with->alloc_size;
+    with->data       = data;
+    with->size       = size;
     with->alloc_size = asize;
 }
 

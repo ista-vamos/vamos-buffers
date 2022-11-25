@@ -1,6 +1,6 @@
-#include <stdatomic.h>
-#include <assert.h>
 #include "spsc_ringbuf.h"
+#include <assert.h>
+#include <stdatomic.h>
 
 #define __predict_false(x) __builtin_expect((x) != 0, 0)
 #define __predict_true(x)  __builtin_expect((x) != 0, 1)
@@ -9,15 +9,17 @@ void shm_spsc_ringbuf_init(shm_spsc_ringbuf *b, size_t capacity) {
     /*  we use one element as a separator */
     assert(capacity > 1);
 
-    b->capacity = capacity;
-    b->head = 0;
-    b->tail = 0;
+    b->capacity  = capacity;
+    b->head      = 0;
+    b->tail      = 0;
     b->seen_head = 0;
     b->seen_tail = 0;
 }
 
-static inline size_t get_written_num(size_t head, size_t tail, size_t capacity) {
-    /* TODO check on init that capacity is such that this expr cannot underflow */
+static inline size_t get_written_num(size_t head, size_t tail,
+                                     size_t capacity) {
+    /* TODO check on init that capacity is such that this expr cannot underflow
+     */
     ssize_t num = ((ssize_t)head - (ssize_t)tail);
     if (num < 0)
         return num + capacity;
@@ -66,7 +68,8 @@ size_t shm_spsc_ringbuf_free_num(shm_spsc_ringbuf *b) {
 bool shm_spsc_ringbuf_full(shm_spsc_ringbuf *b) {
     size_t head = atomic_load_explicit(&b->head, memory_order_relaxed);
     size_t tail = atomic_load_explicit(&b->tail, memory_order_relaxed);
-    return __predict_false(head == tail + 1 || (head == b->capacity - 1 && tail == 0));
+    return __predict_false(head == tail + 1 ||
+                           (head == b->capacity - 1 && tail == 0));
 }
 
 /* Compute the write offset (with wrapping). Returns the num of free elements */
@@ -83,7 +86,7 @@ static inline size_t get_write_off(size_t head, size_t tail, size_t capacity,
 
         *n = capacity - head;
         if (wrap_n) {
-             *wrap_n = tail - 1;
+            *wrap_n = tail - 1;
         }
         return capacity - head + tail - 1;
     }
@@ -103,7 +106,8 @@ static inline size_t get_write_off(size_t head, size_t tail, size_t capacity,
     return tail - head - 1;
 }
 
-size_t shm_spsc_ringbuf_write_off(shm_spsc_ringbuf *b, size_t *n, size_t *wrap_n) {
+size_t shm_spsc_ringbuf_write_off(shm_spsc_ringbuf *b, size_t *n,
+                                  size_t *wrap_n) {
     const size_t head = atomic_load_explicit(&b->head, memory_order_acquire);
 
     if (get_write_off(head, b->seen_tail, b->capacity, n, wrap_n) == 0) {
@@ -112,8 +116,8 @@ size_t shm_spsc_ringbuf_write_off(shm_spsc_ringbuf *b, size_t *n, size_t *wrap_n
     }
 
 #ifndef NDEBUG
-     b->write_in_progress.head = head;
-     b->write_in_progress.n = *n + *wrap_n;
+    b->write_in_progress.head = head;
+    b->write_in_progress.n    = *n + *wrap_n;
 #endif
 
     return head;
@@ -128,15 +132,16 @@ size_t shm_spsc_ringbuf_write_off_nowrap(shm_spsc_ringbuf *b, size_t *n) {
     }
 
 #ifndef NDEBUG
-     b->write_in_progress.head = head;
-     b->write_in_progress.n = *n;
+    b->write_in_progress.head = head;
+    b->write_in_progress.n    = *n;
 #endif
 
     return head;
 }
 
 /* Ask for at least *n elements */
-size_t shm_spsc_ringbuf_acquire(shm_spsc_ringbuf *b, size_t *n, size_t *wrap_n) {
+size_t shm_spsc_ringbuf_acquire(shm_spsc_ringbuf *b, size_t *n,
+                                size_t *wrap_n) {
     const size_t head = atomic_load_explicit(&b->head, memory_order_acquire);
 
     size_t req = *n;
@@ -146,8 +151,8 @@ size_t shm_spsc_ringbuf_acquire(shm_spsc_ringbuf *b, size_t *n, size_t *wrap_n) 
     }
 
 #ifndef NDEBUG
-     b->write_in_progress.head = head;
-     b->write_in_progress.n = *n + *wrap_n;
+    b->write_in_progress.head = head;
+    b->write_in_progress.n    = *n + *wrap_n;
 #endif
 
     return head;
@@ -164,26 +169,24 @@ size_t shm_spsc_ringbuf_acquire_nowrap(shm_spsc_ringbuf *b, size_t *n) {
     }
 
 #ifndef NDEBUG
-     b->write_in_progress.head = head;
-     b->write_in_progress.n = *n;
+    b->write_in_progress.head = head;
+    b->write_in_progress.n    = *n;
 #endif
 
     return head;
 }
 
-
-
 void shm_spsc_ringbuf_write_finish(shm_spsc_ringbuf *b, size_t n) {
     assert(n <= b->capacity);
     assert((b->capacity < (~((size_t)0)) - n) && "Possible overflow");
 #ifndef NDEBUG
-    assert(b->write_in_progress.head == b->head
-           && "Something moved after write_off was called");
+    assert(b->write_in_progress.head == b->head &&
+           "Something moved after write_off was called");
     assert(b->write_in_progress.n >= n &&
            "Trying to write more items than returned by write_off()");
 #endif
 
-    const size_t c = b->capacity;
+    const size_t c  = b->capacity;
     size_t new_head = atomic_load_explicit(&b->head, memory_order_relaxed) + n;
 
     /* buffer full, rotate it */
@@ -191,18 +194,18 @@ void shm_spsc_ringbuf_write_finish(shm_spsc_ringbuf *b, size_t n) {
         new_head -= c;
     }
 
-    assert(new_head != atomic_load_explicit(&b->tail, memory_order_relaxed)
-            && "Invalid head move");
+    assert(new_head != atomic_load_explicit(&b->tail, memory_order_relaxed) &&
+           "Invalid head move");
 
     atomic_store_explicit(&b->head, new_head, memory_order_release);
 }
 
 size_t shm_spsc_ringbuf_read_off_nowrap(shm_spsc_ringbuf *b, size_t *n) {
     const size_t tail = atomic_load_explicit(&b->tail, memory_order_acquire);
-    size_t tmp = get_written_num(b->seen_head, tail, b->capacity);
+    size_t       tmp  = get_written_num(b->seen_head, tail, b->capacity);
     if (tmp == 0) {
         b->seen_head = atomic_load_explicit(&b->head, memory_order_acquire);
-        tmp = get_written_num(b->seen_head, tail, b->capacity);
+        tmp          = get_written_num(b->seen_head, tail, b->capacity);
     }
 
     *n = tmp;
@@ -212,10 +215,10 @@ size_t shm_spsc_ringbuf_read_off_nowrap(shm_spsc_ringbuf *b, size_t *n) {
 
 size_t shm_spsc_ringbuf_read_acquire(shm_spsc_ringbuf *b, size_t *n) {
     const size_t tail = atomic_load_explicit(&b->tail, memory_order_acquire);
-    size_t tmp = get_written_num(b->seen_head, tail, b->capacity);
+    size_t       tmp  = get_written_num(b->seen_head, tail, b->capacity);
     if (tmp < *n) {
         b->seen_head = atomic_load_explicit(&b->head, memory_order_acquire);
-        tmp = get_written_num(b->seen_head, tail, b->capacity);
+        tmp          = get_written_num(b->seen_head, tail, b->capacity);
     }
 
     *n = tmp;
@@ -231,7 +234,7 @@ void shm_spsc_ringbuf_consume(shm_spsc_ringbuf *b, size_t n) {
     assert(n <= b->capacity);
     assert((b->capacity < (~((size_t)0)) - n) && "Possible overflow");
 
-    const size_t c = b->capacity;
+    const size_t c  = b->capacity;
     size_t new_tail = atomic_load_explicit(&b->tail, memory_order_relaxed) + n;
     if (__predict_false(new_tail >= c)) {
         new_tail -= c;
@@ -240,19 +243,19 @@ void shm_spsc_ringbuf_consume(shm_spsc_ringbuf *b, size_t n) {
     atomic_store_explicit(&b->tail, new_tail, memory_order_release);
 }
 
-
 /*
- * Consume up to n items from the ringbuffer. Return the number of consumed events.
+ * Consume up to n items from the ringbuffer. Return the number of consumed
+ * events.
  */
 size_t shm_spsc_ringbuf_consume_upto(shm_spsc_ringbuf *b, size_t n) {
     assert(n <= b->capacity);
     assert((b->capacity < (~((size_t)0)) - n) && "Possible overflow");
 
     const size_t tail = atomic_load_explicit(&b->tail, memory_order_acquire);
-    size_t k = get_written_num(b->seen_head, tail, b->capacity);
+    size_t       k    = get_written_num(b->seen_head, tail, b->capacity);
     if (k < n) {
         b->seen_head = atomic_load_explicit(&b->head, memory_order_acquire);
-        k = get_written_num(b->seen_head, tail, b->capacity);
+        k            = get_written_num(b->seen_head, tail, b->capacity);
     }
 
     if (k < n) {
@@ -267,14 +270,14 @@ size_t shm_spsc_ringbuf_consume_upto(shm_spsc_ringbuf *b, size_t n) {
 }
 
 /* If return value is 0, values *off, *len1 and *len2 may not have been set */
-size_t shm_spsc_ringbuf_peek(shm_spsc_ringbuf *b,
-                             size_t n, size_t *off,
+size_t shm_spsc_ringbuf_peek(shm_spsc_ringbuf *b, size_t n, size_t *off,
                              size_t *len1, size_t *len2) {
     const size_t tail = atomic_load_explicit(&b->tail, memory_order_acquire);
-    size_t head = b->seen_head;
-    size_t cur_elem_num = get_written_num(head, tail, b->capacity);
+    size_t       head = b->seen_head;
+    size_t       cur_elem_num = get_written_num(head, tail, b->capacity);
     if (cur_elem_num < n) {
-        b->seen_head = head = atomic_load_explicit(&b->head, memory_order_acquire);
+        b->seen_head = head =
+            atomic_load_explicit(&b->head, memory_order_acquire);
         cur_elem_num = get_written_num(head, tail, b->capacity);
     }
 
@@ -295,10 +298,10 @@ size_t shm_spsc_ringbuf_peek(shm_spsc_ringbuf *b,
         *len2 = 0;
     } else {
         assert(tail != head && "Ringbuf is empty");
-        const size_t c = b->capacity;
+        const size_t c  = b->capacity;
         const size_t l1 = c - tail > n ? n : c - tail;
-        *len1 = l1;
-        *len2 = head < (n - l1) ? head : n - l1;
+        *len1           = l1;
+        *len2           = head < (n - l1) ? head : n - l1;
     }
 
     assert(*len1 + *len2 == n);

@@ -46,7 +46,7 @@ bool shm_queue_spsc_write_offset(shm_queue_spsc *q, size_t *offset) {
     *offset = q->head;
 
 #ifndef NDEBUG
-    q->partial_head = q->head;
+    q->partial_head    = q->head;
     q->writing_k_elems = 1;
 #endif
 
@@ -101,9 +101,8 @@ size_t shm_queue_spsc_size(shm_queue_spsc *q) {
     return elem_num(q);
 }
 
-size_t shm_queue_spsc_peek(shm_queue_spsc *q, size_t n,
-                           size_t *off1, size_t *len1,
-                           size_t *off2, size_t *len2) {
+size_t shm_queue_spsc_peek(shm_queue_spsc *q, size_t n, size_t *off1,
+                           size_t *len1, size_t *off2, size_t *len2) {
     size_t cur_elem_num = elem_num(q);
     if (n > cur_elem_num)
         n = cur_elem_num;
@@ -144,7 +143,8 @@ size_t shm_queue_spsc_peek_at(shm_queue_spsc *q, size_t idx) {
 }
 */
 
-size_t shm_queue_spsc_peek_atmost_at(shm_queue_spsc *q, size_t *want_k, size_t *offset) {
+size_t shm_queue_spsc_peek_atmost_at(shm_queue_spsc *q, size_t *want_k,
+                                     size_t *offset) {
     size_t num = elem_num(q);
     if (__predict_false(num == 0))
         return 0;

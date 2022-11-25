@@ -5,7 +5,7 @@
 #include "event.h"
 #include "stream.h"
 
-static shm_kind dropped_kind = 1;
+static shm_kind dropped_kind      = 1;
 static shm_kind last_special_kind = 1;
 
 void initialize_events() {
@@ -14,8 +14,7 @@ void initialize_events() {
     assert(dropped_kind > 0 && "Events not initialized");
 }
 
-void deinitialize_events() {
-}
+void deinitialize_events() {}
 
 bool shm_event_is_dropped(shm_event *ev) {
     assert(dropped_kind > 0);

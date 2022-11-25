@@ -19,17 +19,17 @@
  * */
 
 typedef union _signature_operand {
-    unsigned char c;
+    unsigned char  c;
     unsigned short h;
-    unsigned int i;
-    unsigned long l;
-    float f;
-    double d;
-    void *p;
+    unsigned int   i;
+    unsigned long  l;
+    float          f;
+    double         d;
+    void          *p;
     union {
         /* shared string is a 32bit id of shared memory
          * block and 32bit offset */
-        uint64_t shared;
+        uint64_t    shared;
         const char *local;
     } S;
     uint64_t t; /* timestamp */

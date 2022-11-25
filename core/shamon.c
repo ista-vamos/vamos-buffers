@@ -14,8 +14,8 @@
 #include "shamon.h"
 #include "stream.h"
 #include "utils.h"
-#include "vector-macro.h"
 #include "vector-aligned.h"
+#include "vector-macro.h"
 
 typedef struct _shamon {
     VEC(streams, shm_stream *);
@@ -25,29 +25,30 @@ typedef struct _shamon {
     VEC(buffer_threads, thrd_t);
     /* callbacks and their data */
     shamon_process_events_fn process_events;
-    void *process_events_data;
+    void                    *process_events_data;
     /* the memory for passing the next event in the default
        process_events handler */
     shm_event *_ev;
-    size_t _ev_size;
+    size_t     _ev_size;
 } shamon;
 
-#define _buffers(shmn) ((shm_vector*)&shmn->buffers)
+#define _buffers(shmn) ((shm_vector *)&shmn->buffers)
 
-#define SLEEP_NS_INIT (50)
+#define SLEEP_NS_INIT      (50)
 #define SLEEP_THRESHOLD_NS (10000000)
 
 static int default_buffer_manager_thrd(void *data) {
-    shm_arbiter_buffer *buffer = (shm_arbiter_buffer *)data;
-    shm_stream *stream = shm_arbiter_buffer_stream(buffer);
-    register shm_stream_alter_fn alter = stream->alter;
+    shm_arbiter_buffer           *buffer = (shm_arbiter_buffer *)data;
+    shm_stream                   *stream = shm_arbiter_buffer_stream(buffer);
+    register shm_stream_alter_fn  alter  = stream->alter;
     register shm_stream_filter_fn filter = stream->filter;
 
     // wait for buffer->active
     while (!shm_arbiter_buffer_active(buffer))
         _mm_pause();
 
-    printf("Running fetch & autodrop for stream %s\n", shm_stream_get_name(stream));
+    printf("Running fetch & autodrop for stream %s\n",
+           shm_stream_get_name(stream));
 
     void *ev, *out;
     while (1) {
@@ -69,7 +70,8 @@ static int default_buffer_manager_thrd(void *data) {
 
     // TODO: we should check if the stream is finished and remove it
     // in that case
-    printf("BMM for stream %lu (%s) exits\n", stream->id, shm_stream_get_type(stream));
+    printf("BMM for stream %lu (%s) exits\n", stream->id,
+           shm_stream_get_type(stream));
     thrd_exit(EXIT_SUCCESS);
 }
 
@@ -77,15 +79,15 @@ static shm_event *default_process_events(shm_vector *buffers, void *data,
                                          shm_stream **streamret) {
     assert(buffers);
     assert(data);
-    shamon *shmn = (shamon *)data;
+    shamon     *shmn = (shamon *)data;
     shm_stream *stream;
 
     // use static counter to do round robin -- so that some stream
     // does not starve
-    static unsigned i = 0;
+    static unsigned     i      = 0;
     shm_arbiter_buffer *buffer = NULL;
-    size_t qsize;
-    shm_event_dropped dropped;
+    size_t              qsize;
+    shm_event_dropped   dropped;
 
     // reset counter if we're at the end
     if (i >= shm_vector_size(buffers))
@@ -138,15 +140,16 @@ static shm_event *default_process_events(shm_vector *buffers, void *data,
 }
 
 shamon *shamon_create(shamon_process_events_fn process_events,
-                      void *process_events_data) {
+                      void                    *process_events_data) {
     shamon *shmn = malloc(sizeof(shamon));
     assert(shmn);
 
     VEC_INIT(shmn->streams);
-    shm_vector_aligned_init(&shmn->buffers, shm_arbiter_buffer_sizeof(), CACHELINE_SIZE);
+    shm_vector_aligned_init(&shmn->buffers, shm_arbiter_buffer_sizeof(),
+                            CACHELINE_SIZE);
     VEC_INIT(shmn->buffer_threads);
     shmn->_ev_size = sizeof(shm_event_dropped);
-    shmn->_ev = malloc(shmn->_ev_size);
+    shmn->_ev      = malloc(shmn->_ev_size);
     shmn->process_events =
         process_events ? process_events : default_process_events;
     shmn->process_events_data = process_events ? process_events_data : shmn;
@@ -176,12 +179,12 @@ void shamon_destroy(shamon *shmn) {
     assert(VEC_SIZE(shmn->buffer_threads) == shm_vector_size(_buffers(shmn)));
     for (size_t i = 0; i < VEC_SIZE(shmn->buffer_threads); ++i) {
         thrd_join(shmn->buffer_threads[i], NULL);
-	/*
-        shm_arbiter_buffer *buff
-            = *((shm_arbiter_buffer **)shm_vector_at(_buffers(shmn), i));
-        shm_arbiter_buffer_set_active(buff, false);
-        shm_arbiter_buffer_destroy(buff);
-	*/
+        /*
+            shm_arbiter_buffer *buff
+                = *((shm_arbiter_buffer **)shm_vector_at(_buffers(shmn), i));
+            shm_arbiter_buffer_set_active(buff, false);
+            shm_arbiter_buffer_destroy(buff);
+        */
     }
 
     for (size_t i = 0; i < VEC_SIZE(shmn->streams); ++i) {
@@ -200,19 +203,18 @@ bool shamon_is_ready(shamon *shmn) {
         if (shm_stream_is_ready(s)) {
             return true;
         } else {
-             shm_arbiter_buffer *buff = shm_vector_at(_buffers(shmn), i);
-             if (shm_arbiter_buffer_size(buff) > 0) {
-                 return true;
-             }
-         }
+            shm_arbiter_buffer *buff = shm_vector_at(_buffers(shmn), i);
+            if (shm_arbiter_buffer_size(buff) > 0) {
+                return true;
+            }
+        }
     }
 
     return false;
 }
 
 shm_event *shamon_get_next_ev(shamon *shmn, shm_stream **streamret) {
-    return shmn->process_events(_buffers(shmn),
-                                shmn->process_events_data,
+    return shmn->process_events(_buffers(shmn), shmn->process_events_data,
                                 streamret);
 }
 
@@ -230,7 +232,7 @@ void shamon_add_stream(shamon *shmn, shm_stream *stream,
            "BUG: shm_vector_push");
 
     if (stream->event_size > shmn->_ev_size) {
-        shmn->_ev = realloc(shmn->_ev, stream->event_size);
+        shmn->_ev      = realloc(shmn->_ev, stream->event_size);
         shmn->_ev_size = stream->event_size;
     }
 

@@ -6,13 +6,13 @@
 /* non-circular doubly-linked-list */
 typedef struct _shm_list_elem {
     struct _shm_list_elem *next, *prev;
-    void *data;
+    void                  *data;
 } shm_list_elem;
 
 typedef struct _shm_list {
     shm_list_elem *first;
     shm_list_elem *last;
-    size_t size;
+    size_t         size;
 } shm_list;
 
 typedef void(shm_list_elem_destroy_fn)(void *);

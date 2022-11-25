@@ -15,9 +15,9 @@ void shm_par_queue_init(shm_par_queue *q, size_t capacity, size_t elem_size) {
 
     shm_spsc_ringbuf_init(&q->ringbuf, capacity + 1);
 
-    q->capacity = capacity;
+    q->capacity  = capacity;
     q->elem_size = elem_size;
-    q->data = malloc((capacity + 1)* elem_size);
+    q->data      = malloc((capacity + 1) * elem_size);
     if (!q->data) {
         assert(false && "Allocation failed");
         abort();
@@ -59,7 +59,7 @@ bool shm_par_queue_push(shm_par_queue *q, const void *elem, size_t size) {
 }
 
 bool shm_par_queue_pop(shm_par_queue *q, void *buff) {
-    size_t n;
+    size_t       n;
     const size_t off = shm_spsc_ringbuf_read_off_nowrap(&q->ringbuf, &n);
     if (__predict_true(n > 0)) {
         memcpy(buff, q->data + (off * q->elem_size), q->elem_size);
@@ -90,22 +90,20 @@ size_t shm_par_queue_elem_size(shm_par_queue *q) {
 }
 
 shm_event *shm_par_queue_top(shm_par_queue *q) {
-    size_t n;
+    size_t       n;
     const size_t off = shm_spsc_ringbuf_read_off_nowrap(&q->ringbuf, &n);
     if (__predict_true(n > 0)) {
-        return (shm_event*)(q->data + (off * q->elem_size));
+        return (shm_event *)(q->data + (off * q->elem_size));
     }
     return (shm_event *)0;
 }
 
 /* n == 0 means arbitrary n */
-size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
-                          void **ptr1, size_t *len1,
+size_t shm_par_queue_peek(shm_par_queue *q, size_t n, void **ptr1, size_t *len1,
                           void **ptr2, size_t *len2) {
-    size_t off;
-    const size_t cur_elem_num = shm_spsc_ringbuf_peek(&q->ringbuf,
-                                                      n == 0 ? ~((size_t)0) : n,
-                                                      &off, len1, len2);
+    size_t       off;
+    const size_t cur_elem_num = shm_spsc_ringbuf_peek(
+        &q->ringbuf, n == 0 ? ~((size_t)0) : n, &off, len1, len2);
     if (__predict_true(cur_elem_num > 0)) {
         *ptr1 = q->data + (off * q->elem_size);
 
@@ -118,7 +116,7 @@ size_t shm_par_queue_peek(shm_par_queue *q, size_t n,
 
 /* peak1 -- it is like top + return the number of elements */
 size_t shm_par_queue_peek1(shm_par_queue *q, void **data) {
-    size_t n;
+    size_t       n;
     const size_t off = shm_spsc_ringbuf_read_off_nowrap(&q->ringbuf, &n);
     if (__predict_true(n > 0)) {
         *data = q->data + (off * q->elem_size);
@@ -128,41 +126,40 @@ size_t shm_par_queue_peek1(shm_par_queue *q, void **data) {
 
 shm_event *shm_par_queue_peek_at(shm_par_queue *q, size_t k) {
     unsigned char *ptr1, *ptr2;
-    size_t len1, len2;
+    size_t         len1, len2;
 
     size_t n = shm_par_queue_peek(q, k == (~((size_t)0)) ? k : k + 1,
-                                  (void**)&ptr1, &len1,
-                                  (void**)&ptr2, &len2);
+                                  (void **)&ptr1, &len1, (void **)&ptr2, &len2);
     if (n <= k) {
         return NULL;
     }
     if (k < len1) {
-        return (shm_event*)(ptr1 + (k * q->elem_size));
+        return (shm_event *)(ptr1 + (k * q->elem_size));
     }
-    k -=len1;
+    k -= len1;
     assert(k < len2);
-    return (shm_event*)(ptr2 + (k * q->elem_size));
+    return (shm_event *)(ptr2 + (k * q->elem_size));
 }
 
 shm_event *shm_par_queue_peek_atmost_at(shm_par_queue *q, size_t *want_k) {
-    void *ptr1, *ptr2;
+    void  *ptr1, *ptr2;
     size_t len1, len2;
     size_t k = *want_k;
 
-    size_t n = shm_par_queue_peek(q, k == (~((size_t)0)) ? k : k + 1,
-                                  &ptr1, &len1, &ptr2, &len2);
+    size_t n = shm_par_queue_peek(q, k == (~((size_t)0)) ? k : k + 1, &ptr1,
+                                  &len1, &ptr2, &len2);
     if (n == 0) {
-	*want_k = 0;
-	return 0;
+        *want_k = 0;
+        return 0;
     }
     if (n <= k) {
-        k = n - 1;
+        k       = n - 1;
         *want_k = k;
     }
     if (k < len1) {
-        return (shm_event*)((unsigned char *)ptr1 + (k * q->elem_size));
+        return (shm_event *)((unsigned char *)ptr1 + (k * q->elem_size));
     }
-    k -=len1;
+    k -= len1;
     assert(k < len2);
-    return (shm_event*)((unsigned char *)ptr2 + (k * q->elem_size));
+    return (shm_event *)((unsigned char *)ptr2 + (k * q->elem_size));
 }

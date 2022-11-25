@@ -5,7 +5,8 @@
 #include "utils.h"
 #include "vector-aligned.h"
 
-void shm_vector_aligned_init(shm_vector_aligned *vec, size_t elem_size, size_t alignment) {
+void shm_vector_aligned_init(shm_vector_aligned *vec, size_t elem_size,
+                             size_t alignment) {
     assert(alignment > 0);
     shm_vector_init(&vec->vec, elem_size);
     vec->alignment = alignment;
@@ -14,14 +15,14 @@ void shm_vector_aligned_init(shm_vector_aligned *vec, size_t elem_size, size_t a
 void shm_vector_aligned_swap(shm_vector *vec, shm_vector *with) {
     shm_vector_swap(vec, with);
 
-    shm_vector_aligned *avec = (shm_vector_aligned*) vec;
-    size_t alignment =  avec->alignment;
-    avec->alignment  =  ((shm_vector_aligned *)with)->alignment;
+    shm_vector_aligned *avec      = (shm_vector_aligned *)vec;
+    size_t              alignment = avec->alignment;
+    avec->alignment               = ((shm_vector_aligned *)with)->alignment;
     ((shm_vector_aligned *)with)->alignment = alignment;
 }
 
 void shm_vector_aligned_resize(shm_vector *vec, size_t size) {
-    shm_vector_aligned *avec = (shm_vector_aligned*) vec;
+    shm_vector_aligned *avec = (shm_vector_aligned *)vec;
 
     if (vec->size >= size)
         return;
@@ -32,7 +33,7 @@ void shm_vector_aligned_resize(shm_vector *vec, size_t size) {
         void *new_data = xalloc_aligned(vec->alloc_size * vec->element_size,
                                         avec->alignment);
         if (vec->size > 0)
-                memcpy(new_data, vec->data, vec->size);
+            memcpy(new_data, vec->data, vec->size);
         vec->data = new_data;
     }
 
@@ -42,7 +43,7 @@ void shm_vector_aligned_resize(shm_vector *vec, size_t size) {
 }
 
 void *shm_vector_aligned_extend(shm_vector *vec) {
-    shm_vector_aligned *avec = (shm_vector_aligned*) vec;
+    shm_vector_aligned *avec = (shm_vector_aligned *)vec;
 
     if (vec->size >= vec->alloc_size) {
         // TODO: exp. growth?
@@ -51,7 +52,7 @@ void *shm_vector_aligned_extend(shm_vector *vec) {
         void *new_data = xalloc_aligned(vec->alloc_size * vec->element_size,
                                         avec->alignment);
         if (vec->size > 0)
-                memcpy(new_data, vec->data, vec->size);
+            memcpy(new_data, vec->data, vec->size);
         vec->data = new_data;
     }
 
