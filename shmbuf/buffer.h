@@ -31,6 +31,8 @@ char       *get_sub_buffer_key(const char *key, size_t idx);
 
 void release_shared_buffer(struct buffer *);
 void destroy_shared_buffer(struct buffer *);
+void destroy_shared_sub_buffer(struct buffer *);
+void release_shared_sub_buffer(struct buffer *);
 
 #if 0
 struct buffer *initialize_local_buffer(size_t elem_size);

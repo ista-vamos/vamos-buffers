@@ -197,7 +197,7 @@ void shamon_destroy(shamon *shmn) {
 bool shamon_is_ready(shamon *shmn) {
     for (size_t i = 0; i < VEC_SIZE(shmn->streams); ++i) {
         shm_stream *s = shmn->streams[i];
-        if (shm_stream_is_ready(s)) {
+        if (shm_stream_is_ready(s) || shm_stream_has_new_substreams(s)) {
             return true;
         } else {
             shm_arbiter_buffer *buff = shm_vector_at(_buffers(shmn), i);
@@ -216,6 +216,8 @@ shm_event *shamon_get_next_ev(shamon *shmn, shm_stream **streamret) {
         shm_stream *new_stream =
             shm_stream_create_substream(s, NULL, NULL, NULL, NULL, NULL);
         if (new_stream) {
+            fprintf(stderr, "Stream %lu has a new dynamic substream\n", shm_stream_id(s));
+            shm_stream_register_all_events(new_stream);
             shamon_add_stream(
                 shmn, new_stream,
                 shm_arbiter_buffer_capacity(shm_vector_at(_buffers(shmn), i)));

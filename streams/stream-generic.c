@@ -13,7 +13,7 @@
    no filter nor modification of events supported (unless done manually). */
 
 static bool generic_is_ready(shm_stream *stream) {
-    struct buffer *b = ((shm_stream_generic *)stream)->shmbuffer;
+    struct buffer *b = stream->incoming_events_buffer;
     /* buffer must be ready or it may not be ready anymore, but it
      * still has some data that we haven't read */
     return buffer_is_ready(b) || buffer_size(b) > 0;
@@ -24,7 +24,7 @@ static void generic_alter(shm_stream *stream, shm_event *in, shm_event *out) {
 }
 
 static void generic_destroy(shm_stream *s) {
-    release_shared_buffer(((shm_stream_generic *)s)->shmbuffer);
+    release_shared_buffer(s->incoming_events_buffer);
     free(s);
 }
 

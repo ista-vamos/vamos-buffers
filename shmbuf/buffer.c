@@ -46,6 +46,8 @@ struct buffer_info {
     struct dropped_range dropped_ranges[DROPPED_RANGES_NUM];
     size_t               dropped_ranges_next;
     _Atomic _Bool        dropped_ranges_lock; /* spin lock */
+    /* Number of sub-buffers. Sub-buffers are numbered from 1. */
+    volatile _Atomic size_t subbuffers_no;
     /* the monitored program exited/destroyed the buffer */
     volatile _Bool destroyed;
     volatile _Bool monitor_attached;
@@ -86,10 +88,10 @@ struct buffer {
     int fd;
     /* shm key */
     char *key;
-    /* Number of sub-buffers. Sub-buffers are numbered from 1. */
-    size_t subbuffers_no;
     /* mode to set to the created SHM file */
     mode_t mode;
+    /* The number of the last subbufer */
+    _Atomic size_t last_subbufer_no;
 };
 
 static size_t aux_buffer_free_space(struct aux_buffer *buff);
@@ -225,6 +227,7 @@ static struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
     buff->shmbuffer->info.last_processed_id   = 0;
     buff->shmbuffer->info.dropped_ranges_next = 0;
     buff->shmbuffer->info.dropped_ranges_lock = false;
+    buff->shmbuffer->info.subbuffers_no = 0;
 
     buff->key = strdup(key);
     VEC_INIT(buff->aux_buffers);
@@ -234,6 +237,7 @@ static struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
     buff->fd           = fd;
     buff->control      = control;
     buff->mode         = mode;
+    buff->last_subbufer_no = 0;
 
     puts("Done");
     return buff;
@@ -290,7 +294,7 @@ char *get_sub_buffer_key(const char *key, size_t idx) {
 
 struct buffer *create_shared_sub_buffer(struct buffer               *buffer,
                                         const struct source_control *control) {
-    char *key = get_sub_buffer_key(buffer->key, ++buffer->subbuffers_no);
+    char *key = get_sub_buffer_key(buffer->key, ++buffer->last_subbufer_no);
     struct source_control *ctrl =
         create_shared_control_buffer(key, S_IRWXU, control);
     if (!ctrl) {
@@ -305,11 +309,13 @@ struct buffer *create_shared_sub_buffer(struct buffer               *buffer,
      * we have created it in `get_sub_buffer_key` and can just move it */
     free(key);
 
+    ++buffer->shmbuffer->info.subbuffers_no;
+
     return sbuf;
 }
 
 size_t buffer_get_sub_buffers_no(struct buffer *buffer) {
-    return buffer->subbuffers_no;
+    return buffer->shmbuffer->info.subbuffers_no;
 }
 
 /* FOR TESTING */
@@ -488,7 +494,7 @@ static void destroy_shared_control_buffer(const char            *buffkey,
     char key[SHM_NAME_MAXLEN];
     shamon_map_ctrl_key(buffkey, key);
     if (shamon_shm_unlink(key) != 0) {
-        perror("release_shared_control_buffer: shm_unlink failure");
+        perror("destroy_shared_control_buffer: shm_unlink failure");
     }
 }
 
@@ -513,6 +519,60 @@ void release_shared_buffer(struct buffer *buff) {
     free(buff->key);
     free(buff);
 }
+
+/* for writers */
+void destroy_shared_sub_buffer(struct buffer *buff) {
+    buff->shmbuffer->info.destroyed = 1;
+
+    size_t vecsize = VEC_SIZE(buff->aux_buffers);
+    for (size_t i = 0; i < vecsize; ++i) {
+        struct aux_buffer *ab = buff->aux_buffers[i];
+        // we must first wait until the monitor finishes
+        // aux_buffer_destroy(ab);
+        aux_buffer_release(ab);
+    }
+    VEC_DESTROY(buff->aux_buffers);
+    fprintf(stderr, "Totally used %lu aux buffers\n", vecsize);
+
+    if (munmap(buff->shmbuffer, buffer_allocation_size()) != 0) {
+        perror("destroy_shared_buffer: munmap failure");
+    }
+    if (close(buff->fd) == -1) {
+        perror("destroy_shared_buffer: failed closing mmap fd");
+    }
+
+    release_shared_control_buffer(buff->control);
+
+    free(buff->key);
+    free(buff);
+}
+
+/* for readers */
+void release_shared_sub_buffer(struct buffer *buff) {
+    if (munmap(buff->shmbuffer, buffer_allocation_size()) != 0) {
+        perror("release_shared_sub_buffer: munmap failure");
+    }
+    if (close(buff->fd) == -1) {
+        perror("release_shared_sub_buffer: failed closing mmap fd");
+    }
+
+    size_t vecsize = VEC_SIZE(buff->aux_buffers);
+    for (size_t i = 0; i < vecsize; ++i) {
+        struct aux_buffer *ab = buff->aux_buffers[i];
+        aux_buffer_release(ab);
+    }
+    VEC_DESTROY(buff->aux_buffers);
+
+    if (shamon_shm_unlink(buff->key) != 0) {
+        perror("release_shared_sub_buffer: shm_unlink failure");
+    }
+
+    destroy_shared_control_buffer(buff->key, buff->control);
+
+    free(buff->key);
+    free(buff);
+}
+
 
 /* for writers */
 void destroy_shared_buffer(struct buffer *buff) {
