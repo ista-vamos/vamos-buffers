@@ -11,7 +11,8 @@
  * STREAM
  *****/
 
-/* FIXME: we duplicate the counter in stream here. Maybe rather set the funs to NULL? */
+/* FIXME: we duplicate the counter in stream here. Maybe rather set the funs to
+ * NULL? */
 static void default_hole_init(shm_event *ev) {
     ((shm_event_default_hole *)ev)->n = 0;
 }
@@ -23,33 +24,30 @@ static void default_hole_update(shm_event *hole, shm_event *ev) {
 
 static shm_stream_hole_handling default_hole_handling = {
     .hole_event_size = sizeof(shm_event_default_hole),
-    .init = default_hole_init,
-    .update = default_hole_update
-};
-
+    .init            = default_hole_init,
+    .update          = default_hole_update};
 
 static uint64_t last_stream_id = 0;
 
 void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
-                     size_t event_size,
-                     shm_stream_is_ready_fn is_ready,
+                     size_t event_size, shm_stream_is_ready_fn is_ready,
                      shm_stream_filter_fn filter, shm_stream_alter_fn alter,
-                     shm_stream_destroy_fn     destroy,
+                     shm_stream_destroy_fn           destroy,
                      const shm_stream_hole_handling *hole_handling,
-                     const char *const type,
-                     const char *const name) {
+                     const char *const type, const char *const name) {
     stream->id                     = ++last_stream_id;
     stream->event_size             = event_size;
     stream->incoming_events_buffer = incoming_events_buffer;
+    stream->substreams_no          = 0;
     /* TODO: maybe we could just have a boolean flag that would be set
      * by a particular stream implementation instead of this function call?
      * Or a special universal event that is sent by the source...*/
-    stream->is_ready        = is_ready;
-    stream->filter          = filter;
-    stream->alter           = alter;
-    stream->destroy         = destroy;
-    stream->type            = type;
-    stream->name            = strdup(name);
+    stream->is_ready = is_ready;
+    stream->filter   = filter;
+    stream->alter    = alter;
+    stream->destroy  = destroy;
+    stream->type     = xstrdup(type);
+    stream->name     = xstrdup(name);
 #ifndef NDEBUG
     stream->last_event_id = 0;
 #endif
@@ -63,15 +61,17 @@ void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
 #endif
 
     hole_handling = hole_handling ? hole_handling : &default_hole_handling;
-    assert(hole_handling->hole_event_size > 0 && hole_handling->update && hole_handling->init);
+    assert(hole_handling->hole_event_size > 0 && hole_handling->update &&
+           hole_handling->init);
 
     stream->hole_handling = *hole_handling;
-    stream->hole_event = xalloc(hole_handling->hole_event_size);
+    stream->hole_event    = xalloc(hole_handling->hole_event_size);
 }
 
 void shm_stream_destroy(shm_stream *stream) {
     shm_stream_detach(stream);
 
+    free(stream->type);
     free(stream->name);
     free(stream->events_cache);
     free(stream->hole_event);
@@ -93,6 +93,38 @@ const char *shm_stream_get_name(shm_stream *stream) {
 const char *shm_stream_get_type(shm_stream *stream) {
     assert(stream);
     return stream->type;
+}
+
+_Bool shm_stream_has_new_substreams(shm_stream *stream) {
+    return buffer_get_sub_buffers_no(stream->incoming_events_buffer) >
+           stream->substreams_no;
+}
+
+shm_stream *shm_stream_create_substream(
+    shm_stream *stream, shm_stream_is_ready_fn is_ready,
+    shm_stream_filter_fn filter, shm_stream_alter_fn alter,
+    shm_stream_destroy_fn destroy, shm_stream_hole_handling *hole_handling) {
+    if (!shm_stream_has_new_substreams(stream)) {
+        return NULL;
+    }
+    char *key =
+        get_sub_buffer_key(buffer_get_key(stream->incoming_events_buffer),
+                           ++stream->substreams_no);
+    struct buffer *shmbuffer = get_shared_buffer(key);
+
+    shm_stream *substream = xalloc(sizeof *substream);
+    assert(shmbuffer && "Getting the shm buffer failed");
+
+    size_t elem_size = buffer_elem_size(shmbuffer);
+    assert(elem_size > 0);
+
+    shm_stream_init(
+        substream, shmbuffer, elem_size, is_ready ? is_ready : stream->is_ready,
+        filter ? filter : stream->filter, alter ? alter : stream->alter,
+        destroy ? destroy : stream->destroy,
+        hole_handling ? hole_handling : &stream->hole_handling,
+        shm_stream_get_type(stream), shm_stream_get_name(stream));
+    return substream;
 }
 
 struct event_record *shm_stream_get_avail_events(shm_stream *s, size_t *sz) {

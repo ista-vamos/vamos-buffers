@@ -211,6 +211,17 @@ bool shamon_is_ready(shamon *shmn) {
 }
 
 shm_event *shamon_get_next_ev(shamon *shmn, shm_stream **streamret) {
+    for (size_t i = 0; i < VEC_SIZE(shmn->streams); ++i) {
+        shm_stream *s = shmn->streams[i];
+        shm_stream *new_stream =
+            shm_stream_create_substream(s, NULL, NULL, NULL, NULL, NULL);
+        if (new_stream) {
+            shamon_add_stream(
+                shmn, new_stream,
+                shm_arbiter_buffer_capacity(shm_vector_at(_buffers(shmn), i)));
+        }
+    }
+
     return shmn->process_events(_buffers(shmn), shmn->process_events_data,
                                 streamret);
 }

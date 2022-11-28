@@ -6,7 +6,6 @@
 #include "arbiter.h"
 #include "buffer.h"
 #include "signatures.h"
-#include "sources/drfun/eventspec.h"
 #include "stream-funs.h"
 
 bool funs_is_ready(shm_stream *stream) {

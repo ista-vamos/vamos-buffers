@@ -16,6 +16,9 @@ struct buffer *create_shared_buffer_adv(const char *key,
                                         mode_t mode,
                                         size_t elem_size,
                                         const struct source_control *control);
+struct buffer *create_shared_sub_buffer(struct buffer *buffer,
+                                        const struct source_control *control);
+size_t buffer_get_sub_buffers_no(struct buffer *buffer);
 
 struct buffer *try_get_shared_buffer(const char *key, size_t retry);
 struct buffer *get_shared_buffer(const char *key);
@@ -23,6 +26,8 @@ struct event_record *buffer_get_avail_events(struct buffer *, size_t *);
 
 int buffer_get_key_path(struct buffer *, char keypath[], size_t keypathsize);
 int buffer_get_ctrl_key_path(struct buffer *, char keypath[], size_t keypathsize);
+const char *buffer_get_key(struct buffer *);
+char *get_sub_buffer_key(const char *key, size_t idx);
 
 void release_shared_buffer(struct buffer *);
 void destroy_shared_buffer(struct buffer *);

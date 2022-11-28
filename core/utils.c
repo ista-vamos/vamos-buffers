@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -48,4 +49,14 @@ void *xalloc(size_t size) {
     }
 
     return mem;
+}
+
+char *xstrdup(const char *str) {
+    char *s = strdup(str);
+    if (s == NULL) {
+        fprintf(stderr, "Strdup failed");
+        abort();
+    }
+
+    return s;
 }

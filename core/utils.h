@@ -18,4 +18,6 @@ void *xalloc(size_t size);
 /* Allocate aligned memory and abort if the allocation fails */
 void *xalloc_aligned(size_t size, size_t alignment);
 
+char *xstrdup(const char *str);
+
 #endif /* SHAMON_UTILS_H_ */

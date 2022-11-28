@@ -86,6 +86,8 @@ struct buffer {
     int fd;
     /* shm key */
     char *key;
+    /* Number of sub-buffers. Sub-buffers are numbered from 1. */
+    size_t subbuffers_no;
     /* mode to set to the created SHM file */
     mode_t mode;
 };
@@ -138,6 +140,10 @@ size_t buffer_size(struct buffer *buff) {
 
 size_t buffer_elem_size(struct buffer *buff) {
     return buff->shmbuffer->info.elem_size;
+}
+
+const char *buffer_get_key(struct buffer *buffer) {
+    return buffer->key;
 }
 
 int buffer_get_key_path(struct buffer *buff, char keypath[], size_t keypathsize) {
@@ -269,6 +275,40 @@ struct buffer *create_shared_buffer_adv(const char *key,
 
     return initialize_shared_buffer(key, mode, elem_size, ctrl);
 }
+
+char *get_sub_buffer_key(const char *key, size_t idx) {
+    size_t tmpsize = strlen(key) + 16 /* space for index */;
+    char *tmp = xalloc(tmpsize);
+    int written = snprintf(tmp, tmpsize, "%s.sub.%lu", key, idx);
+    if (written < 0 || written >= (int)tmpsize) {
+        fprintf(stderr, "Failed creating sub-buffer key for '%s'\n", key);
+        abort();
+    }
+    return tmp;
+}
+
+struct buffer *create_shared_sub_buffer(struct buffer *buffer,
+                                        const struct source_control *control) {
+    char *key = get_sub_buffer_key(buffer->key, ++buffer->subbuffers_no);
+    struct source_control *ctrl = create_shared_control_buffer(key, S_IRWXU, control);
+    if (!ctrl) {
+        fprintf(stderr, "Failed creating control buffer\n");
+        return NULL;
+    }
+
+    size_t elem_size = source_control_max_event_size(ctrl);
+    struct buffer *sbuf = initialize_shared_buffer(key, S_IRWXU, elem_size, ctrl);
+    /* TODO: we copy the key in 'initialize_shared_buffer' which is redundant as
+     * we have created it in `get_sub_buffer_key` and can just move it */
+    free(key);
+
+    return sbuf;
+}
+
+size_t buffer_get_sub_buffers_no(struct buffer *buffer) {
+    return buffer->subbuffers_no;
+}
+
 
 /* FOR TESTING */
 struct buffer *initialize_local_buffer(const char *key, size_t elem_size,

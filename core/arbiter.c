@@ -311,8 +311,9 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
 #ifndef NDEBUG
             bool ret =
 #endif
-                shm_par_queue_push(queue, buffer->stream->hole_event,
-                                   buffer->stream->hole_handling.hole_event_size);
+                shm_par_queue_push(
+                    queue, buffer->stream->hole_event,
+                    buffer->stream->hole_handling.hole_event_size);
 #ifdef DUMP_STATS
             ++buffer->written_num;
 #endif
