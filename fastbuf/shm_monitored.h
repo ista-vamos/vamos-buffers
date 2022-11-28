@@ -12,8 +12,8 @@ void push_event_nowait_64(buffer_entry_kind kind, int64_t payload);
 void push_event_wait_32(buffer_entry_kind kind, int32_t payload);
 void push_event_nowait_32(buffer_entry_kind kind, int32_t payload);
 
-void push_data_wait(buffer_entry_kind kind, void* data, size_t size);
-void push_data_nowait(buffer_entry_kind kind, void* data, size_t size);
+void push_data_wait(buffer_entry_kind kind, void *data, size_t size);
+void push_data_nowait(buffer_entry_kind kind, void *data, size_t size);
 
-void push_read(int fd, void* data, size_t size, ssize_t result);
-void push_write(int fd, const void* data, size_t size, ssize_t result);
+void push_read(int fd, void *data, size_t size, ssize_t result);
+void push_write(int fd, const void *data, size_t size, ssize_t result);

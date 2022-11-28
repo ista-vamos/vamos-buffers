@@ -9,26 +9,26 @@
 #include "stream-fastbuf-io.h"
 
 // FIXME: do these local to a stream
-static int monitoring_active = 0;
-static size_t processed_bytes = 0;
+static int    monitoring_active = 0;
+static size_t processed_bytes   = 0;
 
 typedef struct msgbuf {
     struct msgbuf *next;
     struct msgbuf *prev;
-    char *textbuf;
-    size_t offset;
+    char          *textbuf;
+    size_t         offset;
 } msgbuf;
 
 static void insert_message(msgbuf *buf, char *text) {
     if (buf->textbuf == NULL) {
         buf->textbuf = text;
-        buf->offset = sizeof(size_t) + sizeof(int64_t);
+        buf->offset  = sizeof(size_t) + sizeof(int64_t);
     } else {
-        msgbuf *newbuf = (msgbuf *)malloc(sizeof(msgbuf));
-        newbuf->textbuf = text;
-        newbuf->offset = sizeof(size_t) + sizeof(int64_t);
-        newbuf->next = buf;
-        newbuf->prev = buf->prev;
+        msgbuf *newbuf     = (msgbuf *)malloc(sizeof(msgbuf));
+        newbuf->textbuf    = text;
+        newbuf->offset     = sizeof(size_t) + sizeof(int64_t);
+        newbuf->next       = buf;
+        newbuf->prev       = buf->prev;
         newbuf->next->prev = newbuf;
         newbuf->prev->next = newbuf;
     }
@@ -36,14 +36,14 @@ static void insert_message(msgbuf *buf, char *text) {
 
 int monitoring_thread(void *arg) {
     monitor_buffer buffer = (monitor_buffer)arg;
-    buffer_entry buffer_buffer[32];
-    msgbuf read_msg;
-    msgbuf write_msg;
-    read_msg.next = &read_msg;
-    write_msg.next = &write_msg;
-    read_msg.prev = &read_msg;
-    write_msg.prev = &write_msg;
-    read_msg.textbuf = NULL;
+    buffer_entry   buffer_buffer[32];
+    msgbuf         read_msg;
+    msgbuf         write_msg;
+    read_msg.next     = &read_msg;
+    write_msg.next    = &write_msg;
+    read_msg.prev     = &read_msg;
+    write_msg.prev    = &write_msg;
+    read_msg.textbuf  = NULL;
     write_msg.textbuf = NULL;
     while (monitoring_active) {
 #ifdef SHM_DOMONITOR_NOWAIT
@@ -128,7 +128,7 @@ shm_stream *shm_create_io_stream(pid_t pid) {
     ss->ev_kind_out =
         shm_mk_event_kind("io-out", sizeof(shm_event_io), NULL, NULL);
 
-    monitoring_active = 1;
+    monitoring_active      = 1;
     monitored_process proc = attach_to_process(pid, &register_monitored_thread);
 
     // wait_for_process(proc);

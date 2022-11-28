@@ -1,10 +1,10 @@
 #undef NDEBUG
-#include <assert.h>
 #include "queue.h"
+#include <assert.h>
 
 int main(void) {
-    int i;
-    int num[] = {0, 1, 2, 3};
+    int       i;
+    int       num[] = {0, 1, 2, 3};
     shm_queue q;
     shm_queue_init(&q, 3, sizeof(int));
 

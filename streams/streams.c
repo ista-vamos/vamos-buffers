@@ -3,12 +3,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "stream.h"
 #include "stream-drregex.h"
 #include "stream-funs.h"
 #include "stream-generic.h"
 #include "stream-regex.h"
 #include "stream-regexrw.h"
+#include "stream.h"
 
 const char *find_next_part(const char *params) {
     params = strchr(params, ':');
@@ -59,7 +59,8 @@ static struct stream_rec avail_streams[] = {
     {NULL, NULL} /* to mark the end */
 };
 
-shm_stream *shm_stream_create(const char *stream_name, const char *spec, shm_stream_hole_handling *hole_handling) {
+shm_stream *shm_stream_create(const char *stream_name, const char *spec,
+                              shm_stream_hole_handling *hole_handling) {
     const char *next = find_next_part(spec); /* skip the name */
     if (!next) {
         fprintf(stderr,
@@ -69,7 +70,7 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec, shm_str
     }
 
     char source[256] = {0};
-    next = get_next_part(next, source, ':');
+    next             = get_next_part(next, source, ':');
     if (source[0] == 0) {
         fprintf(stderr, "error: invalid source specified\n");
         return NULL;
@@ -163,7 +164,9 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec, shm_str
     return NULL;
 }
 
-shm_stream *shm_stream_create_from_argv(const char *stream_name, int argc, char *argv[], shm_stream_hole_handling *hole_handling) {
+shm_stream *
+shm_stream_create_from_argv(const char *stream_name, int argc, char *argv[],
+                            shm_stream_hole_handling *hole_handling) {
     const char *spec = get_spec(stream_name, argc, argv);
     if (!spec) {
         fprintf(stderr, "error: did not find spec for stream '%s'\n",

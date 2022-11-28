@@ -2,49 +2,49 @@
 #undef NDEBUG
 #endif
 
-#include <stdbool.h>
 #include <assert.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include <stdio.h>
 
-#include "stream.h"
 #include "arbiter.h"
 #include "shmbuf/buffer.h"
+#include "stream.h"
 
-static bool is_ready(shm_stream *s){
+static bool is_ready(shm_stream *s) {
     (void)s;
     return false;
 }
 
 struct event {
     shm_event base;
-    int i;
+    int       i;
 };
 
 struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
                                        struct source_control *control);
 
 int main(void) {
-    struct buffer *lbuffer
-                = initialize_local_buffer("/dummy", sizeof(struct event), NULL);
+    struct buffer *lbuffer =
+        initialize_local_buffer("/dummy", sizeof(struct event), NULL);
     assert(lbuffer);
 
-    shm_stream dummy_stream;
+    shm_stream  dummy_stream;
     shm_stream *stream = &dummy_stream;
 
-    shm_stream_init(stream, lbuffer, sizeof(struct event), is_ready,
-                    NULL, NULL, NULL, NULL, "dummy-stream", "dummy");
+    shm_stream_init(stream, lbuffer, sizeof(struct event), is_ready, NULL, NULL,
+                    NULL, NULL, "dummy-stream", "dummy");
 
-    shm_arbiter_buffer *b
-            = shm_arbiter_buffer_create(stream, sizeof(struct event), 20);
+    shm_arbiter_buffer *b =
+        shm_arbiter_buffer_create(stream, sizeof(struct event), 20);
     shm_arbiter_buffer_set_active(b, true);
 
-	struct event ev;
-	for (int i = 1; i < 21; ++i) {
+    struct event ev;
+    for (int i = 1; i < 21; ++i) {
         ev.base.id = i;
-        ev.i = i;
+        ev.i       = i;
         shm_arbiter_buffer_push(b, &ev, sizeof(struct event));
-	}
+    }
 
     assert(shm_arbiter_buffer_size(b) == 20);
     assert(shm_arbiter_buffer_drop_older_than(b, 10) == 10);
@@ -53,8 +53,8 @@ int main(void) {
     assert(shm_arbiter_buffer_size(b) == 0);
 
     for (int i = 1; i < 21; ++i) {
-        ev.base.id = 20 + 2*i;
-        ev.i = i;
+        ev.base.id = 20 + 2 * i;
+        ev.i       = i;
         shm_arbiter_buffer_push(b, &ev, sizeof(struct event));
     }
 
@@ -67,8 +67,8 @@ int main(void) {
     assert(shm_arbiter_buffer_size(b) == 0);
 
     for (int i = 1; i < 21; ++i) {
-        ev.base.id = 40 + 2*i;
-        ev.i = i;
+        ev.base.id = 40 + 2 * i;
+        ev.i       = i;
         shm_arbiter_buffer_push(b, &ev, sizeof(struct event));
     }
 

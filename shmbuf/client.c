@@ -1,8 +1,8 @@
 #include <assert.h>
 #include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <signal.h>
 
 #include "buffer.h"
 #include "client.h"
@@ -14,7 +14,7 @@
 static volatile sig_atomic_t interrupted = 0;
 
 static void sig_int(int signo) {
-    (void) signo;
+    (void)signo;
     interrupted = 1;
 }
 

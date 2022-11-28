@@ -19,10 +19,11 @@ typedef struct _shm_event_generic {
 } shm_event_generic;
 
 typedef struct _shm_stream_generic {
-    shm_stream base;
+    shm_stream     base;
     struct buffer *shmbuffer;
 } shm_stream_generic;
 
-shm_stream *shm_create_generic_stream(const char *key, const char *name, shm_stream_hole_handling *hole_handling);
+shm_stream *shm_create_generic_stream(const char *key, const char *name,
+                                      shm_stream_hole_handling *hole_handling);
 
 #endif /* SHMN_STREAM_GENERIC_H_ */

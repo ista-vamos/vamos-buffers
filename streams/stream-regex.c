@@ -25,15 +25,17 @@ static void sregex_destroy(shm_stream *s) {
     free(s);
 }
 
-shm_stream *shm_create_sregex_stream(const char *key, const char *name, const shm_stream_hole_handling *hole_handling) {
-    shm_stream_sregex *ss = malloc(sizeof *ss);
-    struct buffer *shmbuffer = get_shared_buffer(key);
+shm_stream *
+shm_create_sregex_stream(const char *key, const char *name,
+                         const shm_stream_hole_handling *hole_handling) {
+    shm_stream_sregex *ss        = malloc(sizeof *ss);
+    struct buffer     *shmbuffer = get_shared_buffer(key);
     assert(shmbuffer && "Getting the shm buffer failed");
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
     shm_stream_init((shm_stream *)ss, shmbuffer, elem_size, sregex_is_ready,
-                    /* filter = */ NULL, sregex_alter, sregex_destroy, hole_handling,
-                    "regex-stream", name);
+                    /* filter = */ NULL, sregex_alter, sregex_destroy,
+                    hole_handling, "regex-stream", name);
     ss->shmbuffer = shmbuffer;
 
     return (shm_stream *)ss;

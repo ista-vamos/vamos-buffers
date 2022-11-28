@@ -1,12 +1,12 @@
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
+#include <stdarg.h>
 #include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 #include <sys/file.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -14,10 +14,10 @@
 #include <unistd.h>
 
 #include "buffer.h"
-#include "spsc_ringbuf.h"
 #include "list.h"
 #include "shm.h"
 #include "source.h"
+#include "spsc_ringbuf.h"
 #include "utils.h"
 #include "vector-macro.h"
 
@@ -26,7 +26,7 @@
 #define SLEEP_TIME_NS 10000
 
 #define MAX_AUX_BUF_KEY_SIZE 16
-#define DROPPED_RANGES_NUM 5
+#define DROPPED_RANGES_NUM   5
 
 struct dropped_range {
     /* the range of autodropped events
@@ -40,12 +40,12 @@ struct dropped_range {
 struct buffer_info {
     shm_spsc_ringbuf ringbuf;
 
-    size_t capacity;
-    size_t elem_size;
-    shm_eventid last_processed_id;
+    size_t               capacity;
+    size_t               elem_size;
+    shm_eventid          last_processed_id;
     struct dropped_range dropped_ranges[DROPPED_RANGES_NUM];
-    size_t dropped_ranges_next;
-    _Atomic _Bool dropped_ranges_lock; /* spin lock */
+    size_t               dropped_ranges_next;
+    _Atomic _Bool        dropped_ranges_lock; /* spin lock */
     /* the monitored program exited/destroyed the buffer */
     volatile _Bool destroyed;
     volatile _Bool monitor_attached;
@@ -61,12 +61,12 @@ struct shmbuffer {
 };
 
 struct aux_buffer {
-    size_t size;
-    size_t head;
-    size_t idx;
-    uint64_t first_event_id;
-    uint64_t last_event_id;
-    bool reusable;
+    size_t        size;
+    size_t        head;
+    size_t        idx;
+    uint64_t      first_event_id;
+    uint64_t      last_event_id;
+    bool          reusable;
     unsigned char data[];
 };
 
@@ -74,13 +74,13 @@ struct aux_buffer {
    (e.g., elem_size, etc.). Maybe we could also inline
    the shm_spsc_ringbuf so that we can keep local cache */
 struct buffer {
-    struct shmbuffer *shmbuffer;
+    struct shmbuffer      *shmbuffer;
     struct source_control *control;
     /* shared memory of auxiliary buffer */
     struct aux_buffer *cur_aux_buff;
     /* the known aux_buffers that might still be needed */
     VEC(aux_buffers, struct aux_buffer *);
-    size_t aux_buf_idx;
+    size_t   aux_buf_idx;
     shm_list aux_buffers_age;
     /* shm filedescriptor */
     int fd;
@@ -93,10 +93,10 @@ struct buffer {
 };
 
 static size_t aux_buffer_free_space(struct aux_buffer *buff);
-static void aux_buffer_release(struct aux_buffer *buffer);
+static void   aux_buffer_release(struct aux_buffer *buffer);
 // static void aux_buffer_destroy(struct aux_buffer *buffer);
-static size_t _buffer_push_strn(struct buffer *buff, const void *data,
-                                size_t size);
+static size_t   _buffer_push_strn(struct buffer *buff, const void *data,
+                                  size_t size);
 static uint64_t buffer_push_str(struct buffer *buff, uint64_t evid,
                                 const char *str);
 static uint64_t buffer_push_strn(struct buffer *buff, uint64_t evid,
@@ -104,7 +104,7 @@ static uint64_t buffer_push_strn(struct buffer *buff, uint64_t evid,
 
 static inline void drop_ranges_lock(struct buffer *buff) {
     _Atomic bool *l = &buff->shmbuffer->info.dropped_ranges_lock;
-    bool unlocked;
+    bool          unlocked;
     do {
         unlocked = false;
     } while (atomic_compare_exchange_weak(l, &unlocked, true));
@@ -116,7 +116,7 @@ static inline void drop_ranges_unlock(struct buffer *buff) {
 }
 
 #define BUFF_START(b) ((unsigned char *)b->data)
-#define BUFF_END(b) ((unsigned char *)b->data + MEM_SIZE - 1)
+#define BUFF_END(b)   ((unsigned char *)b->data + MEM_SIZE - 1)
 
 size_t buffer_allocation_size() {
     return sizeof(struct shmbuffer);
@@ -146,7 +146,8 @@ const char *buffer_get_key(struct buffer *buffer) {
     return buffer->key;
 }
 
-int buffer_get_key_path(struct buffer *buff, char keypath[], size_t keypathsize) {
+int buffer_get_key_path(struct buffer *buff, char keypath[],
+                        size_t keypathsize) {
     if (SHM_NAME_MAXLEN <= keypathsize)
         return -1;
 
@@ -157,7 +158,8 @@ int buffer_get_key_path(struct buffer *buff, char keypath[], size_t keypathsize)
     return 0;
 }
 
-int buffer_get_ctrl_key_path(struct buffer *buff, char keypath[], size_t keypathsize) {
+int buffer_get_ctrl_key_path(struct buffer *buff, char keypath[],
+                             size_t keypathsize) {
     if (SHM_NAME_MAXLEN <= keypathsize)
         return -1;
 
@@ -173,10 +175,8 @@ int buffer_get_ctrl_key_path(struct buffer *buff, char keypath[], size_t keypath
     return 0;
 }
 
-
-static struct buffer *initialize_shared_buffer(const char *key,
-                                               mode_t mode,
-                                               size_t elem_size,
+static struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
+                                               size_t                 elem_size,
                                                struct source_control *control) {
     assert(elem_size > 0 && "Element size is 0");
 
@@ -193,7 +193,7 @@ static struct buffer *initialize_shared_buffer(const char *key,
     }
 
     void *shmem = mmap(0, buffer_allocation_size(), PROT_READ | PROT_WRITE,
-                     MAP_SHARED, fd, 0);
+                       MAP_SHARED, fd, 0);
     if (shmem == MAP_FAILED) {
         perror("mmap failure");
         if (close(fd) == -1) {
@@ -221,19 +221,19 @@ static struct buffer *initialize_shared_buffer(const char *key,
     shm_spsc_ringbuf_init(_ringbuf(buff), capacity);
     printf("  .. buffer allocated size = %lu, capacity = %lu\n",
            buffer_allocation_size(), buff->shmbuffer->info.capacity);
-    buff->shmbuffer->info.elem_size = elem_size;
-    buff->shmbuffer->info.last_processed_id = 0;
+    buff->shmbuffer->info.elem_size           = elem_size;
+    buff->shmbuffer->info.last_processed_id   = 0;
     buff->shmbuffer->info.dropped_ranges_next = 0;
     buff->shmbuffer->info.dropped_ranges_lock = false;
 
     buff->key = strdup(key);
     VEC_INIT(buff->aux_buffers);
     shm_list_init(&buff->aux_buffers_age);
-    buff->aux_buf_idx = 0;
+    buff->aux_buf_idx  = 0;
     buff->cur_aux_buff = NULL;
-    buff->fd = fd;
-    buff->control = control;
-    buff->mode = mode;
+    buff->fd           = fd;
+    buff->control      = control;
+    buff->mode         = mode;
 
     puts("Done");
     return buff;
@@ -243,9 +243,10 @@ static struct source_control *
 create_shared_control_buffer(const char *buff_key, mode_t mode,
                              const struct source_control *control);
 
-struct buffer *create_shared_buffer(const char *key,
+struct buffer *create_shared_buffer(const char                  *key,
                                     const struct source_control *control) {
-    struct source_control *ctrl = create_shared_control_buffer(key, S_IRWXU, control);
+    struct source_control *ctrl =
+        create_shared_control_buffer(key, S_IRWXU, control);
     if (!ctrl) {
         fprintf(stderr, "Failed creating control buffer\n");
         return NULL;
@@ -255,11 +256,11 @@ struct buffer *create_shared_buffer(const char *key,
     return initialize_shared_buffer(key, S_IRWXU, elem_size, ctrl);
 }
 
-struct buffer *create_shared_buffer_adv(const char *key,
-                                        mode_t mode,
-                                        size_t elem_size,
+struct buffer *create_shared_buffer_adv(const char *key, mode_t mode,
+                                        size_t                       elem_size,
                                         const struct source_control *control) {
-    struct source_control *ctrl = create_shared_control_buffer(key, mode, control);
+    struct source_control *ctrl =
+        create_shared_control_buffer(key, mode, control);
     if (!ctrl) {
         fprintf(stderr, "Failed creating control buffer\n");
         return NULL;
@@ -278,8 +279,8 @@ struct buffer *create_shared_buffer_adv(const char *key,
 
 char *get_sub_buffer_key(const char *key, size_t idx) {
     size_t tmpsize = strlen(key) + 16 /* space for index */;
-    char *tmp = xalloc(tmpsize);
-    int written = snprintf(tmp, tmpsize, "%s.sub.%lu", key, idx);
+    char  *tmp     = xalloc(tmpsize);
+    int    written = snprintf(tmp, tmpsize, "%s.sub.%lu", key, idx);
     if (written < 0 || written >= (int)tmpsize) {
         fprintf(stderr, "Failed creating sub-buffer key for '%s'\n", key);
         abort();
@@ -287,17 +288,19 @@ char *get_sub_buffer_key(const char *key, size_t idx) {
     return tmp;
 }
 
-struct buffer *create_shared_sub_buffer(struct buffer *buffer,
+struct buffer *create_shared_sub_buffer(struct buffer               *buffer,
                                         const struct source_control *control) {
     char *key = get_sub_buffer_key(buffer->key, ++buffer->subbuffers_no);
-    struct source_control *ctrl = create_shared_control_buffer(key, S_IRWXU, control);
+    struct source_control *ctrl =
+        create_shared_control_buffer(key, S_IRWXU, control);
     if (!ctrl) {
         fprintf(stderr, "Failed creating control buffer\n");
         return NULL;
     }
 
-    size_t elem_size = source_control_max_event_size(ctrl);
-    struct buffer *sbuf = initialize_shared_buffer(key, S_IRWXU, elem_size, ctrl);
+    size_t         elem_size = source_control_max_event_size(ctrl);
+    struct buffer *sbuf =
+        initialize_shared_buffer(key, S_IRWXU, elem_size, ctrl);
     /* TODO: we copy the key in 'initialize_shared_buffer' which is redundant as
      * we have created it in `get_sub_buffer_key` and can just move it */
     free(key);
@@ -309,7 +312,6 @@ size_t buffer_get_sub_buffers_no(struct buffer *buffer) {
     return buffer->subbuffers_no;
 }
 
-
 /* FOR TESTING */
 struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
                                        struct source_control *control) {
@@ -317,7 +319,7 @@ struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
     printf("Initializing LOCAL buffer '%s' with elem size '%lu'\n", key,
            elem_size);
     void *mem;
-    int succ = posix_memalign(&mem, 64, buffer_allocation_size());
+    int   succ = posix_memalign(&mem, 64, buffer_allocation_size());
     if (succ != 0) {
         perror("allocation failure");
         return NULL;
@@ -339,18 +341,18 @@ struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
     shm_spsc_ringbuf_init(_ringbuf(buff), capacity);
     printf("  .. buffer allocated size = %lu, capacity = %lu\n",
            buffer_allocation_size(), buff->shmbuffer->info.capacity);
-    buff->shmbuffer->info.elem_size = elem_size;
-    buff->shmbuffer->info.last_processed_id = 0;
+    buff->shmbuffer->info.elem_size           = elem_size;
+    buff->shmbuffer->info.last_processed_id   = 0;
     buff->shmbuffer->info.dropped_ranges_next = 0;
     buff->shmbuffer->info.dropped_ranges_lock = false;
 
     buff->key = strdup(key);
     VEC_INIT(buff->aux_buffers);
     shm_list_init(&buff->aux_buffers_age);
-    buff->aux_buf_idx = 0;
+    buff->aux_buf_idx  = 0;
     buff->cur_aux_buff = NULL;
-    buff->fd = -1;
-    buff->control = control;
+    buff->fd           = -1;
+    buff->control      = control;
 
     puts("Done");
     return buff;
@@ -420,11 +422,11 @@ struct buffer *try_get_shared_buffer(const char *key, size_t retry) {
         goto buff_clean_all;
     }
 
-    buff->shmbuffer = (struct shmbuffer *)shmmem;
-    buff->aux_buf_idx = 0;
+    buff->shmbuffer    = (struct shmbuffer *)shmmem;
+    buff->aux_buf_idx  = 0;
     buff->cur_aux_buff = NULL;
-    buff->fd = fd;
-    buff->mode = 0;
+    buff->fd           = fd;
+    buff->mode         = 0;
 
     return buff;
 
@@ -450,7 +452,7 @@ struct buffer *get_shared_buffer(const char *key) {
 }
 
 struct event_record *buffer_get_avail_events(struct buffer *buff,
-                                             size_t *evs_num) {
+                                             size_t        *evs_num) {
     assert(buff);
     assert(evs_num);
     assert(buff->control);
@@ -471,8 +473,7 @@ void buffer_set_last_processed_id(struct buffer *buff, shm_eventid id) {
     buff->shmbuffer->info.last_processed_id = id;
 }
 
-static
-void release_shared_control_buffer(struct source_control *buffer) {
+static void release_shared_control_buffer(struct source_control *buffer) {
     if (munmap(buffer, buffer->size) != 0) {
         perror("munmap failure");
     }
@@ -480,10 +481,8 @@ void release_shared_control_buffer(struct source_control *buffer) {
     /* TODO: we leak fd */
 }
 
-
-static
-void destroy_shared_control_buffer(const char *buffkey,
-                                   struct source_control *buffer) {
+static void destroy_shared_control_buffer(const char            *buffkey,
+                                          struct source_control *buffer) {
     release_shared_control_buffer(buffer);
 
     char key[SHM_NAME_MAXLEN];
@@ -492,7 +491,6 @@ void destroy_shared_control_buffer(const char *buffkey,
         perror("release_shared_control_buffer: shm_unlink failure");
     }
 }
-
 
 /* for readers */
 void release_shared_buffer(struct buffer *buff) {
@@ -563,7 +561,6 @@ bool buffer_drop_k(struct buffer *buff, size_t k) {
 size_t buffer_consume(struct buffer *buff, size_t k) {
     return shm_spsc_ringbuf_consume_upto(_ringbuf(buff), k);
 }
-
 
 /* buffer_push broken down into several operations:
  *
@@ -639,8 +636,8 @@ void buffer_finish_push(struct buffer *buff) {
 
 bool buffer_push(struct buffer *buff, const void *elem, size_t size) {
     assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
-    assert(buff->shmbuffer->info.elem_size >= size
-           && "Size does not fit the slot");
+    assert(buff->shmbuffer->info.elem_size >= size &&
+           "Size does not fit the slot");
 
     void *dst = buffer_start_push(buff);
     if (dst == NULL)
@@ -653,10 +650,11 @@ bool buffer_push(struct buffer *buff, const void *elem, size_t size) {
 }
 
 bool buffer_pop(struct buffer *buff, void *dst) {
-    assert(!buff->shmbuffer->info.destroyed && "Reading from a destroyed buffer");
+    assert(!buff->shmbuffer->info.destroyed &&
+           "Reading from a destroyed buffer");
 
     size_t size;
-    void *pos = buffer_read_pointer(buff, &size);
+    void  *pos = buffer_read_pointer(buff, &size);
     if (size > 0) {
         memcpy(dst, pos, buff->shmbuffer->info.elem_size);
         shm_spsc_ringbuf_consume(_ringbuf(buff), 1);
@@ -697,8 +695,7 @@ bool buffer_pop_k(struct buffer *buff, void *dst, size_t k) {
 /*** CONTROL BUFFER ****/
 
 struct source_control *
-create_shared_control_buffer(const char *buff_key,
-                             mode_t mode,
+create_shared_control_buffer(const char *buff_key, mode_t mode,
                              const struct source_control *control) {
     char key[SHM_NAME_MAXLEN];
     shamon_map_ctrl_key(buff_key, key);
@@ -741,8 +738,7 @@ create_shared_control_buffer(const char *buff_key,
     return (struct source_control *)mem;
 }
 
-static
-struct source_control *get_shared_control_buffer(const char *buff_key) {
+static struct source_control *get_shared_control_buffer(const char *buff_key) {
     char key[SHM_NAME_MAXLEN];
     shamon_map_ctrl_key(buff_key, key);
 
@@ -782,7 +778,7 @@ size_t aux_buffer_free_space(struct aux_buffer *buff) {
 }
 
 static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
-    size_t idx = buff->aux_buf_idx++;
+    size_t       idx     = buff->aux_buf_idx++;
     const size_t pg_size = sysconf(_SC_PAGESIZE);
     size = (((size + sizeof(struct aux_buffer)) / pg_size) + 2) * pg_size;
 
@@ -816,12 +812,12 @@ static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
     }
 
     struct aux_buffer *ab = (struct aux_buffer *)mem;
-    ab->head = 0;
-    ab->size = size - sizeof(struct aux_buffer);
-    ab->idx = idx;
-    ab->first_event_id = 0;
-    ab->last_event_id = ~(0LL);
-    ab->reusable = false;
+    ab->head              = 0;
+    ab->size              = size - sizeof(struct aux_buffer);
+    ab->idx               = idx;
+    ab->first_event_id    = 0;
+    ab->last_event_id     = ~(0LL);
+    ab->reusable          = false;
 
     VEC_PUSH(buff->aux_buffers, &ab);
     assert(VEC_TOP(buff->aux_buffers) == ab);
@@ -850,20 +846,20 @@ static inline bool ab_was_dropped(struct aux_buffer *ab, struct buffer *buff) {
 }
 
 static struct aux_buffer *writer_get_aux_buffer(struct buffer *buff,
-                                                size_t size) {
+                                                size_t         size) {
     if (!buff->cur_aux_buff ||
         aux_buffer_free_space(buff->cur_aux_buff) < size) {
         /* try to find a free buffer */
         struct aux_buffer *ab;
-        shm_list_elem *cur = shm_list_first(&buff->aux_buffers_age);
+        shm_list_elem     *cur = shm_list_first(&buff->aux_buffers_age);
         while (cur) {
             ab = (struct aux_buffer *)cur->data;
             if (ab->last_event_id <= buff->shmbuffer->info.last_processed_id ||
                 ab_was_dropped(ab, buff)) {
-                ab->reusable = true;
-                ab->head = 0;
+                ab->reusable       = true;
+                ab->head           = 0;
                 ab->first_event_id = 0;
-                ab->last_event_id = ~(0LL);
+                ab->last_event_id  = ~(0LL);
             }
             if (ab->reusable && ab->size >= size) {
                 assert(shm_list_last(&buff->aux_buffers_age)->data ==
@@ -871,7 +867,7 @@ static struct aux_buffer *writer_get_aux_buffer(struct buffer *buff,
                 shm_list_remove(&buff->aux_buffers_age, cur);
                 shm_list_append_elem(&buff->aux_buffers_age, cur);
                 buff->cur_aux_buff = ab;
-                ab->reusable = false;
+                ab->reusable       = false;
                 return ab;
             }
             cur = cur->next;
@@ -888,7 +884,7 @@ static struct aux_buffer *writer_get_aux_buffer(struct buffer *buff,
 }
 
 static struct aux_buffer *reader_get_aux_buffer(struct buffer *buff,
-                                                size_t idx) {
+                                                size_t         idx) {
     /* cache the last use */
     if (buff->cur_aux_buff && buff->cur_aux_buff->idx == idx)
         return buff->cur_aux_buff;
@@ -988,9 +984,9 @@ size_t _buffer_push_strn(struct buffer *buff, const void *data, size_t size) {
 }
 
 void *buffer_get_str(struct buffer *buff, uint64_t elem) {
-    size_t idx = elem >> 32;
-    struct aux_buffer *ab = reader_get_aux_buffer(buff, idx);
-    size_t off = elem & 0xffffffff;
+    size_t             idx = elem >> 32;
+    struct aux_buffer *ab  = reader_get_aux_buffer(buff, idx);
+    size_t             off = elem & 0xffffffff;
     return ab->data + off;
 }
 
@@ -1003,8 +999,8 @@ uint64_t buffer_push_str(struct buffer *buff, uint64_t evid, const char *str) {
 
 uint64_t buffer_push_strn(struct buffer *buff, uint64_t evid, const char *str,
                           size_t len) {
-    size_t off = _buffer_push_strn(buff, str, len);
-    struct aux_buffer *ab = buff->cur_aux_buff;
+    size_t             off = _buffer_push_strn(buff, str, len);
+    struct aux_buffer *ab  = buff->cur_aux_buff;
     assert(ab);
     if (ab->first_event_id == 0)
         ab->first_event_id = evid;
@@ -1014,9 +1010,9 @@ uint64_t buffer_push_strn(struct buffer *buff, uint64_t evid, const char *str,
 
 void buffer_notify_dropped(struct buffer *buff, uint64_t begin_id,
                            uint64_t end_id) {
-    struct buffer_info *info = &buff->shmbuffer->info;
-    size_t idx = info->dropped_ranges_next;
-    struct dropped_range *r = &info->dropped_ranges[idx];
+    struct buffer_info   *info = &buff->shmbuffer->info;
+    size_t                idx  = info->dropped_ranges_next;
+    struct dropped_range *r    = &info->dropped_ranges[idx];
     if (r->begin == begin_id || r->end == r->begin - 1) {
         drop_ranges_lock(buff);
         r->end = end_id;
@@ -1025,7 +1021,7 @@ void buffer_notify_dropped(struct buffer *buff, uint64_t begin_id,
     }
 
     if (idx + 1 == DROPPED_RANGES_NUM) {
-        r = &info->dropped_ranges[0];
+        r                         = &info->dropped_ranges[0];
         info->dropped_ranges_next = 0;
     } else {
         ++r;
@@ -1034,7 +1030,7 @@ void buffer_notify_dropped(struct buffer *buff, uint64_t begin_id,
 
     drop_ranges_lock(buff);
     r->begin = begin_id;
-    r->end = end_id;
+    r->end   = end_id;
     drop_ranges_unlock(buff);
 }
 
@@ -1054,7 +1050,7 @@ int buffer_register_events(struct buffer *b, size_t ev_nums, ...) {
 
     for (size_t i = 0; i < ev_nums; ++i) {
         const char *name = va_arg(ap, const char *);
-        shm_kind kind = va_arg(ap, shm_kind);
+        shm_kind    kind = va_arg(ap, shm_kind);
         if (buffer_register_event(b, name, kind) < 0) {
             va_end(ap);
             return -1;
@@ -1067,8 +1063,8 @@ int buffer_register_events(struct buffer *b, size_t ev_nums, ...) {
 }
 
 int buffer_register_all_events(struct buffer *b) {
-    struct event_record *recs = b->control->events;
-    const size_t ev_nums = source_control_get_records_num(b->control);
+    struct event_record *recs    = b->control->events;
+    const size_t         ev_nums = source_control_get_records_num(b->control);
 
     for (size_t i = 0; i < ev_nums; ++i) {
         recs[i].kind = 1 + i + shm_get_last_special_kind();

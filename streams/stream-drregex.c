@@ -27,8 +27,8 @@ void drregex_destroy(shm_stream *s) {
 }
 
 shm_stream *shm_create_drregex_stream(const char *key, const char *name) {
-    shm_stream_drregex *ss = malloc(sizeof *ss);
-    struct buffer *shmbuffer = get_shared_buffer(key);
+    shm_stream_drregex *ss        = malloc(sizeof *ss);
+    struct buffer      *shmbuffer = get_shared_buffer(key);
     assert(shmbuffer && "Getting the shm buffer failed");
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);

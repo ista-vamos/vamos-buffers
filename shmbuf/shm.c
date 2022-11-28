@@ -11,7 +11,7 @@
 
 #include "shm.h"
 
-const char *shm_dir = "/dev/shm/";
+const char  *shm_dir    = "/dev/shm/";
 const size_t shm_dirlen = 9;
 
 /* adapted function from musl project, src/mman/shm_open.c

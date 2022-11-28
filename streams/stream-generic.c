@@ -28,9 +28,10 @@ static void generic_destroy(shm_stream *s) {
     free(s);
 }
 
-shm_stream *shm_create_generic_stream(const char *key, const char *name, shm_stream_hole_handling *hole_handling) {
-    shm_stream_generic *ss = malloc(sizeof *ss);
-    struct buffer *shmbuffer = get_shared_buffer(key);
+shm_stream *shm_create_generic_stream(const char *key, const char *name,
+                                      shm_stream_hole_handling *hole_handling) {
+    shm_stream_generic *ss        = malloc(sizeof *ss);
+    struct buffer      *shmbuffer = get_shared_buffer(key);
     assert(shmbuffer && "Getting the shm buffer failed");
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);

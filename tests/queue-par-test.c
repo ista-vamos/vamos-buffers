@@ -1,14 +1,14 @@
+#include "par_queue.h"
 #include <assert.h>
 #include <threads.h>
-#include "par_queue.h"
 
 int buffer[4];
 
 int reader(void *data) {
-    shm_par_queue *q = (shm_par_queue*)data;
-    int n = 0;
+    shm_par_queue *q = (shm_par_queue *)data;
+    int            n = 0;
     while (n < 3) {
-        if (shm_par_queue_pop(q, &buffer[n+1])) {
+        if (shm_par_queue_pop(q, &buffer[n + 1])) {
             ++n;
         }
     }
@@ -16,8 +16,8 @@ int reader(void *data) {
 }
 
 int writer(void *data) {
-    int num[] = {0, 1, 2, 3};
-    shm_par_queue *q = (shm_par_queue*)data;
+    int            num[] = {0, 1, 2, 3};
+    shm_par_queue *q     = (shm_par_queue *)data;
     for (int i = 1; i < 4; ++i)
         shm_par_queue_push(q, &num[i], sizeof(int));
 

@@ -8,11 +8,11 @@ void shm_queue_init(shm_queue *q, size_t size, size_t elem_size) {
     assert(q);
     assert(size > 0);
     assert(elem_size > 0);
-    q->elem_num = 0;
-    q->size = size;
+    q->elem_num  = 0;
+    q->size      = size;
     q->elem_size = elem_size;
     q->head = q->tail = 0;
-    q->data = malloc(size * elem_size);
+    q->data           = malloc(size * elem_size);
 }
 
 void shm_queue_destroy(shm_queue *q) {
