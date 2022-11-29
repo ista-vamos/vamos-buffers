@@ -136,7 +136,7 @@ static inline void drop_ranges_unlock(struct buffer *buff) {
 
 #define BUFF_START(b) ((unsigned char *)b->data)
 #define BUFF_END(b)                                                            \
-    ((unsigned char *)b->data + b->info.elem_size * b->info.capacity)
+    ((unsigned char *)b->data + (b->info.elem_size * b->info.capacity))
 
 bool buffer_is_ready(struct buffer *buff) {
     return !buff->shmbuffer->info.destroyed;
@@ -239,14 +239,17 @@ static struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
     buff->shmbuffer->info.capacity       = capacity;
     /* ringbuf has one dummy element and we allocated the space for it */
     shm_spsc_ringbuf_init(_ringbuf(buff), capacity + 1);
-    fprintf(stderr, "  .. buffer allocated size = %lu, capacity = %lu\n",
-            buff->shmbuffer->info.allocated_size,
-            buff->shmbuffer->info.capacity);
     buff->shmbuffer->info.elem_size           = elem_size;
     buff->shmbuffer->info.last_processed_id   = 0;
     buff->shmbuffer->info.dropped_ranges_next = 0;
     buff->shmbuffer->info.dropped_ranges_lock = false;
     buff->shmbuffer->info.subbuffers_no       = 0;
+
+    fprintf(stderr, "  .. buffer allocated size = %lu, capacity = %lu\n",
+            buff->shmbuffer->info.allocated_size,
+            buff->shmbuffer->info.capacity);
+    fprintf(stderr, "  .. buffer memory range:  %p - %p\n",
+            (void*)BUFF_START(buff->shmbuffer), (void*)BUFF_END(buff->shmbuffer));
 
     buff->key = strdup(key);
     VEC_INIT(buff->aux_buffers);
@@ -683,13 +686,16 @@ void *buffer_start_push(struct buffer *buff) {
     size_t off = shm_spsc_ringbuf_write_off_nowrap(_ringbuf(buff), &n);
     if (n == 0) {
         /* ++info->dropped; */
-        return false;
+        return NULL;
     }
 
     /* all ok, return the pointer to the data */
     /* FIXME: do not use multiplication, maintain the pointer to the head of
      * data */
-    return buff->shmbuffer->data + off * info->elem_size;
+    void *mem = buff->shmbuffer->data + off * info->elem_size;
+    assert((void*)BUFF_START(buff->shmbuffer) <= mem);
+    assert(mem < (void*)BUFF_END(buff->shmbuffer));
+    return mem;
 }
 
 void *buffer_partial_push(struct buffer *buff, void *prev_push,
