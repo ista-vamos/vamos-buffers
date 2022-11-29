@@ -108,8 +108,8 @@ shm_stream *shm_stream_create_substream(
         return NULL;
     }
     size_t substream_no = ++stream->substreams_no;
-    char *key =
-        get_sub_buffer_key(buffer_get_key(stream->incoming_events_buffer), substream_no);
+    char  *key          = get_sub_buffer_key(
+                  buffer_get_key(stream->incoming_events_buffer), substream_no);
     struct buffer *shmbuffer = get_shared_buffer(key);
 
     shm_stream *substream = xalloc(sizeof *substream);
@@ -118,7 +118,8 @@ shm_stream *shm_stream_create_substream(
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
 
-    char *substream_name = get_sub_buffer_key(shm_stream_get_name(stream), substream_no);
+    char *substream_name =
+        get_sub_buffer_key(shm_stream_get_name(stream), substream_no);
 
     shm_stream_init(
         substream, shmbuffer, elem_size, is_ready ? is_ready : stream->is_ready,

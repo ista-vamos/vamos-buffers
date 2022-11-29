@@ -216,7 +216,8 @@ shm_event *shamon_get_next_ev(shamon *shmn, shm_stream **streamret) {
         shm_stream *new_stream =
             shm_stream_create_substream(s, NULL, NULL, NULL, NULL, NULL);
         if (new_stream) {
-            fprintf(stderr, "Stream %lu has a new dynamic substream\n", shm_stream_id(s));
+            fprintf(stderr, "Stream %lu has a new dynamic substream\n",
+                    shm_stream_id(s));
             shm_stream_register_all_events(new_stream);
             shamon_add_stream(
                 shmn, new_stream,

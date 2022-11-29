@@ -227,16 +227,16 @@ static struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
     buff->shmbuffer->info.last_processed_id   = 0;
     buff->shmbuffer->info.dropped_ranges_next = 0;
     buff->shmbuffer->info.dropped_ranges_lock = false;
-    buff->shmbuffer->info.subbuffers_no = 0;
+    buff->shmbuffer->info.subbuffers_no       = 0;
 
     buff->key = strdup(key);
     VEC_INIT(buff->aux_buffers);
     shm_list_init(&buff->aux_buffers_age);
-    buff->aux_buf_idx  = 0;
-    buff->cur_aux_buff = NULL;
-    buff->fd           = fd;
-    buff->control      = control;
-    buff->mode         = mode;
+    buff->aux_buf_idx      = 0;
+    buff->cur_aux_buff     = NULL;
+    buff->fd               = fd;
+    buff->control          = control;
+    buff->mode             = mode;
     buff->last_subbufer_no = 0;
 
     puts("Done");
@@ -572,7 +572,6 @@ void release_shared_sub_buffer(struct buffer *buff) {
     free(buff->key);
     free(buff);
 }
-
 
 /* for writers */
 void destroy_shared_buffer(struct buffer *buff) {
