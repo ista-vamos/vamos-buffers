@@ -12,6 +12,7 @@
 #include "stream.h"
 
 struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
+                                       size_t                 capacity,
                                        struct source_control *control);
 
 static int  stream_ready  = 1;
@@ -76,7 +77,7 @@ static size_t waiting_for_arbbuf = 0;
 
 int main(void) {
     struct buffer *buffer =
-        initialize_local_buffer("/dummy", sizeof(struct event), NULL);
+        initialize_local_buffer("/dummy", sizeof(struct event), 30, NULL);
     assert(buffer);
     shm_stream  dummy_stream;
     shm_stream *stream = &dummy_stream;

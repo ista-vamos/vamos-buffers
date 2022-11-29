@@ -22,11 +22,12 @@ struct event {
 };
 
 struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
+                                       size_t                 capacity,
                                        struct source_control *control);
 
 int main(void) {
     struct buffer *lbuffer =
-        initialize_local_buffer("/dummy", sizeof(struct event), NULL);
+        initialize_local_buffer("/dummy", sizeof(struct event), 30, NULL);
     assert(lbuffer);
 
     shm_stream  dummy_stream;

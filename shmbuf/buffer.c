@@ -21,8 +21,6 @@
 #include "utils.h"
 #include "vector-macro.h"
 
-#include "buffer-size.h"
-
 #define SLEEP_TIME_NS 10000
 
 #define MAX_AUX_BUF_KEY_SIZE 16
@@ -40,6 +38,7 @@ struct dropped_range {
 struct buffer_info {
     shm_spsc_ringbuf ringbuf;
 
+    size_t               allocated_size;
     size_t               capacity;
     size_t               elem_size;
     shm_eventid          last_processed_id;
@@ -53,14 +52,32 @@ struct buffer_info {
     volatile _Bool monitor_attached;
 } __attribute__((aligned(CACHELINE_SIZE)));
 
-/* TODO: not all systems have the size of page 4kB */
-#define MEM_SIZE (SHM_BUFFER_SIZE_PAGES * 4096)
-
 struct shmbuffer {
     struct buffer_info info;
     /* pointer to the beginning of data */
-    unsigned char data[MEM_SIZE];
+    unsigned char data[];
 };
+
+/* FIXME: this may not be always true */
+#define PAGE_SIZE 4096
+
+static size_t compute_shm_size(size_t elem_size, size_t capacity) {
+    /* compute how much memory we need */
+    size_t size = (elem_size * capacity) + sizeof(struct shmbuffer);
+    /* round it up to page size.
+     * XXX: do we need that? mmap will do this internally anyway */
+    size_t roundup = (size % PAGE_SIZE);
+    if (roundup > (PAGE_SIZE) / 4) {
+        fprintf(stderr,
+                "The required capacity '%lu' of SHM buffer will result in %lu "
+                "unused bytes "
+                "in a memory page, consider changing it.\n"
+                "You have space for %lu more elements...\n",
+                capacity, roundup, roundup / elem_size);
+    }
+    size += roundup;
+    return size;
+}
 
 struct aux_buffer {
     size_t        size;
@@ -118,11 +135,8 @@ static inline void drop_ranges_unlock(struct buffer *buff) {
 }
 
 #define BUFF_START(b) ((unsigned char *)b->data)
-#define BUFF_END(b)   ((unsigned char *)b->data + MEM_SIZE - 1)
-
-size_t buffer_allocation_size() {
-    return sizeof(struct shmbuffer);
-}
+#define BUFF_END(b)                                                            \
+    ((unsigned char *)b->data + b->info.elem_size * b->info.capacity)
 
 bool buffer_is_ready(struct buffer *buff) {
     return !buff->shmbuffer->info.destroyed;
@@ -179,23 +193,30 @@ int buffer_get_ctrl_key_path(struct buffer *buff, char keypath[],
 
 static struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
                                                size_t                 elem_size,
+                                               size_t                 capacity,
                                                struct source_control *control) {
     assert(elem_size > 0 && "Element size is 0");
+    assert(capacity > 0 && "Capacity is 0");
+    /* the ringbuffer has one unusable dummy element, so increase the capacity
+     * by one */
+    const size_t memsize = compute_shm_size(elem_size, capacity + 1);
 
-    printf("Initializing buffer '%s' with elem size '%lu'\n", key, elem_size);
+    fprintf(stderr,
+            "Initializing buffer '%s' with elem size '%lu' and minimum "
+            "capacity '%lu' (%lu pages)\n",
+            key, elem_size, capacity, memsize / PAGE_SIZE);
     int fd = shamon_shm_open(key, O_RDWR | O_CREAT | O_TRUNC, mode);
     if (fd < 0) {
         perror("shm_open");
         return NULL;
     }
 
-    if ((ftruncate(fd, buffer_allocation_size())) == -1) {
+    if ((ftruncate(fd, memsize)) == -1) {
         perror("ftruncate");
         return NULL;
     }
 
-    void *shmem = mmap(0, buffer_allocation_size(), PROT_READ | PROT_WRITE,
-                       MAP_SHARED, fd, 0);
+    void *shmem = mmap(0, memsize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (shmem == MAP_FAILED) {
         perror("mmap failure");
         if (close(fd) == -1) {
@@ -207,22 +228,20 @@ static struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
         return NULL;
     }
 
-    struct buffer *buff = malloc(sizeof(struct buffer));
-    assert(buff && "Memory allocation failed");
-
-    buff->shmbuffer = (struct shmbuffer *)shmem;
+    struct buffer *buff = xalloc(sizeof(struct buffer));
+    buff->shmbuffer     = (struct shmbuffer *)shmem;
     assert(ADDR_IS_CACHE_ALIGNED(buff->shmbuffer->data));
     assert(ADDR_IS_CACHE_ALIGNED(&buff->shmbuffer->info.ringbuf));
 
     memset(buff->shmbuffer, 0, sizeof(struct buffer_info));
 
-    const size_t capacity =
-        (BUFF_END(buff->shmbuffer) - BUFF_START(buff->shmbuffer)) / elem_size;
-    /* ringbuf has one dummy element */
-    buff->shmbuffer->info.capacity = capacity - 1;
-    shm_spsc_ringbuf_init(_ringbuf(buff), capacity);
-    printf("  .. buffer allocated size = %lu, capacity = %lu\n",
-           buffer_allocation_size(), buff->shmbuffer->info.capacity);
+    buff->shmbuffer->info.allocated_size = memsize;
+    buff->shmbuffer->info.capacity       = capacity;
+    /* ringbuf has one dummy element and we allocated the space for it */
+    shm_spsc_ringbuf_init(_ringbuf(buff), capacity + 1);
+    fprintf(stderr, "  .. buffer allocated size = %lu, capacity = %lu\n",
+            buff->shmbuffer->info.allocated_size,
+            buff->shmbuffer->info.capacity);
     buff->shmbuffer->info.elem_size           = elem_size;
     buff->shmbuffer->info.last_processed_id   = 0;
     buff->shmbuffer->info.dropped_ranges_next = 0;
@@ -247,7 +266,7 @@ static struct source_control *
 create_shared_control_buffer(const char *buff_key, mode_t mode,
                              const struct source_control *control);
 
-struct buffer *create_shared_buffer(const char                  *key,
+struct buffer *create_shared_buffer(const char *key, size_t capacity,
                                     const struct source_control *control) {
     struct source_control *ctrl =
         create_shared_control_buffer(key, S_IRWXU, control);
@@ -257,11 +276,11 @@ struct buffer *create_shared_buffer(const char                  *key,
     }
 
     size_t elem_size = source_control_max_event_size(ctrl);
-    return initialize_shared_buffer(key, S_IRWXU, elem_size, ctrl);
+    return initialize_shared_buffer(key, S_IRWXU, elem_size, capacity, ctrl);
 }
 
 struct buffer *create_shared_buffer_adv(const char *key, mode_t mode,
-                                        size_t                       elem_size,
+                                        size_t elem_size, size_t capacity,
                                         const struct source_control *control) {
     struct source_control *ctrl =
         create_shared_control_buffer(key, mode, control);
@@ -278,7 +297,7 @@ struct buffer *create_shared_buffer_adv(const char *key, mode_t mode,
         mode = S_IRWXU;
     }
 
-    return initialize_shared_buffer(key, mode, elem_size, ctrl);
+    return initialize_shared_buffer(key, mode, elem_size, capacity, ctrl);
 }
 
 char *get_sub_buffer_key(const char *key, size_t idx) {
@@ -292,7 +311,7 @@ char *get_sub_buffer_key(const char *key, size_t idx) {
     return tmp;
 }
 
-struct buffer *create_shared_sub_buffer(struct buffer               *buffer,
+struct buffer *create_shared_sub_buffer(struct buffer *buffer, size_t capacity,
                                         const struct source_control *control) {
     char *key = get_sub_buffer_key(buffer->key, ++buffer->last_subbufer_no);
     struct source_control *ctrl =
@@ -302,9 +321,11 @@ struct buffer *create_shared_sub_buffer(struct buffer               *buffer,
         return NULL;
     }
 
-    size_t         elem_size = source_control_max_event_size(ctrl);
+    size_t elem_size = source_control_max_event_size(ctrl);
+    if (capacity == 0)
+        capacity = buffer_capacity(buffer);
     struct buffer *sbuf =
-        initialize_shared_buffer(key, S_IRWXU, elem_size, ctrl);
+        initialize_shared_buffer(key, S_IRWXU, elem_size, capacity, ctrl);
     /* TODO: we copy the key in 'initialize_shared_buffer' which is redundant as
      * we have created it in `get_sub_buffer_key` and can just move it */
     free(key);
@@ -320,12 +341,14 @@ size_t buffer_get_sub_buffers_no(struct buffer *buffer) {
 
 /* FOR TESTING */
 struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
+                                       size_t                 capacity,
                                        struct source_control *control) {
     assert(elem_size > 0 && "Element size is 0");
     printf("Initializing LOCAL buffer '%s' with elem size '%lu'\n", key,
            elem_size);
-    void *mem;
-    int   succ = posix_memalign(&mem, 64, buffer_allocation_size());
+    void        *mem;
+    const size_t memsize = compute_shm_size(elem_size, capacity);
+    int          succ    = posix_memalign(&mem, 64, memsize);
     if (succ != 0) {
         perror("allocation failure");
         return NULL;
@@ -340,13 +363,13 @@ struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
 
     memset(buff->shmbuffer, 0, sizeof(struct buffer_info));
 
-    const size_t capacity =
-        (BUFF_END(buff->shmbuffer) - BUFF_START(buff->shmbuffer)) / elem_size;
     /* ringbuf has one dummy element */
-    buff->shmbuffer->info.capacity = capacity - 1;
-    shm_spsc_ringbuf_init(_ringbuf(buff), capacity);
+    buff->shmbuffer->info.capacity       = capacity;
+    buff->shmbuffer->info.allocated_size = memsize;
+    shm_spsc_ringbuf_init(_ringbuf(buff), capacity + 1);
     printf("  .. buffer allocated size = %lu, capacity = %lu\n",
-           buffer_allocation_size(), buff->shmbuffer->info.capacity);
+           buff->shmbuffer->info.allocated_size,
+           buff->shmbuffer->info.capacity);
     buff->shmbuffer->info.elem_size           = elem_size;
     buff->shmbuffer->info.last_processed_id   = 0;
     buff->shmbuffer->info.dropped_ranges_next = 0;
@@ -380,7 +403,7 @@ void release_local_buffer(struct buffer *buff) {
 static struct source_control *get_shared_control_buffer(const char *buff_key);
 
 struct buffer *try_get_shared_buffer(const char *key, size_t retry) {
-    printf("Getting shared buffer '%s'\n", key);
+    fprintf(stderr, "getting shared buffer '%s'\n", key);
 
     int fd = -1;
     ++retry;
@@ -398,8 +421,23 @@ struct buffer *try_get_shared_buffer(const char *key, size_t retry) {
         return NULL;
     }
 
-    void *shmmem = mmap(0, buffer_allocation_size(), PROT_READ | PROT_WRITE,
-                        MAP_SHARED, fd, 0);
+    struct buffer_info info;
+    if (pread(fd, &info, sizeof(info), 0) == -1) {
+        perror("reading info of shared buffer");
+        close(fd);
+        return NULL;
+    }
+
+    fprintf(stderr, "   ... its size is %lu\n", info.allocated_size);
+    if (info.allocated_size == 0) {
+        fprintf(stderr, "Invalid allocated size of SHM buffer: %lu\n",
+                info.allocated_size);
+        close(fd);
+        return NULL;
+    }
+
+    void *shmmem =
+        mmap(0, info.allocated_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (shmmem == MAP_FAILED) {
         perror("mmap failure");
         goto before_mmap_clean;
@@ -442,7 +480,7 @@ buff_clean_all:
 buff_clean_key:
     free(buff);
 mmap_clean:
-    munmap(shmmem, buffer_allocation_size());
+    munmap(shmmem, info.allocated_size);
 before_mmap_clean:
     if (close(fd) == -1) {
         perror("closing fd after mmap failure");
@@ -500,7 +538,7 @@ static void destroy_shared_control_buffer(const char            *buffkey,
 
 /* for readers */
 void release_shared_buffer(struct buffer *buff) {
-    if (munmap(buff->shmbuffer, buffer_allocation_size()) != 0) {
+    if (munmap(buff->shmbuffer, buff->shmbuffer->info.allocated_size) != 0) {
         perror("release_shared_buffer: munmap failure");
     }
     if (close(buff->fd) == -1) {
@@ -534,7 +572,7 @@ void destroy_shared_sub_buffer(struct buffer *buff) {
     VEC_DESTROY(buff->aux_buffers);
     fprintf(stderr, "Totally used %lu aux buffers\n", vecsize);
 
-    if (munmap(buff->shmbuffer, buffer_allocation_size()) != 0) {
+    if (munmap(buff->shmbuffer, buff->shmbuffer->info.allocated_size) != 0) {
         perror("destroy_shared_buffer: munmap failure");
     }
     if (close(buff->fd) == -1) {
@@ -549,7 +587,7 @@ void destroy_shared_sub_buffer(struct buffer *buff) {
 
 /* for readers */
 void release_shared_sub_buffer(struct buffer *buff) {
-    if (munmap(buff->shmbuffer, buffer_allocation_size()) != 0) {
+    if (munmap(buff->shmbuffer, buff->shmbuffer->info.allocated_size) != 0) {
         perror("release_shared_sub_buffer: munmap failure");
     }
     if (close(buff->fd) == -1) {
@@ -587,7 +625,7 @@ void destroy_shared_buffer(struct buffer *buff) {
     VEC_DESTROY(buff->aux_buffers);
     fprintf(stderr, "Totally used %lu aux buffers\n", vecsize);
 
-    if (munmap(buff->shmbuffer, buffer_allocation_size()) != 0) {
+    if (munmap(buff->shmbuffer, buff->shmbuffer->info.allocated_size) != 0) {
         perror("destroy_shared_buffer: munmap failure");
     }
     if (close(buff->fd) == -1) {
