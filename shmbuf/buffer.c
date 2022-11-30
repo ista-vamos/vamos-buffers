@@ -134,10 +134,6 @@ static inline void drop_ranges_unlock(struct buffer *buff) {
     buff->shmbuffer->info.dropped_ranges_lock = false;
 }
 
-#define BUFF_START(b) ((unsigned char *)b->data)
-#define BUFF_END(b)                                                            \
-    ((unsigned char *)b->data + (b->info.elem_size * b->info.capacity))
-
 bool buffer_is_ready(struct buffer *buff) {
     return !buff->shmbuffer->info.destroyed;
 }
@@ -190,6 +186,12 @@ int buffer_get_ctrl_key_path(struct buffer *buff, char keypath[],
 
     return 0;
 }
+
+/* Pointer to the beginning of the allocated memory. */
+#define BUFF_START(b) ((unsigned char *)b->data)
+/* Pointer to the first byte after the allocated memory. We allocate 1 more byte than
+   is the desired capacity. */
+#define BUFF_END(b) ((unsigned char *)b->data + (b->info.elem_size * (b->info.capacity + 1)))
 
 static struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
                                                size_t                 elem_size,
@@ -250,6 +252,13 @@ static struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
             buff->shmbuffer->info.capacity);
     fprintf(stderr, "  .. buffer memory range:  %p - %p\n",
             (void*)BUFF_START(buff->shmbuffer), (void*)BUFF_END(buff->shmbuffer));
+
+#ifndef NDEBUG
+    assert((size_t)(BUFF_END(buff->shmbuffer) - BUFF_START(buff->shmbuffer)) == (capacity + 1)*elem_size);
+    /* In debugging mode, set the allocated memory to test if it is really accessible
+     * and that our structures are not (incorrectly) overlapping with the memory */
+    memset(BUFF_START(buff->shmbuffer), 0xff, capacity*elem_size);
+#endif
 
     buff->key = strdup(key);
     VEC_INIT(buff->aux_buffers);
