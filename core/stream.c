@@ -147,6 +147,7 @@ static shm_kind get_max_kind(struct event_record *recs, size_t size) {
 
 struct event_record *shm_stream_get_event_record(shm_stream *stream,
                                                  shm_kind    kind) {
+    assert(kind > 0 && "Got invalid kind");
     struct event_record *rec = NULL;
     if (stream->events_cache) {
         if (kind < MAX_EVENTS_CACHE_SIZE) {
@@ -166,6 +167,7 @@ struct event_record *shm_stream_get_event_record(shm_stream *stream,
             (max_kind > MAX_EVENTS_CACHE_SIZE ? MAX_EVENTS_CACHE_SIZE
                                               : max_kind) +
             1;
+        assert(cache_sz > 0 && "Invalid cache size");
         stream->events_cache = malloc(cache_sz * sizeof(struct event_record));
         /* cache elements that fit into the cache (cache is indexed by kinds) */
         for (size_t i = 0; i < sz; ++i) {
