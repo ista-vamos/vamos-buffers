@@ -26,6 +26,7 @@ typedef struct _shm_arbiter_buffer {
     shm_eventid drop_begin_id; // the id of the next 'dropped' event
 
     shm_stream *stream; // the source for the buffer
+    shm_event *hole_event;
     bool        active; // true while the events are being queued
 } shm_arbiter_buffer;
 
@@ -250,6 +251,8 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
     size_t event_size = out_event_size > stream->event_size
                             ? out_event_size
                             : stream->event_size;
+    if (stream->hole_handling.hole_event_size > event_size)
+        event_size = stream->hole_handling.hole_event_size;
     /* the buffer must be able to contain the event 'dropped' */
     size_t hole_event_size = stream->hole_handling.hole_event_size;
     if (hole_event_size > 0 && event_size < hole_event_size)
@@ -258,6 +261,7 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
     shm_par_queue_init(&buffer->buffer, capacity, event_size);
 
     buffer->drop_space_threshold = DROP_SPACE_DEFAULT_THRESHOLD;
+    buffer->hole_event = xalloc(stream->hole_handling.hole_event_size);
 
     buffer->stream              = stream;
     buffer->active              = false;
@@ -289,6 +293,7 @@ void shm_arbiter_buffer_free(shm_arbiter_buffer *buffer) {
 
 void shm_arbiter_buffer_destroy(shm_arbiter_buffer *buffer) {
     shm_par_queue_destroy(&buffer->buffer);
+    free(buffer->hole_event);
 }
 
 size_t shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q) {
@@ -304,7 +309,9 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
         if (shm_par_queue_free_num(queue) < 2) {
             ++buffer->dropped_num;
         } else {
-            shm_stream_prepare_hole_event(buffer->stream, buffer->drop_begin_id,
+            shm_stream_prepare_hole_event(buffer->stream,
+                                          buffer->hole_event,
+                                          buffer->drop_begin_id,
                                           buffer->dropped_num);
             assert(buffer->stream->hole_handling.hole_event_size <=
                    shm_par_queue_elem_size(queue));
@@ -312,7 +319,7 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
             bool ret =
 #endif
                 shm_par_queue_push(
-                    queue, buffer->stream->hole_event,
+                    queue, buffer->hole_event,
                     buffer->stream->hole_handling.hole_event_size);
 #ifdef DUMP_STATS
             ++buffer->written_num;
@@ -417,8 +424,8 @@ static void *get_event(shm_stream *stream) {
 
 static void push_dropped_event(shm_stream *stream, shm_arbiter_buffer *buffer,
                                size_t notify_id) {
-    shm_stream_prepare_hole_event(stream, notify_id, buffer->dropped_num);
-    shm_par_queue_push(&buffer->buffer, stream->hole_event,
+    shm_stream_prepare_hole_event(stream, buffer->hole_event, notify_id, buffer->dropped_num);
+    shm_par_queue_push(&buffer->buffer, buffer->hole_event,
                        stream->hole_handling.hole_event_size);
 #ifdef DUMP_STATS
     ++buffer->written_num;
@@ -488,9 +495,9 @@ static inline void start_dropping(shm_stream         *stream,
     assert(buffer->dropped_num == 0);
     ++buffer->dropped_num;
 
-    assert(stream->hole_event);
-    stream->hole_handling.init(stream->hole_event);
-    stream->hole_handling.update(stream->hole_event, event);
+    assert(buffer->hole_event);
+    stream->hole_handling.init(buffer->hole_event);
+    stream->hole_handling.update(buffer->hole_event, event);
     /*
      printf("FETCH: start dropping { kind = %lu, id = %lu}\n",
             ((shm_event*)ev)->kind,
@@ -503,7 +510,7 @@ static inline void continue_dropping(shm_stream         *stream,
                                      shm_arbiter_buffer *buffer,
                                      shm_event          *event) {
     ++buffer->dropped_num;
-    stream->hole_handling.update(stream->hole_event, event);
+    stream->hole_handling.update(buffer->hole_event, event);
 
     /* notify about dropped events continuously, because it may take
      * long time to generate the dropped event */

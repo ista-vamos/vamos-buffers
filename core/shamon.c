@@ -113,9 +113,9 @@ static shm_event *default_process_events(shm_vector *buffers, void *data,
                 if (!shm_arbiter_buffer_drop(buffer, c / 2)) {
                     assert(0 && "Failed dropping events");
                 }
-                shm_stream_prepare_hole_event(stream, id, c / 2);
+                shm_stream_prepare_hole_event(stream, shmn->_ev, id, c / 2);
                 *streamret = stream;
-                return stream->hole_event;
+                return shmn->_ev;
             }
 
             /* TODO: ideally, we do not copy the event here but pass it directly
@@ -242,9 +242,12 @@ void shamon_add_stream(shamon *shmn, shm_stream *stream,
     assert(shmn->streams[VEC_SIZE(shmn->streams) - 1] == stream &&
            "BUG: shm_vector_push");
 
-    if (stream->event_size > shmn->_ev_size) {
-        shmn->_ev      = realloc(shmn->_ev, stream->event_size);
-        shmn->_ev_size = stream->event_size;
+    size_t strm_event_size = stream->hole_handling.hole_event_size;
+    if (stream->event_size > strm_event_size)
+        strm_event_size = stream->event_size;
+    if (strm_event_size > shmn->_ev_size) {
+        shmn->_ev      = realloc(shmn->_ev, strm_event_size);
+        shmn->_ev_size = strm_event_size;
     }
 
     shm_arbiter_buffer *buffer = shm_vector_aligned_extend(_buffers(shmn));

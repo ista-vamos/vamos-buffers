@@ -28,7 +28,6 @@ typedef struct _shm_stream {
     char      *name;
     char      *type;
     size_t     event_size;
-    shm_event *hole_event;
     /* shared-memory buffer */
     struct buffer *incoming_events_buffer;
     /* the number of created substreams (sub-buffers) for the
@@ -98,7 +97,7 @@ bool shm_stream_is_ready(shm_stream *);
 void shm_stream_attach(shm_stream *stream);
 void shm_stream_detach(shm_stream *stream);
 
-void shm_stream_prepare_hole_event(shm_stream *stream, size_t id, uint64_t n);
+void shm_stream_prepare_hole_event(shm_stream *stream, shm_event *ev, size_t id, uint64_t n);
 
 /*
  * returns true if there will come no events in the future, false otherwise

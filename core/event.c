@@ -5,8 +5,8 @@
 #include "event.h"
 #include "stream.h"
 
-static shm_kind hole_kind         = 1;
-static shm_kind last_special_kind = 1;
+static const shm_kind hole_kind         = 1;
+static const shm_kind last_special_kind = 1;
 
 void initialize_events() {
     assert(hole_kind == 1 && "We assume that the 'hole_kind' is 1 for now");
