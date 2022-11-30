@@ -13,6 +13,8 @@ endif()
 
 set(CTEST_OPTS -j${N} --output-on-failure --progress ${CTEST_OPTS})
 
+find_program(CBMC_EXE "cbmc")
+
 add_executable(list-test list-test.c)
 target_link_libraries(list-test shamon-list)
 target_include_directories(list-test PRIVATE ${CMAKE_SOURCE_DIR})
@@ -44,6 +46,7 @@ add_test(NAME queue-par-test-3
          COMMAND sh -c -e "for i in `seq 1 1000`;do ./queue-par-test-3; done"
          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests)
 
+if (CBMC_EXE)
 add_test(NAME queue-par-cbmc
          COMMAND cbmc -I${CMAKE_SOURCE_DIR} --c11 --unwind 2
 	         queue-par-cbmc.c
@@ -56,6 +59,7 @@ add_test(NAME queue-par-cbmc-2
 	         queue-par-cbmc_2.c
 		 ${CMAKE_SOURCE_DIR}/core/par_queue.c
 		 ${CMAKE_SOURCE_DIR}/core/spsc_ringbuf.c)
+ endif(CBMC_EXE)
 
 add_executable(arbiter-buffer-test arbiter-buffer.c)
 target_link_libraries(arbiter-buffer-test shamon-arbiter)
