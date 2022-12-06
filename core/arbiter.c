@@ -26,7 +26,7 @@ typedef struct _shm_arbiter_buffer {
     shm_eventid drop_begin_id; // the id of the next 'dropped' event
 
     shm_stream *stream; // the source for the buffer
-    shm_event *hole_event;
+    shm_event  *hole_event;
     bool        active; // true while the events are being queued
 } shm_arbiter_buffer;
 
@@ -309,8 +309,7 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
         if (shm_par_queue_free_num(queue) < 2) {
             ++buffer->dropped_num;
         } else {
-            shm_stream_prepare_hole_event(buffer->stream,
-                                          buffer->hole_event,
+            shm_stream_prepare_hole_event(buffer->stream, buffer->hole_event,
                                           buffer->drop_begin_id,
                                           buffer->dropped_num);
             assert(buffer->stream->hole_handling.hole_event_size <=
@@ -424,7 +423,8 @@ static void *get_event(shm_stream *stream) {
 
 static void push_dropped_event(shm_stream *stream, shm_arbiter_buffer *buffer,
                                size_t notify_id) {
-    shm_stream_prepare_hole_event(stream, buffer->hole_event, notify_id, buffer->dropped_num);
+    shm_stream_prepare_hole_event(stream, buffer->hole_event, notify_id,
+                                  buffer->dropped_num);
     shm_par_queue_push(&buffer->buffer, buffer->hole_event,
                        stream->hole_handling.hole_event_size);
 #ifdef DUMP_STATS
