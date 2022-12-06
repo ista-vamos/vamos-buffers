@@ -48,8 +48,8 @@ struct buffer_info {
     /* Number of sub-buffers. Sub-buffers are numbered from 1. */
     volatile _Atomic size_t subbuffers_no;
     /* the monitored program exited/destroyed the buffer */
-    volatile CACHELINE_ALIGNED _Atomic _Bool destroyed;
-    volatile CACHELINE_ALIGNED _Atomic _Bool monitor_attached;
+    volatile _Bool destroyed;
+    volatile _Bool monitor_attached;
 } __attribute__((aligned(CACHELINE_SIZE)));
 
 struct shmbuffer {
@@ -134,15 +134,8 @@ static inline void drop_ranges_unlock(struct buffer *buff) {
     buff->shmbuffer->info.dropped_ranges_lock = false;
 }
 
-static inline bool buffer_is_destroyed(struct buffer *buff) {
-    return atomic_load_explicit(&buff->shmbuffer->info.destroyed,
-	                        memory_order_relaxed);
-}
-
-
-
 bool buffer_is_ready(struct buffer *buff) {
-    return !buffer_is_destroyed(buff);
+    return !buff->shmbuffer->info.destroyed;
 }
 
 bool buffer_monitor_attached(struct buffer *buff) {
@@ -525,7 +518,7 @@ struct event_record *buffer_get_avail_events(struct buffer *buff,
 }
 
 void buffer_set_attached(struct buffer *buff, bool val) {
-    if (!buffer_is_destroyed(buff))
+    if (!buff->shmbuffer->info.destroyed)
         buff->shmbuffer->info.monitor_attached = val;
 }
 
@@ -579,8 +572,7 @@ void release_shared_buffer(struct buffer *buff) {
 
 /* for writers */
 void destroy_shared_sub_buffer(struct buffer *buff) {
-    atomic_store_explicit(&buff->shmbuffer->info.destroyed,
-		          1, memory_order_release);
+    buff->shmbuffer->info.destroyed = 1;
 
     size_t vecsize = VEC_SIZE(buff->aux_buffers);
     for (size_t i = 0; i < vecsize; ++i) {
@@ -633,8 +625,7 @@ void release_shared_sub_buffer(struct buffer *buff) {
 
 /* for writers */
 void destroy_shared_buffer(struct buffer *buff) {
-    atomic_store_explicit(&buff->shmbuffer->info.destroyed,
-		          1, memory_order_release);
+    buff->shmbuffer->info.destroyed = 1;
 
     size_t vecsize = VEC_SIZE(buff->aux_buffers);
     for (size_t i = 0; i < vecsize; ++i) {
@@ -698,7 +689,7 @@ size_t buffer_consume(struct buffer *buff, size_t k) {
 
 void *buffer_start_push(struct buffer *buff) {
     struct buffer_info *info = &buff->shmbuffer->info;
-    assert(!buffer_is_destroyed(buff) && "Writing to a destroyed buffer");
+    assert(!info->destroyed && "Writing to a destroyed buffer");
 
     size_t n;
     size_t off = shm_spsc_ringbuf_write_off_nowrap(_ringbuf(buff), &n);
@@ -730,7 +721,7 @@ void *buffer_partial_push(struct buffer *buff, void *prev_push,
 
 void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
                               uint64_t evid, const char *str) {
-    assert(buffer_is_ready(buff) && "Writing to a destroyed buffer");
+    assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
     assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
     assert((unsigned char *)prev_push < BUFF_END(buff->shmbuffer));
 
@@ -741,7 +732,7 @@ void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
 
 void *buffer_partial_push_str_n(struct buffer *buff, void *prev_push,
                                 uint64_t evid, const char *str, size_t len) {
-    assert(buffer_is_ready(buff) && "Writing to a destroyed buffer");
+    assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
     assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
     assert((unsigned char *)prev_push < BUFF_END(buff->shmbuffer));
 
@@ -751,12 +742,12 @@ void *buffer_partial_push_str_n(struct buffer *buff, void *prev_push,
 }
 
 void buffer_finish_push(struct buffer *buff) {
-    assert(buffer_is_ready(buff) && "Writing to a destroyed buffer");
+    assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
     shm_spsc_ringbuf_write_finish(_ringbuf(buff), 1);
 }
 
 bool buffer_push(struct buffer *buff, const void *elem, size_t size) {
-    assert(buffer_is_ready(buff) && "Writing to a destroyed buffer");
+    assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
     assert(buff->shmbuffer->info.elem_size >= size &&
            "Size does not fit the slot");
 
@@ -771,7 +762,8 @@ bool buffer_push(struct buffer *buff, const void *elem, size_t size) {
 }
 
 bool buffer_pop(struct buffer *buff, void *dst) {
-    assert(buffer_is_ready(buff) && "Writing to a destroyed buffer");
+    assert(!buff->shmbuffer->info.destroyed &&
+           "Reading from a destroyed buffer");
 
     size_t size;
     void  *pos = buffer_read_pointer(buff, &size);
