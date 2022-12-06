@@ -14,6 +14,7 @@
 /* FIXME: we duplicate the counter in stream here. Maybe rather set the funs to
  * NULL? */
 static void default_hole_init(shm_event *ev) {
+    ev->kind = shm_get_hole_kind();
     ((shm_event_default_hole *)ev)->n = 0;
 }
 
@@ -206,8 +207,8 @@ size_t shm_stream_buffer_capacity(shm_stream *s) {
 /* FIXME: no longer related to stream */
 void shm_stream_prepare_hole_event(shm_stream *stream, shm_event *hole_event,
                                    size_t id, uint64_t n) {
+    assert(hole_event->kind > 0 && "init fun set wrong kind");
     hole_event->id   = id;
-    hole_event->kind = shm_get_hole_kind();
 #ifdef DUMP_STATS
     stream->dropped_events += n;
 #else
