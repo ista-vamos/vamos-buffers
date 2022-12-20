@@ -22,6 +22,7 @@ typedef struct _shm_arbiter_buffer {
                                      // be dropped dropped via drop() calls
     size_t written_num;              // the number of calls to write_finish
     int    last_was_drop; // true if the last event written was drop()
+    size_t waited_to_push;       // how many times the buffer waited to push
 #endif
     shm_eventid drop_begin_id; // the id of the next 'dropped' event
 
@@ -273,6 +274,7 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
     buffer->volunt_dropped_num       = 0;
     buffer->volunt_dropped_num_asked = 0;
     buffer->last_was_drop            = 0;
+    buffer->waited_to_push           = 0;
 #endif
 }
 
@@ -300,6 +302,18 @@ size_t shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q) {
     return shm_par_queue_elem_size(&q->buffer);
 }
 
+void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
+                             size_t size) {
+    assert(shm_arbiter_buffer_active(buffer));
+    while (!shm_par_queue_push(&buffer->buffer, elem, size)) {
+#ifdef DUMP_STATS
+        ++buffer->waited_to_push;
+#endif
+        ;
+    }
+}
+
+#if 0
 void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
                              size_t size) {
     assert(shm_arbiter_buffer_active(buffer));
@@ -353,6 +367,7 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
 #endif
     }
 }
+#endif
 
 /* NOTE: does not notify about processing the event, must
  * be done manually once all the work with data is done */

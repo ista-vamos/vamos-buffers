@@ -9,11 +9,8 @@
 
 #include "arbiter.h"
 #include "shmbuf/buffer.h"
+#include "shmbuf/buffer-private.h"
 #include "stream.h"
-
-struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
-                                       size_t                 capacity,
-                                       struct source_control *control);
 
 static int  stream_ready  = 1;
 static int  main_finished = 0;

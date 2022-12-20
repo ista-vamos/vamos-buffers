@@ -26,7 +26,8 @@ static void default_hole_update(shm_event *hole, shm_event *ev) {
 static shm_stream_hole_handling default_hole_handling = {
     .hole_event_size = sizeof(shm_event_default_hole),
     .init            = default_hole_init,
-    .update          = default_hole_update};
+    .update          = default_hole_update
+};
 
 static uint64_t last_stream_id = 0;
 

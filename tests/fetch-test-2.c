@@ -8,12 +8,9 @@
 #include <stdio.h>
 
 #include "arbiter.h"
+#include "shmbuf/buffer-private.h"
 #include "shmbuf/buffer.h"
 #include "stream.h"
-
-struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
-                                       size_t                 capacity,
-                                       struct source_control *control);
 
 static int  stream_ready  = 1;
 static int  main_finished = 0;
@@ -35,8 +32,10 @@ void         *filler_thread(void *data) {
             for (size_t i = 1; i <= 10000; ++i) {
                 ev.base.id = i;
                 ev.n       = i;
-                // printf("PUSH Event: {{%lu, %lu}, %lu}\n", ev.base.id, ev.base.kind,
-                // ev.n);
+                /*
+                printf("PUSH Event: {{%lu, %lu}, %lu}\n", ev.base.id, ev.base.kind,
+                       ev.n);
+                       */
                 while (!buffer_push(buffer, &ev, sizeof(ev)))
             ++failed_push;
     }
@@ -55,24 +54,24 @@ void *reader_thread(void *data) {
             if (shm_event_is_hole((shm_event *)ev)) {
                 next_id = 0;
             } else {
-		assert(ev->n > 0);
+                assert(ev->n > 0);
 
                 if (next_id == 0) {
                     /* we had a hole */
                     next_id = ev->n;
                 }
-		if (ev->n != next_id) {
-		    fprintf(stderr, "%lu != %lu\n", ev->n, next_id);
-		}
+                if (ev->n != next_id) {
+                    fprintf(stderr, "%lu != %lu\n", ev->n, next_id);
+                }
                 assert(next_id == shm_event_id((shm_event *)ev));
                 assert(ev->n == next_id);
                 assert(ev->n == shm_event_id((shm_event *)ev));
-		++next_id;
+                ++next_id;
             }
             /*
-            printf("Abuf Event: {{%lu, %lu}, %lu}\n",
-                    ev->base.id, ev->base.kind, ev->n);
-            */
+            printf("Abuf Event: {{%lu, %lu}, %lu}\n", ev->base.id,
+                   ev->base.kind, ev->n);
+                   */
             assert(shm_arbiter_buffer_drop(arbiter_buffer_r, 1) == 1);
         }
         if (num == 0 && stream_ready == 0 && main_finished == 1)
@@ -108,18 +107,17 @@ int main(void) {
     pthread_create(&tida, NULL, reader_thread, arbiter_buffer_r);
 
     struct event *ev;
-    for (size_t i = 0; i < 10000; ++i) {
+    for (size_t i = 1; i <= 10000; ++i) {
         ev = stream_fetch(stream, arbiter_buffer);
         /* there should be no dropped event generated */
         assert(shm_arbiter_buffer_size(arbiter_buffer) == 0);
 
         assert(ev);
         assert(ev->n == i);
-        assert(ev->base.id == i + 1);
+        assert(ev->base.id == i);
         // printf("POP Event: {{%lu, %lu}, %lu}\n", ev->base.id, ev->base.kind,
         // ev->n);
 
-        /* this function also automatically drops events */
         shm_arbiter_buffer_push(arbiter_buffer_r, ev, sizeof(struct event));
         shm_stream_consume(stream, 1);
     }
