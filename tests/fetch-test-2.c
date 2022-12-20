@@ -32,8 +32,8 @@ void         *filler_thread(void *data) {
             struct buffer *buffer = (struct buffer *)data;
             struct event   ev;
             ev.base.kind = shm_get_last_special_kind() + 1;
-            for (size_t i = 0; i < 10000; ++i) {
-                ev.base.id = i + 1;
+            for (size_t i = 1; i <= 10000; ++i) {
+                ev.base.id = i;
                 ev.n       = i;
                 // printf("PUSH Event: {{%lu, %lu}, %lu}\n", ev.base.id, ev.base.kind,
                 // ev.n);
@@ -48,22 +48,26 @@ void *reader_thread(void *data) {
     shm_arbiter_buffer *arbiter_buffer_r = (shm_arbiter_buffer *)data;
     struct event       *ev;
     size_t              num;
-    size_t              last_id = 0;
+    size_t              next_id = 1;
     while (1) {
         num = shm_arbiter_buffer_peek1(arbiter_buffer_r, (void **)&ev);
         if (num > 0) {
             if (shm_event_is_hole((shm_event *)ev)) {
-                last_id = 0;
+                next_id = 0;
             } else {
-                if (last_id == 0) {
+		assert(ev->n > 0);
+
+                if (next_id == 0) {
                     /* we had a hole */
-                    last_id = ev->n;
+                    next_id = ev->n;
                 }
-		if (ev->n != last_id) {
-		    fprintf(stderr, "%lu != %lu\n", ev->n, last_id);
-                    assert(ev->n == last_id);
+		if (ev->n != next_id) {
+		    fprintf(stderr, "%lu != %lu\n", ev->n, next_id);
 		}
-                assert(++last_id == shm_event_id((shm_event *)ev));
+                assert(next_id == shm_event_id((shm_event *)ev));
+                assert(ev->n == next_id);
+                assert(ev->n == shm_event_id((shm_event *)ev));
+		++next_id;
             }
             /*
             printf("Abuf Event: {{%lu, %lu}, %lu}\n",
