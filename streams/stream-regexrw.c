@@ -1,3 +1,5 @@
+#include "stream-regexrw.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,7 +9,6 @@
 #include "buffer.h"
 #include "signatures.h"
 #include "source.h"
-#include "stream-regexrw.h"
 
 bool sregexrw_is_ready(shm_stream *stream) {
     struct buffer *b = ((shm_stream_sregexrw *)stream)->shmbuffer;
@@ -26,8 +27,8 @@ static void sregexrw_destroy(shm_stream *s) {
 }
 
 shm_stream *shm_create_sregexrw_stream(const char *key, const char *name) {
-    shm_stream_sregexrw *ss        = malloc(sizeof *ss);
-    struct buffer       *shmbuffer = get_shared_buffer(key);
+    shm_stream_sregexrw *ss = malloc(sizeof *ss);
+    struct buffer *shmbuffer = get_shared_buffer(key);
     assert(shmbuffer && "Getting the shm buffer failed");
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);

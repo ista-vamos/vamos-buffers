@@ -1,12 +1,13 @@
 #undef NDEBUG
-#include "par_queue.h"
 #include <assert.h>
 #include <stdio.h>
 
+#include "par_queue.h"
+
 int main(void) {
-    size_t        i;
-    int          *p;
-    int           num[] = {0, 1, 2, 3, 4, 5, 6};
+    size_t i;
+    int *p;
+    int num[] = {0, 1, 2, 3, 4, 5, 6};
     shm_par_queue q;
     shm_par_queue_init(&q, 3, sizeof(int));
     assert(shm_par_queue_peek_at(&q, 2) == NULL);
@@ -55,7 +56,7 @@ int main(void) {
     assert(shm_par_queue_push(&q, num + 4, sizeof(int)) == false);
     for (i = 0; i < shm_par_queue_size(&q); ++i) {
         size_t j = i;
-        p        = (int *)shm_par_queue_peek_at(&q, i);
+        p = (int *)shm_par_queue_peek_at(&q, i);
         assert(*p == (int)i + 1);
         p = (int *)shm_par_queue_peek_atmost_at(&q, &j);
         assert(j == i);
@@ -106,7 +107,7 @@ int main(void) {
     assert(shm_par_queue_push(&q, num + 3, sizeof(int)) == true);
     assert(shm_par_queue_push(&q, num + 4, sizeof(int)) == true);
     assert(shm_par_queue_push(&q, num + 5, sizeof(int)) == false);
-    int   *d1, *d2;
+    int *d1, *d2;
     size_t s1, s2;
     size_t n = shm_par_queue_peek(&q, 5, (void **)&d1, &s1, (void **)&d2, &s2);
     assert(n == 3);

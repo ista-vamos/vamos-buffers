@@ -70,7 +70,7 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec,
     }
 
     char source[256] = {0};
-    next             = get_next_part(next, source, ':');
+    next = get_next_part(next, source, ':');
     if (source[0] == 0) {
         fprintf(stderr, "error: invalid source specified\n");
         return NULL;
@@ -86,8 +86,9 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec,
         char key[256];
         next = get_next_part(next, key, ';');
         if (next) {
-            fprintf(stderr, "warning: source 'calls' takes only one parameter, "
-                            "ignoring others\n");
+            fprintf(stderr,
+                    "warning: source 'calls' takes only one parameter, "
+                    "ignoring others\n");
             return NULL;
         }
 
@@ -102,8 +103,9 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec,
         char key[256];
         next = get_next_part(next, key, ';');
         if (next) {
-            fprintf(stderr, "warning: source 'regex' ignoring further "
-                            "parameter (FOR NOW)\n");
+            fprintf(stderr,
+                    "warning: source 'regex' ignoring further "
+                    "parameter (FOR NOW)\n");
         }
 
         return shm_create_sregex_stream(key, stream_name, hole_handling);
@@ -117,8 +119,9 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec,
         char key[256];
         next = get_next_part(next, key, ';');
         if (next) {
-            fprintf(stderr, "warning: source 'regexrw' ignoring further "
-                            "parameter (FOR NOW)\n");
+            fprintf(stderr,
+                    "warning: source 'regexrw' ignoring further "
+                    "parameter (FOR NOW)\n");
         }
 
         return shm_create_sregexrw_stream(key, stream_name);
@@ -132,8 +135,9 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec,
         char key[256];
         next = get_next_part(next, key, ';');
         if (next) {
-            fprintf(stderr, "warning: source 'drregex' ignoring further "
-                            "parameter (FOR NOW)\n");
+            fprintf(stderr,
+                    "warning: source 'drregex' ignoring further "
+                    "parameter (FOR NOW)\n");
         }
 
         return shm_create_drregex_stream(key, stream_name);
@@ -147,8 +151,9 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec,
         char key[256];
         next = get_next_part(next, key, ';');
         if (next) {
-            fprintf(stderr, "warning: source 'generic' ignoring further "
-                            "parameter (FOR NOW)\n");
+            fprintf(stderr,
+                    "warning: source 'generic' ignoring further "
+                    "parameter (FOR NOW)\n");
         }
 
         return shm_create_generic_stream(key, stream_name, hole_handling);
@@ -164,9 +169,9 @@ shm_stream *shm_stream_create(const char *stream_name, const char *spec,
     return NULL;
 }
 
-shm_stream *
-shm_stream_create_from_argv(const char *stream_name, int argc, char *argv[],
-                            shm_stream_hole_handling *hole_handling) {
+shm_stream *shm_stream_create_from_argv(
+    const char *stream_name, int argc, char *argv[],
+    shm_stream_hole_handling *hole_handling) {
     const char *spec = get_spec(stream_name, argc, argv);
     if (!spec) {
         fprintf(stderr, "error: did not find spec for stream '%s'\n",

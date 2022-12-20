@@ -1,8 +1,9 @@
+#include "arbiter.h"
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
 
-#include "arbiter.h"
 #include "par_queue.h"
 #include "stream.h"
 #include "utils.h"
@@ -10,30 +11,28 @@
 #define DROP_SPACE_DEFAULT_THRESHOLD 1
 
 typedef struct _shm_arbiter_buffer {
-    shm_par_queue buffer;        // the buffer itself
-    size_t drop_space_threshold; // the number of elements to keep free before
-                                 // pushing dropped() event
-    size_t dropped_num;          // the number of dropped events
-    size_t total_dropped_times;  // the number of dropped events
-    size_t total_dropped_num;    // the number of dropped events
+    shm_par_queue buffer;         // the buffer itself
+    size_t drop_space_threshold;  // the number of elements to keep free before
+                                  // pushing dropped() event
+    size_t dropped_num;           // the number of dropped events
+    size_t total_dropped_times;   // the number of dropped events
+    size_t total_dropped_num;     // the number of dropped events
 #ifdef DUMP_STATS
-    size_t volunt_dropped_num; // the number of events dropped via drop() calls
-    size_t volunt_dropped_num_asked; // the number of events attempted to
-                                     // be dropped dropped via drop() calls
-    size_t written_num;              // the number of calls to write_finish
-    int    last_was_drop; // true if the last event written was drop()
-    size_t waited_to_push;       // how many times the buffer waited to push
+    size_t volunt_dropped_num;  // the number of events dropped via drop() calls
+    size_t volunt_dropped_num_asked;  // the number of events attempted to
+                                      // be dropped dropped via drop() calls
+    size_t written_num;               // the number of calls to write_finish
+    int last_was_drop;      // true if the last event written was drop()
+    size_t waited_to_push;  // how many times the buffer waited to push
 #endif
-    shm_eventid drop_begin_id; // the id of the next 'dropped' event
+    shm_eventid drop_begin_id;  // the id of the next 'dropped' event
 
-    shm_stream *stream; // the source for the buffer
-    shm_event  *hole_event;
-    bool        active; // true while the events are being queued
+    shm_stream *stream;  // the source for the buffer
+    shm_event *hole_event;
+    bool active;  // true while the events are being queued
 } shm_arbiter_buffer;
 
-size_t shm_arbiter_buffer_sizeof(void) {
-    return sizeof(shm_arbiter_buffer);
-}
+size_t shm_arbiter_buffer_sizeof(void) { return sizeof(shm_arbiter_buffer); }
 
 void *shm_arbiter_buffer_write_ptr(shm_arbiter_buffer *q) {
     return shm_par_queue_write_ptr(&q->buffer);
@@ -61,11 +60,11 @@ size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *buffer) {
 }
 
 size_t shm_arbiter_buffer_set_drop_space_threshold(shm_arbiter_buffer *buffer,
-                                                   size_t              thr) {
+                                                   size_t thr) {
     assert(thr >= 1);
     assert(thr < shm_arbiter_buffer_capacity(buffer));
 
-    size_t old                   = buffer->drop_space_threshold;
+    size_t old = buffer->drop_space_threshold;
     buffer->drop_space_threshold = thr;
     return old;
 }
@@ -97,29 +96,29 @@ size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t k) {
 /* Drop all events with ID less or equal to the one of ev.
  * Return how many events were dropped */
 size_t shm_arbiter_buffer_drop_older_than(shm_arbiter_buffer *buffer,
-                                          shm_eventid         id) {
+                                          shm_eventid id) {
     /* we first must find the event in the queue */
-    void        *ptr1, *ptr2;
-    size_t       len1, len2;
+    void *ptr1, *ptr2;
+    size_t len1, len2;
     const size_t n =
         shm_par_queue_peek(&buffer->buffer, 0, &ptr1, &len1, &ptr2, &len2);
     if (n == 0)
         return 0;
 
-    const size_t   elem_size = shm_par_queue_elem_size(&buffer->buffer);
-    size_t         k; /* the number of events to be dropped */
-    size_t         bot = 0, top;
+    const size_t elem_size = shm_par_queue_elem_size(&buffer->buffer);
+    size_t k; /* the number of events to be dropped */
+    size_t bot = 0, top;
     unsigned char *events;
 
     assert(len1 > 0 && "Underflow");
-    top           = len1 - 1;
+    top = len1 - 1;
     shm_event *ev = (shm_event *)((unsigned char *)ptr1 + (top)*elem_size);
     /* in which part of the buffer may the event be? */
     if (id <= shm_event_id(ev)) {
         events = ptr1;
     } else if (len2 > 0) {
         events = ptr2;
-        top    = len2 - 1;
+        top = len2 - 1;
     } else {
         /* the sought event should be in ptr2 part, but it is empty,
          * therefore we should drop the whole first part */
@@ -264,23 +263,23 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
     buffer->drop_space_threshold = DROP_SPACE_DEFAULT_THRESHOLD;
     buffer->hole_event = xalloc(stream->hole_handling.hole_event_size);
 
-    buffer->stream              = stream;
-    buffer->active              = false;
-    buffer->dropped_num         = 0;
+    buffer->stream = stream;
+    buffer->active = false;
+    buffer->dropped_num = 0;
     buffer->total_dropped_times = 0;
-    buffer->total_dropped_num   = 0;
+    buffer->total_dropped_num = 0;
 #ifdef DUMP_STATS
-    buffer->written_num              = 0;
-    buffer->volunt_dropped_num       = 0;
+    buffer->written_num = 0;
+    buffer->volunt_dropped_num = 0;
     buffer->volunt_dropped_num_asked = 0;
-    buffer->last_was_drop            = 0;
-    buffer->waited_to_push           = 0;
+    buffer->last_was_drop = 0;
+    buffer->waited_to_push = 0;
 #endif
 }
 
 shm_arbiter_buffer *shm_arbiter_buffer_create(shm_stream *stream,
-                                              size_t      out_event_size,
-                                              size_t      capacity) {
+                                              size_t out_event_size,
+                                              size_t capacity) {
     /* some elements are cache-aligned, so we must make sure
      * that the memory is not allocated mis-aligned */
     shm_arbiter_buffer *b =
@@ -396,10 +395,10 @@ static void *get_event(shm_stream *stream) {
        events forward. if there are filtering and modifications, we could have
        an additional thread to handle the load of data if we copy them in chunks
      */
-    size_t num        = 1;
+    size_t num = 1;
     size_t sleep_time = SLEEP_TIME_INIT_NS;
-    size_t spinned    = 0;
-    void  *ev;
+    size_t spinned = 0;
+    void *ev;
     while (1) {
         /* wait for the event */
         ev = shm_stream_read_events(stream, &num);
@@ -488,9 +487,9 @@ void *handle_stream_end(shm_stream *stream, shm_arbiter_buffer *buffer,
     return NULL; /* stream ended */
 }
 
-static inline void send_dropped_event(shm_stream         *stream,
+static inline void send_dropped_event(shm_stream *stream,
                                       shm_arbiter_buffer *buffer,
-                                      size_t              last_ev_id) {
+                                      size_t last_ev_id) {
     assert(last_ev_id == buffer->dropped_num + buffer->drop_begin_id &&
            "Drop IDs are wrong");
     push_dropped_event(stream, buffer, last_ev_id - 1);
@@ -503,9 +502,9 @@ static inline void send_dropped_event(shm_stream         *stream,
     assert(shm_arbiter_buffer_free_space(buffer) > 0);
 }
 
-static inline void start_dropping(shm_stream         *stream,
+static inline void start_dropping(shm_stream *stream,
                                   shm_arbiter_buffer *buffer,
-                                  shm_event          *event) {
+                                  shm_event *event) {
     buffer->drop_begin_id = shm_event_id(event);
     assert(buffer->dropped_num == 0);
     ++buffer->dropped_num;
@@ -521,9 +520,9 @@ static inline void start_dropping(shm_stream         *stream,
     shm_stream_consume(stream, 1);
 }
 
-static inline void continue_dropping(shm_stream         *stream,
+static inline void continue_dropping(shm_stream *stream,
                                      shm_arbiter_buffer *buffer,
-                                     shm_event          *event) {
+                                     shm_event *event) {
     ++buffer->dropped_num;
     stream->hole_handling.update(buffer->hole_event, event);
 
@@ -540,9 +539,9 @@ static inline void continue_dropping(shm_stream         *stream,
 
 /* return true if the event should be dropped and false
    if the event should be forwarded */
-static bool handle_dropping_event(shm_stream         *stream,
+static bool handle_dropping_event(shm_stream *stream,
                                   shm_arbiter_buffer *buffer,
-                                  shm_event          *event) {
+                                  shm_event *event) {
     if (buffer->dropped_num > 0) {
         assert(buffer->drop_space_threshold <
                shm_arbiter_buffer_capacity(buffer));
@@ -569,7 +568,7 @@ static bool handle_dropping_event(shm_stream         *stream,
 
 /* wait for an event on the 'stream' */
 void *stream_fetch(shm_stream *stream, shm_arbiter_buffer *buffer) {
-    void  *ev;
+    void *ev;
     size_t last_ev_id = 1;
     while (1) {
         ev = get_event(stream);
@@ -602,7 +601,7 @@ void *stream_fetch(shm_stream *stream, shm_arbiter_buffer *buffer) {
 /* FIXME: do not duplicate the code */
 void *stream_filter_fetch(shm_stream *stream, shm_arbiter_buffer *buffer,
                           shm_stream_filter_fn filter) {
-    void  *ev;
+    void *ev;
     size_t last_ev_id = 1;
     while (1) {
         ev = get_event(stream);
@@ -646,9 +645,9 @@ void shm_arbiter_buffer_notify_dropped(shm_arbiter_buffer *buffer,
 
 #ifdef DUMP_STATS
 
-#define COLOR_RED_IF(c)                                                        \
-    if ((c)) {                                                                 \
-        fprintf(stderr, "\033[31;1m");                                         \
+#define COLOR_RED_IF(c)                \
+    if ((c)) {                         \
+        fprintf(stderr, "\033[31;1m"); \
     }
 #define COLOR_RESET fprintf(stderr, "\033[0m");
 

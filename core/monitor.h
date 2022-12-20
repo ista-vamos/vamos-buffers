@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 typedef struct _shm_monitor_buffer shm_monitor_buffer;
-typedef struct _shm_event          shm_event;
+typedef struct _shm_event shm_event;
 
 void shm_monitor_buffer_init(shm_monitor_buffer *buffer, size_t event_size,
                              size_t capacity);
@@ -23,7 +23,7 @@ void shm_monitor_buffer_free(shm_monitor_buffer *buffer);
 void shm_monitor_buffer_destroy(shm_monitor_buffer *buffer);
 
 size_t shm_monitor_buffer_elem_size(shm_monitor_buffer *q);
-bool   shm_monitor_buffer_active(shm_monitor_buffer *buffer);
+bool shm_monitor_buffer_active(shm_monitor_buffer *buffer);
 size_t shm_monitor_buffer_size(shm_monitor_buffer *buffer);
 size_t shm_monitor_buffer_capacity(shm_monitor_buffer *buffer);
 size_t shm_monitor_buffer_free_space(shm_monitor_buffer *buffer);
@@ -34,12 +34,12 @@ size_t shm_monitor_buffer_free_space(shm_monitor_buffer *buffer);
 void *shm_monitor_buffer_write_ptr(shm_monitor_buffer *q);
 /* Get write pointer to the buffer or null if no space is available */
 void *shm_monitor_buffer_write_ptr_or_null(shm_monitor_buffer *q);
-void  shm_monitor_buffer_write_finish(shm_monitor_buffer *q);
+void shm_monitor_buffer_write_finish(shm_monitor_buffer *q);
 /*void shm_monitor_buffer_get_str(shm_monitor_buffer *q, size_t elem); */
 
 /* reader's API */
 void *fetch_arbiter_stream(shm_monitor_buffer *buffer);
-void  shm_monitor_buffer_consume(shm_monitor_buffer *buffer, size_t n);
+void shm_monitor_buffer_consume(shm_monitor_buffer *buffer, size_t n);
 
 /* multiple threads can use top and peek if none of them uses drop/pop
  * at the time

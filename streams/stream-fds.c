@@ -1,3 +1,5 @@
+#include "stream-fds.h"
+
 #include <assert.h>
 #include <poll.h>
 #include <stdio.h>
@@ -5,11 +7,10 @@
 #include <unistd.h>
 
 #include "arbiter.h"
-#include "stream-fds.h"
 
 static size_t read_events(shm_stream_fds *ss, shm_arbiter_buffer *buffer) {
-    size_t          read_ev    = 0;
-    size_t          remove_num = 0;
+    size_t read_ev = 0;
+    size_t remove_num = 0;
     shm_event_fd_in ev;
 
     for (unsigned i = 0; i < ss->fds_num; ++i) {
@@ -32,9 +33,9 @@ static size_t read_events(shm_stream_fds *ss, shm_arbiter_buffer *buffer) {
                 assert(len > 0);
                 ev.time = clock();
                 // ev.base.stream = (shm_stream *) ss;
-                ev.base.kind    = ss->ev_kind_in;
-                ev.base.id      = shm_stream_get_next_id((shm_stream *)ss);
-                ev.fd           = pfd->fd;
+                ev.base.kind = ss->ev_kind_in;
+                ev.base.id = shm_stream_get_next_id((shm_stream *)ss);
+                ev.fd = pfd->fd;
                 ev.str_ref.size = len;
                 ev.str_ref.data = str->data;
                 shm_arbiter_buffer_push(buffer, &ev, sizeof(ev));
@@ -61,19 +62,19 @@ static size_t read_events(shm_stream_fds *ss, shm_arbiter_buffer *buffer) {
             struct pollfd *pfd = ss->fds + i;
             if (pfd->revents & POLLHUP)
                 continue;
-            new_fds[idx]        = *pfd;
+            new_fds[idx] = *pfd;
             new_fds_buffer[idx] = ss->fds_buffer[i];
         }
         free(ss->fds);
         free(ss->fds_buffer);
-        ss->fds        = new_fds;
-        ss->fds_size   = ss->fds_num;
+        ss->fds = new_fds;
+        ss->fds_size = ss->fds_num;
         ss->fds_buffer = new_fds_buffer;
     }
     return read_ev;
 }
 
-static size_t fds_buffer_events(shm_stream         *stream,
+static size_t fds_buffer_events(shm_stream *stream,
                                 shm_arbiter_buffer *buffer) {
     shm_stream_fds *fs = (shm_stream_fds *)stream;
 
@@ -97,9 +98,9 @@ shm_stream *shm_create_fds_stream() {
                     fds_buffer_events, NULL, fds_is_ready, "fds-stream");
     ss->ev_kind_in = shm_mk_event_kind("fd-in", (shm_stream *)ss,
                                        sizeof(shm_event_fd_in), NULL, NULL);
-    ss->fds        = NULL;
-    ss->fds_size   = 0;
-    ss->fds_num    = 0;
+    ss->fds = NULL;
+    ss->fds_size = 0;
+    ss->fds_num = 0;
     ss->fds_buffer = NULL;
     shm_queue_init(&ss->pending_events, 32, sizeof(shm_event_fd_in));
 
@@ -117,13 +118,13 @@ void shm_stream_fds_add_fd(shm_stream_fds *stream, int fd) {
     }
     assert(stream->fds_num < stream->fds_size);
 
-    struct pollfd *pfd           = &stream->fds[idx];
-    pfd->fd                      = fd;
-    pfd->events                  = POLLIN;
+    struct pollfd *pfd = &stream->fds[idx];
+    pfd->fd = fd;
+    pfd->events = POLLIN;
     stream->fds_buffer[idx].data = malloc(1024);
     assert(stream->fds_buffer[idx].data && "Allocation failed");
     stream->fds_buffer[idx].alloc_size = 1024;
-    stream->fds_buffer[idx].size       = 0;
+    stream->fds_buffer[idx].size = 0;
 }
 
 void shm_destroy_fds_stream(shm_stream_fds *ss) {

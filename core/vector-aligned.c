@@ -1,9 +1,10 @@
+#include "vector-aligned.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "utils.h"
-#include "vector-aligned.h"
 
 void shm_vector_aligned_init(shm_vector_aligned *vec, size_t elem_size,
                              size_t alignment) {
@@ -15,9 +16,9 @@ void shm_vector_aligned_init(shm_vector_aligned *vec, size_t elem_size,
 void shm_vector_aligned_swap(shm_vector *vec, shm_vector *with) {
     shm_vector_swap(vec, with);
 
-    shm_vector_aligned *avec      = (shm_vector_aligned *)vec;
-    size_t              alignment = avec->alignment;
-    avec->alignment               = ((shm_vector_aligned *)with)->alignment;
+    shm_vector_aligned *avec = (shm_vector_aligned *)vec;
+    size_t alignment = avec->alignment;
+    avec->alignment = ((shm_vector_aligned *)with)->alignment;
     ((shm_vector_aligned *)with)->alignment = alignment;
 }
 

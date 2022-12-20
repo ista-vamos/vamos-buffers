@@ -19,7 +19,7 @@ typedef struct _shm_event_generic {
 } shm_event_generic;
 
 typedef struct _shm_stream_generic {
-    shm_stream     base;
+    shm_stream base;
     struct buffer *shmbuffer;
 } shm_stream_generic;
 

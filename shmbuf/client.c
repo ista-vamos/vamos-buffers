@@ -1,3 +1,5 @@
+#include "client.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <signal.h>
@@ -5,7 +7,6 @@
 #include <unistd.h>
 
 #include "buffer.h"
-#include "client.h"
 #include "shm.h"
 #include "utils.h"
 

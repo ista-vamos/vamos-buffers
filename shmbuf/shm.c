@@ -1,3 +1,5 @@
+#include "shm.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -9,9 +11,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "shm.h"
-
-const char  *shm_dir    = "/dev/shm/";
+const char *shm_dir = "/dev/shm/";
 const size_t shm_dirlen = 9;
 
 /* adapted function from musl project, src/mman/shm_open.c
@@ -19,8 +19,7 @@ const size_t shm_dirlen = 9;
 char *shm_mapname(const char *name, char *buf) {
     assert(name[0] == '/');
     /* Construct the filename.  */
-    while (name[0] == '/')
-        ++name;
+    while (name[0] == '/') ++name;
     size_t namelen = strlen(name) + 1;
     /* Validate the filename.  */
     if (namelen == 1 || namelen >= SHM_NAME_MAXLEN ||

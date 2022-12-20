@@ -1,4 +1,5 @@
 #include "queue.h"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -8,16 +9,14 @@ void shm_queue_init(shm_queue *q, size_t size, size_t elem_size) {
     assert(q);
     assert(size > 0);
     assert(elem_size > 0);
-    q->elem_num  = 0;
-    q->size      = size;
+    q->elem_num = 0;
+    q->size = size;
     q->elem_size = elem_size;
     q->head = q->tail = 0;
-    q->data           = malloc(size * elem_size);
+    q->data = malloc(size * elem_size);
 }
 
-void shm_queue_destroy(shm_queue *q) {
-    free(q->data);
-}
+void shm_queue_destroy(shm_queue *q) { free(q->data); }
 
 // allocate space for one element
 // and return the pointer to this element.
@@ -64,10 +63,6 @@ bool shm_queue_pop(shm_queue *q, void *buff) {
     return true;
 }
 
-size_t shm_queue_max_size(shm_queue *q) {
-    return q->size;
-}
+size_t shm_queue_max_size(shm_queue *q) { return q->size; }
 
-size_t shm_queue_size(shm_queue *q) {
-    return q->elem_num;
-}
+size_t shm_queue_size(shm_queue *q) { return q->elem_num; }

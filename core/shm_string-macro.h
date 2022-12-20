@@ -5,10 +5,10 @@
 
 #define STRING(name) VEC(name, char)
 
-#define STRING_SIZE(s)       VEC_SIZE(s)
+#define STRING_SIZE(s) VEC_SIZE(s)
 #define STRING_ALLOC_SIZE(s) VEC_ALLOC_SIZE(s)
 
-#define STRING_INIT(s)    VEC_INIT(s)
+#define STRING_INIT(s) VEC_INIT(s)
 #define STRING_DESTROY(s) VEC_DESTROY(s)
 #define STRING_AT(s, idx) VEC_AT(s, idx)
 
@@ -38,23 +38,23 @@
         assert((STRING_SIZE(s) < STRING_ALLOC_SIZE(s)) && "Vector too small"); \
     } while (0)
 
-#define STRING_APPEND(s, c)                                                    \
-    do {                                                                       \
-        char *__w;                                                             \
-        STRING_EXTEND(s, __w);                                                 \
-        assert((STRING_SIZE(s) <= STRING_ALLOC_SIZE(s)) &&                     \
-               "String too small");                                            \
-        assert(__w == s + STRING_SIZE(s) - 1);                                 \
-        *__w = c;                                                              \
+#define STRING_APPEND(s, c)                                \
+    do {                                                   \
+        char *__w;                                         \
+        STRING_EXTEND(s, __w);                             \
+        assert((STRING_SIZE(s) <= STRING_ALLOC_SIZE(s)) && \
+               "String too small");                        \
+        assert(__w == s + STRING_SIZE(s) - 1);             \
+        *__w = c;                                          \
     } while (0)
 
-#define STRING_POP(s)                                                          \
-    do {                                                                       \
-        assert(STRING_SIZE(s) > 0);                                            \
-        --STRING_SIZE(s);                                                      \
+#define STRING_POP(s)               \
+    do {                            \
+        assert(STRING_SIZE(s) > 0); \
+        --STRING_SIZE(s);           \
     } while (0)
 
 #define STRING_TOP_PTR(s) ((s) + STRING_SIZE(s) - 1)
-#define STRING_TOP(s)     (*STRING_TOP_PTR(s))
+#define STRING_TOP(s) (*STRING_TOP_PTR(s))
 
 #endif /* SHAMON_STRING_MACRO_H_ */

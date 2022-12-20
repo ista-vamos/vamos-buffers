@@ -1,3 +1,5 @@
+#include "stream-generic.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,7 +9,6 @@
 #include "buffer.h"
 #include "signatures.h"
 #include "source.h"
-#include "stream-generic.h"
 
 /* A generic stream for events stored in shared memory buffer,
    no filter nor modification of events supported (unless done manually). */
@@ -30,8 +31,8 @@ static void generic_destroy(shm_stream *s) {
 
 shm_stream *shm_create_generic_stream(const char *key, const char *name,
                                       shm_stream_hole_handling *hole_handling) {
-    shm_stream_generic *ss        = malloc(sizeof *ss);
-    struct buffer      *shmbuffer = get_shared_buffer(key);
+    shm_stream_generic *ss = malloc(sizeof *ss);
+    struct buffer *shmbuffer = get_shared_buffer(key);
     assert(shmbuffer && "Getting the shm buffer failed");
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);

@@ -17,17 +17,17 @@ typedef void (*shm_stream_hole_init_fn)(shm_event *);
 typedef void (*shm_stream_hole_update_fn)(shm_event *, shm_event *);
 
 typedef struct _shm_stream_hole_handling {
-    size_t                    hole_event_size;
-    shm_stream_hole_init_fn   init;
+    size_t hole_event_size;
+    shm_stream_hole_init_fn init;
     shm_stream_hole_update_fn update;
 } shm_stream_hole_handling;
 
 // TODO: make this opaque
 typedef struct _shm_stream {
     uint64_t id;
-    char    *name;
-    char    *type;
-    size_t   event_size;
+    char *name;
+    char *type;
+    size_t event_size;
     /* shared-memory buffer */
     struct buffer *incoming_events_buffer;
     /* the number of created substreams (sub-buffers) for the
@@ -36,10 +36,10 @@ typedef struct _shm_stream {
     /* cached info about events in 'incoming_events_buffer' */
     struct event_record *events_cache;
     /* callbacks */
-    shm_stream_is_ready_fn   is_ready;
-    shm_stream_filter_fn     filter;
-    shm_stream_alter_fn      alter;
-    shm_stream_destroy_fn    destroy;
+    shm_stream_is_ready_fn is_ready;
+    shm_stream_filter_fn filter;
+    shm_stream_alter_fn alter;
+    shm_stream_destroy_fn destroy;
     shm_stream_hole_handling hole_handling;
 #ifndef NDEBUG
     /* for checking consistency */
@@ -57,14 +57,14 @@ typedef struct _shm_stream {
 void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
                      size_t event_size, shm_stream_is_ready_fn is_ready,
                      shm_stream_filter_fn filter, shm_stream_alter_fn alter,
-                     shm_stream_destroy_fn           destroy,
+                     shm_stream_destroy_fn destroy,
                      const shm_stream_hole_handling *hole_handling,
                      const char *const type, const char *const name);
 
 const char *shm_stream_get_name(shm_stream *);
 const char *shm_stream_get_type(shm_stream *);
-size_t      shm_stream_event_size(shm_stream *);
-size_t      shm_stream_id(shm_stream *);
+size_t shm_stream_event_size(shm_stream *);
+size_t shm_stream_id(shm_stream *);
 
 struct event_record *shm_stream_get_avail_events(shm_stream *, size_t *);
 struct event_record *shm_stream_get_event_record(shm_stream *, shm_kind);
@@ -88,8 +88,8 @@ size_t shm_stream_buffer_size(shm_stream *);
 /* the capacity the (shared memory) buffer of the stream */
 size_t shm_stream_buffer_capacity(shm_stream *);
 
-void       *shm_stream_read_events(shm_stream *, size_t *);
-bool        shm_stream_consume(shm_stream *stream, size_t num);
+void *shm_stream_read_events(shm_stream *, size_t *);
+bool shm_stream_consume(shm_stream *stream, size_t num);
 const char *shm_stream_get_str(shm_stream *stream, uint64_t elem);
 
 void shm_stream_notify_last_processed_id(shm_stream *stream, shm_eventid id);
@@ -116,4 +116,4 @@ inline size_t shm_stream_last_event_id(shm_stream *s) {
 #endif
 
 void shm_stream_dump_events(shm_stream *stream);
-#endif // SHAMON_STREAMS_H
+#endif  // SHAMON_STREAMS_H

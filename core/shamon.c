@@ -1,4 +1,7 @@
+#include "shamon.h"
+
 #include <assert.h>
+#include <immintrin.h> /* _mm_pause */
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -7,11 +10,8 @@
 #include <threads.h>
 #include <unistd.h>
 
-#include <immintrin.h> /* _mm_pause */
-
 #include "arbiter.h"
 #include "par_queue.h"
-#include "shamon.h"
 #include "stream.h"
 #include "utils.h"
 #include "vector-aligned.h"
@@ -25,27 +25,26 @@ typedef struct _shamon {
     VEC(buffer_threads, thrd_t);
     /* callbacks and their data */
     shamon_process_events_fn process_events;
-    void                    *process_events_data;
+    void *process_events_data;
     /* the memory for passing the next event in the default
        process_events handler */
     shm_event *_ev;
-    size_t     _ev_size;
+    size_t _ev_size;
 } shamon;
 
 #define _buffers(shmn) ((shm_vector *)&shmn->buffers)
 
-#define SLEEP_NS_INIT      (50)
+#define SLEEP_NS_INIT (50)
 #define SLEEP_THRESHOLD_NS (10000000)
 
 static int default_buffer_manager_thrd(void *data) {
-    shm_arbiter_buffer           *buffer = (shm_arbiter_buffer *)data;
-    shm_stream                   *stream = shm_arbiter_buffer_stream(buffer);
-    register shm_stream_alter_fn  alter  = stream->alter;
+    shm_arbiter_buffer *buffer = (shm_arbiter_buffer *)data;
+    shm_stream *stream = shm_arbiter_buffer_stream(buffer);
+    register shm_stream_alter_fn alter = stream->alter;
     register shm_stream_filter_fn filter = stream->filter;
 
     // wait for buffer->active
-    while (!shm_arbiter_buffer_active(buffer))
-        _mm_pause();
+    while (!shm_arbiter_buffer_active(buffer)) _mm_pause();
 
     printf("Running fetch & autodrop for stream %s\n",
            shm_stream_get_name(stream));
@@ -79,14 +78,14 @@ static shm_event *default_process_events(shm_vector *buffers, void *data,
                                          shm_stream **streamret) {
     assert(buffers);
     assert(data);
-    shamon     *shmn = (shamon *)data;
+    shamon *shmn = (shamon *)data;
     shm_stream *stream;
 
     // use static counter to do round robin -- so that some stream
     // does not starve
-    static unsigned     i      = 0;
+    static unsigned i = 0;
     shm_arbiter_buffer *buffer = NULL;
-    size_t              qsize;
+    size_t qsize;
 
     // reset counter if we're at the end
     if (i >= shm_vector_size(buffers))
@@ -137,7 +136,7 @@ static shm_event *default_process_events(shm_vector *buffers, void *data,
 }
 
 shamon *shamon_create(shamon_process_events_fn process_events,
-                      void                    *process_events_data) {
+                      void *process_events_data) {
     shamon *shmn = malloc(sizeof(shamon));
     assert(shmn);
 
@@ -146,7 +145,7 @@ shamon *shamon_create(shamon_process_events_fn process_events,
                             CACHELINE_SIZE);
     VEC_INIT(shmn->buffer_threads);
     shmn->_ev_size = sizeof(shm_event_default_hole);
-    shmn->_ev      = malloc(shmn->_ev_size);
+    shmn->_ev = malloc(shmn->_ev_size);
     shmn->process_events =
         process_events ? process_events : default_process_events;
     shmn->process_events_data = process_events ? process_events_data : shmn;
@@ -154,9 +153,7 @@ shamon *shamon_create(shamon_process_events_fn process_events,
     return shmn;
 }
 
-shm_vector *shamon_get_buffers(shamon *shmn) {
-    return _buffers(shmn);
-}
+shm_vector *shamon_get_buffers(shamon *shmn) { return _buffers(shmn); }
 
 shm_stream **shamon_get_streams(shamon *shmn, size_t *size) {
     *size = VEC_SIZE(shmn->streams);
@@ -246,7 +243,7 @@ void shamon_add_stream(shamon *shmn, shm_stream *stream,
     if (stream->event_size > strm_event_size)
         strm_event_size = stream->event_size;
     if (strm_event_size > shmn->_ev_size) {
-        shmn->_ev      = realloc(shmn->_ev, strm_event_size);
+        shmn->_ev = realloc(shmn->_ev, strm_event_size);
         shmn->_ev_size = strm_event_size;
     }
 

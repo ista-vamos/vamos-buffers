@@ -1,4 +1,5 @@
 #include "par_queue.h"
+
 #include <assert.h>
 #include <stdatomic.h>
 #include <stdbool.h>
@@ -6,7 +7,7 @@
 #include <string.h>
 
 #define __predict_false(x) __builtin_expect((x) != 0, 0)
-#define __predict_true(x)  __builtin_expect((x) != 0, 1)
+#define __predict_true(x) __builtin_expect((x) != 0, 1)
 
 void shm_par_queue_init(shm_par_queue *q, size_t capacity, size_t elem_size) {
     assert(q);
@@ -15,18 +16,16 @@ void shm_par_queue_init(shm_par_queue *q, size_t capacity, size_t elem_size) {
 
     shm_spsc_ringbuf_init(&q->ringbuf, capacity + 1);
 
-    q->capacity  = capacity;
+    q->capacity = capacity;
     q->elem_size = elem_size;
-    q->data      = malloc((capacity + 1) * elem_size);
+    q->data = malloc((capacity + 1) * elem_size);
     if (!q->data) {
         assert(false && "Allocation failed");
         abort();
     }
 }
 
-void shm_par_queue_destroy(shm_par_queue *q) {
-    free(q->data);
-}
+void shm_par_queue_destroy(shm_par_queue *q) { free(q->data); }
 
 /* Pointer to the next writable slot */
 void *shm_par_queue_write_ptr(shm_par_queue *q) {
@@ -59,7 +58,7 @@ bool shm_par_queue_push(shm_par_queue *q, const void *elem, size_t size) {
 }
 
 bool shm_par_queue_pop(shm_par_queue *q, void *buff) {
-    size_t       n;
+    size_t n;
     const size_t off = shm_spsc_ringbuf_read_off_nowrap(&q->ringbuf, &n);
     if (__predict_true(n > 0)) {
         memcpy(buff, q->data + (off * q->elem_size), q->elem_size);
@@ -77,20 +76,16 @@ size_t shm_par_queue_free_num(shm_par_queue *q) {
     return shm_spsc_ringbuf_free_num(&q->ringbuf);
 }
 
-size_t shm_par_queue_capacity(shm_par_queue *q) {
-    return q->capacity;
-}
+size_t shm_par_queue_capacity(shm_par_queue *q) { return q->capacity; }
 
 size_t shm_par_queue_size(shm_par_queue *q) {
     return shm_spsc_ringbuf_size(&q->ringbuf);
 }
 
-size_t shm_par_queue_elem_size(shm_par_queue *q) {
-    return q->elem_size;
-}
+size_t shm_par_queue_elem_size(shm_par_queue *q) { return q->elem_size; }
 
 shm_event *shm_par_queue_top(shm_par_queue *q) {
-    size_t       n;
+    size_t n;
     const size_t off = shm_spsc_ringbuf_read_off_nowrap(&q->ringbuf, &n);
     if (__predict_true(n > 0)) {
         return (shm_event *)(q->data + (off * q->elem_size));
@@ -101,7 +96,7 @@ shm_event *shm_par_queue_top(shm_par_queue *q) {
 /* n == 0 means arbitrary n */
 size_t shm_par_queue_peek(shm_par_queue *q, size_t n, void **ptr1, size_t *len1,
                           void **ptr2, size_t *len2) {
-    size_t       off;
+    size_t off;
     const size_t cur_elem_num = shm_spsc_ringbuf_peek(
         &q->ringbuf, n == 0 ? ~((size_t)0) : n, &off, len1, len2);
     if (__predict_true(cur_elem_num > 0)) {
@@ -116,7 +111,7 @@ size_t shm_par_queue_peek(shm_par_queue *q, size_t n, void **ptr1, size_t *len1,
 
 /* peak1 -- it is like top + return the number of elements */
 size_t shm_par_queue_peek1(shm_par_queue *q, void **data) {
-    size_t       n;
+    size_t n;
     const size_t off = shm_spsc_ringbuf_read_off_nowrap(&q->ringbuf, &n);
     if (__predict_true(n > 0)) {
         *data = q->data + (off * q->elem_size);
@@ -126,7 +121,7 @@ size_t shm_par_queue_peek1(shm_par_queue *q, void **data) {
 
 shm_event *shm_par_queue_peek_at(shm_par_queue *q, size_t k) {
     unsigned char *ptr1, *ptr2;
-    size_t         len1, len2;
+    size_t len1, len2;
 
     size_t n = shm_par_queue_peek(q, k == (~((size_t)0)) ? k : k + 1,
                                   (void **)&ptr1, &len1, (void **)&ptr2, &len2);
@@ -142,7 +137,7 @@ shm_event *shm_par_queue_peek_at(shm_par_queue *q, size_t k) {
 }
 
 shm_event *shm_par_queue_peek_atmost_at(shm_par_queue *q, size_t *want_k) {
-    void  *ptr1, *ptr2;
+    void *ptr1, *ptr2;
     size_t len1, len2;
     size_t k = *want_k;
 
@@ -153,7 +148,7 @@ shm_event *shm_par_queue_peek_atmost_at(shm_par_queue *q, size_t *want_k) {
         return 0;
     }
     if (n <= k) {
-        k       = n - 1;
+        k = n - 1;
         *want_k = k;
     }
     if (k < len1) {

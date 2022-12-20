@@ -1,9 +1,10 @@
 #undef NDEBUG
 #include "list.h"
+
 #include <assert.h>
 
 int main(void) {
-    int      num[] = {0, 1, 2, 3};
+    int num[] = {0, 1, 2, 3};
     shm_list l;
     shm_list_init(&l);
     assert(shm_list_size(&l) == 0);
@@ -20,9 +21,9 @@ int main(void) {
         assert(shm_list_append(&l, num + i) == i + 1);
 
     shm_list_elem *cur = l.first;
-    int            i   = 0;
-    int            sum = 0;
-    shm_list_elem *x   = NULL;
+    int i = 0;
+    int sum = 0;
+    shm_list_elem *x = NULL;
     while (cur) {
         assert(cur->data == num + i);
         if (i == 2)

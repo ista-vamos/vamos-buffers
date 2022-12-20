@@ -1,12 +1,10 @@
+#include "list.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "list.h"
-
-void shm_list_init(shm_list *list) {
-    memset(list, 0, sizeof(shm_list));
-}
+void shm_list_init(shm_list *list) { memset(list, 0, sizeof(shm_list)); }
 
 void shm_list_destroy(shm_list *list, shm_list_elem_destroy_fn destroy) {
     shm_list_elem *cur = list->first;
@@ -50,7 +48,7 @@ size_t shm_list_insert_before(shm_list *list, shm_list_elem *elem, void *data) {
     new->next = elem;
     if (elem->prev)
         elem->prev->next = new;
-    new->prev  = elem->prev;
+    new->prev = elem->prev;
     elem->prev = new;
 
     if (elem == list->first) {
@@ -66,9 +64,9 @@ size_t shm_list_prepend(shm_list *list, void *data) {
     assert(!list->first || list->first->prev == NULL);
     shm_list_elem *new = malloc(sizeof(*new));
     assert(new);
-    new->data   = data;
-    new->next   = list->first;
-    new->prev   = NULL;
+    new->data = data;
+    new->next = list->first;
+    new->prev = NULL;
     list->first = new;
     if (!list->last)
         list->last = new;

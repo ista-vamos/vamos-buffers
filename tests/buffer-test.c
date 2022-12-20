@@ -1,18 +1,19 @@
 #undef NDEBUG
+#include "shmbuf/buffer.h"
+
 #include <assert.h>
 #include <stdlib.h>
 
-#include "shmbuf/buffer.h"
 #include "source.h"
 
 int main(void) {
-    size_t       i;
-    const size_t ctrl_size       = sizeof(size_t) + sizeof(struct event_record);
-    struct source_control *ctrl  = malloc(ctrl_size);
-    ctrl->size                   = ctrl_size;
-    ctrl->events[0].size         = sizeof(size_t);
-    ctrl->events[0].kind         = 2;
-    ctrl->events[0].name[0]      = '\0';
+    size_t i;
+    const size_t ctrl_size = sizeof(size_t) + sizeof(struct event_record);
+    struct source_control *ctrl = malloc(ctrl_size);
+    ctrl->size = ctrl_size;
+    ctrl->events[0].size = sizeof(size_t);
+    ctrl->events[0].kind = 2;
+    ctrl->events[0].name[0] = '\0';
     ctrl->events[0].signature[0] = '\0';
 
     struct buffer *b = create_shared_buffer("/testkey", 128, ctrl);

@@ -104,7 +104,7 @@ DR_EXPORT void dr_client_main(client_id_t id, int argc, const char *argv[]) {
 
     // TODO: use to instrument only main module:
     // dr_module_set_should_instrument()
-    main_module      = dr_get_main_module();
+    main_module = dr_get_main_module();
     drsym_error_t ok = drsym_lookup_symbol(main_module->full_path,
                                            events[0].name, &events[0].addr,
                                            /* flags = */ 0);
@@ -141,7 +141,7 @@ static void event_exit(void) {
 
 /* adapted from instrcalls.c */
 static app_pc call_get_target(instr_t *instr) {
-    app_pc target   = 0;
+    app_pc target = 0;
     opnd_t targetop = instr_get_target(instr);
     if (opnd_is_pc(targetop)) {
         if (opnd_is_far_pc(targetop)) {
@@ -169,8 +169,7 @@ static dr_emit_flags_t event_app_instruction(void *drcontext, void *tag,
                                              instrlist_t *bb, instr_t *instr,
                                              bool for_trace, bool translating,
                                              void *user_data) {
-    if (instr_is_meta(instr) || translating)
-        return DR_EMIT_DEFAULT;
+    if (instr_is_meta(instr) || translating) return DR_EMIT_DEFAULT;
     /* instrument only calls/returns from the main binary */
     if (!dr_module_contains_addr(main_module, instr_get_app_pc(instr)))
         return DR_EMIT_DEFAULT;
@@ -184,8 +183,7 @@ static dr_emit_flags_t event_app_instruction(void *drcontext, void *tag,
         DR_ASSERT(target && "Do not have call target");
         size_t off = dr_module_addr_offset(main_module, target);
         // dr_printf("off: %lu == %lu events[0].addr\n", off, events[0].addr);
-        if (off == (~(size_t)0))
-            return DR_EMIT_DEFAULT;
+        if (off == (~(size_t)0)) return DR_EMIT_DEFAULT;
         if (off != events[0].addr) {
             return DR_EMIT_DEFAULT;
         }

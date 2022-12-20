@@ -12,46 +12,45 @@
 #include "shmbuf/buffer.h"
 #include "stream.h"
 
-static int  stream_ready  = 1;
-static int  main_finished = 0;
-static bool is_ready(shm_stream *s) {
+static int stream_ready = 1;
+static int main_finished = 0;
+static bool is_ready(shm_stream* s) {
     (void)s;
     return !!stream_ready;
 }
 
 struct event {
     shm_event base;
-    size_t    n;
+    size_t n;
 };
 
 static size_t failed_push = 0;
-void         *filler_thread(void *data) {
-            struct buffer *buffer = (struct buffer *)data;
-            struct event   ev;
-            ev.base.kind = shm_get_last_special_kind() + 1;
-            for (size_t i = 1; i <= 10000; ++i) {
-                ev.base.id = i;
-                ev.n       = i;
-                /*
-                printf("PUSH Event: {{%lu, %lu}, %lu}\n", ev.base.id, ev.base.kind,
-                       ev.n);
-                       */
-                while (!buffer_push(buffer, &ev, sizeof(ev)))
-            ++failed_push;
+void* filler_thread(void* data) {
+    struct buffer* buffer = (struct buffer*)data;
+    struct event ev;
+    ev.base.kind = shm_get_last_special_kind() + 1;
+    for (size_t i = 1; i <= 10000; ++i) {
+        ev.base.id = i;
+        ev.n = i;
+        /*
+        printf("PUSH Event: {{%lu, %lu}, %lu}\n", ev.base.id, ev.base.kind,
+               ev.n);
+               */
+        while (!buffer_push(buffer, &ev, sizeof(ev))) ++failed_push;
     }
-            stream_ready = 0;
-            pthread_exit(NULL);
+    stream_ready = 0;
+    pthread_exit(NULL);
 }
 
-void *reader_thread(void *data) {
-    shm_arbiter_buffer *arbiter_buffer_r = (shm_arbiter_buffer *)data;
-    struct event       *ev;
-    size_t              num;
-    size_t              next_id = 1;
+void* reader_thread(void* data) {
+    shm_arbiter_buffer* arbiter_buffer_r = (shm_arbiter_buffer*)data;
+    struct event* ev;
+    size_t num;
+    size_t next_id = 1;
     while (1) {
-        num = shm_arbiter_buffer_peek1(arbiter_buffer_r, (void **)&ev);
+        num = shm_arbiter_buffer_peek1(arbiter_buffer_r, (void**)&ev);
         if (num > 0) {
-            if (shm_event_is_hole((shm_event *)ev)) {
+            if (shm_event_is_hole((shm_event*)ev)) {
                 next_id = 0;
             } else {
                 assert(ev->n > 0);
@@ -63,9 +62,9 @@ void *reader_thread(void *data) {
                 if (ev->n != next_id) {
                     fprintf(stderr, "%lu != %lu\n", ev->n, next_id);
                 }
-                assert(next_id == shm_event_id((shm_event *)ev));
+                assert(next_id == shm_event_id((shm_event*)ev));
                 assert(ev->n == next_id);
-                assert(ev->n == shm_event_id((shm_event *)ev));
+                assert(ev->n == shm_event_id((shm_event*)ev));
                 ++next_id;
             }
             /*
@@ -82,21 +81,21 @@ void *reader_thread(void *data) {
 }
 
 int main(void) {
-    struct buffer *buffer =
+    struct buffer* buffer =
         initialize_local_buffer("/dummy", sizeof(struct event), 30, NULL);
     assert(buffer);
-    shm_stream  dummy_stream;
-    shm_stream *stream = &dummy_stream;
+    shm_stream dummy_stream;
+    shm_stream* stream = &dummy_stream;
 
     shm_stream_init(stream, buffer, sizeof(struct event), is_ready, NULL, NULL,
                     NULL, NULL, "dummy-stream", "dummy");
 
     /* into this buffer, stream_fetch() will push dropped() events if any */
-    shm_arbiter_buffer *arbiter_buffer =
+    shm_arbiter_buffer* arbiter_buffer =
         shm_arbiter_buffer_create(stream, sizeof(struct event), 10);
 
     /* into this buffer, we will push events here and read them */
-    shm_arbiter_buffer *arbiter_buffer_r =
+    shm_arbiter_buffer* arbiter_buffer_r =
         shm_arbiter_buffer_create(stream, sizeof(struct event), 3);
 
     shm_arbiter_buffer_set_active(arbiter_buffer, 1);
@@ -106,7 +105,7 @@ int main(void) {
     pthread_create(&tid, NULL, filler_thread, buffer);
     pthread_create(&tida, NULL, reader_thread, arbiter_buffer_r);
 
-    struct event *ev;
+    struct event* ev;
     for (size_t i = 1; i <= 10000; ++i) {
         ev = stream_fetch(stream, arbiter_buffer);
         /* there should be no dropped event generated */

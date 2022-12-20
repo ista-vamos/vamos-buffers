@@ -1,8 +1,8 @@
+#include "vector.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "vector.h"
 
 void shm_vector_init(shm_vector *vec, size_t elem_size) {
     assert(elem_size > 0);
@@ -10,20 +10,18 @@ void shm_vector_init(shm_vector *vec, size_t elem_size) {
     vec->element_size = elem_size;
 }
 
-void shm_vector_destroy(shm_vector *vec) {
-    free(vec->data);
-}
+void shm_vector_destroy(shm_vector *vec) { free(vec->data); }
 
 void shm_vector_swap(shm_vector *vec, shm_vector *with) {
     assert(vec->element_size == with->element_size);
-    void  *data      = vec->data;
-    size_t size      = vec->size;
-    size_t asize     = vec->alloc_size;
-    vec->data        = with->data;
-    vec->size        = with->size;
-    vec->alloc_size  = with->alloc_size;
-    with->data       = data;
-    with->size       = size;
+    void *data = vec->data;
+    size_t size = vec->size;
+    size_t asize = vec->alloc_size;
+    vec->data = with->data;
+    vec->size = with->size;
+    vec->alloc_size = with->alloc_size;
+    with->data = data;
+    with->size = size;
     with->alloc_size = asize;
 }
 
@@ -69,9 +67,7 @@ size_t shm_vector_pop(shm_vector *vec) {
     return --vec->size;
 }
 
-size_t shm_vector_size(shm_vector *vec) {
-    return vec->size;
-}
+size_t shm_vector_size(shm_vector *vec) { return vec->size; }
 
 size_t shm_vector_elem_size(shm_vector *vec) {
     assert(0 < vec->element_size);

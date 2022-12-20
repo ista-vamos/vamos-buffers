@@ -1,29 +1,28 @@
+#include "shm_string.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "shm_string-macro.h"
-#include "shm_string.h"
 
 void shm_string_init(shm_string *s) {
     STRING_INIT(s->data);
     memset(s, 0, sizeof(*s));
 }
 
-void shm_string_destroy(shm_string *s) {
-    STRING_DESTROY(s->data);
-}
+void shm_string_destroy(shm_string *s) { STRING_DESTROY(s->data); }
 
 void shm_string_swap(shm_string *s, shm_string *with) {
-    char  *data  = s->data;
-    size_t size  = STRING_SIZE(s->data);
+    char *data = s->data;
+    size_t size = STRING_SIZE(s->data);
     size_t asize = STRING_ALLOC_SIZE(s->data);
 
-    s->data                       = with->data;
-    STRING_SIZE(s->data)          = STRING_SIZE(with->data);
-    STRING_ALLOC_SIZE(s->data)    = STRING_ALLOC_SIZE(with->data);
-    with->data                    = data;
-    STRING_SIZE(with->data)       = size;
+    s->data = with->data;
+    STRING_SIZE(s->data) = STRING_SIZE(with->data);
+    STRING_ALLOC_SIZE(s->data) = STRING_ALLOC_SIZE(with->data);
+    with->data = data;
+    STRING_SIZE(with->data) = size;
     STRING_ALLOC_SIZE(with->data) = asize;
 }
 
@@ -45,17 +44,11 @@ size_t shm_string_append(shm_string *s, char c) {
     return STRING_SIZE(s->data);
 }
 
-size_t shm_string_pop(shm_string *s) {
-    return --STRING_SIZE(s->data);
-}
+size_t shm_string_pop(shm_string *s) { return --STRING_SIZE(s->data); }
 
-void shm_string_clear(shm_string *s) {
-    STRING_SIZE(s->data) = 0;
-}
+void shm_string_clear(shm_string *s) { STRING_SIZE(s->data) = 0; }
 
-size_t shm_string_size(shm_string *s) {
-    return STRING_SIZE(s->data);
-}
+size_t shm_string_size(shm_string *s) { return STRING_SIZE(s->data); }
 
 /*
  * Return the pointer to the element at index 'idx'

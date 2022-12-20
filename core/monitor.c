@@ -1,21 +1,20 @@
+#include "monitor.h"
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "monitor.h"
 #include "par_queue.h"
 #include "utils.h"
 
 typedef struct _shm_monitor_buffer {
-    shm_par_queue buffer;   // the buffer itself
-    bool          finished; // the arbiter has finished?
+    shm_par_queue buffer;  // the buffer itself
+    bool finished;         // the arbiter has finished?
 } shm_monitor_buffer;
 
-size_t shm_monitor_buffer_sizeof(void) {
-    return sizeof(shm_monitor_buffer);
-}
+size_t shm_monitor_buffer_sizeof(void) { return sizeof(shm_monitor_buffer); }
 size_t shm_monitor_buffer_size(shm_monitor_buffer *buffer) {
     return shm_par_queue_size(&buffer->buffer);
 }
@@ -119,8 +118,8 @@ void shm_monitor_buffer_write_finish(shm_monitor_buffer *q) {
  * or return NULL if the stream ended */
 void *fetch_arbiter_stream(shm_monitor_buffer *buffer) {
     size_t sleep_time = SLEEP_TIME_INIT_NS;
-    size_t spinned    = 0;
-    void  *ev;
+    size_t spinned = 0;
+    void *ev;
 
     while (1) {
         /* wait for the event */

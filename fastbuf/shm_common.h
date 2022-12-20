@@ -9,7 +9,7 @@ typedef uint16_t buffer_entry_kind;
 typedef uint16_t buffer_kind;
 
 #define BUF_ENTRY_MAGIC_ID 2
-#define BUF_ENTRY_FREE_ID  0
+#define BUF_ENTRY_FREE_ID 0
 
 #define SHM_NAME_MAXLEN 128
 
@@ -27,11 +27,11 @@ enum threadbuffer_management_msgflags { TBMGMT_STD, TBMGMT_DATA };
 
 typedef struct buffer_entry {
     _Atomic buffer_entry_id id;
-    buffer_entry_kind       flags;
-    buffer_entry_kind       kind;
-    int32_t                 payload32_1;
-    int64_t                 payload64_1;
-    int64_t                 payload64_2;
+    buffer_entry_kind flags;
+    buffer_entry_kind kind;
+    int32_t payload32_1;
+    int64_t payload64_1;
+    int64_t payload64_2;
 } buffer_entry;
 
 char *shm_mapname_thread_pid(char *buf, pid_t pid);

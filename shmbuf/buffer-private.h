@@ -10,9 +10,8 @@ struct source_control;
 struct event_record;
 struct buffer;
 
-struct buffer *initialize_local_buffer(const char *key,
-                                       size_t elem_size,
-                                       size_t                 capacity,
+struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
+                                       size_t capacity,
                                        struct source_control *control);
 
 void release_local_buffer(struct buffer *buff);

@@ -1,3 +1,5 @@
+#include "stream-funs.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,7 +8,6 @@
 #include "arbiter.h"
 #include "buffer.h"
 #include "signatures.h"
-#include "stream-funs.h"
 
 bool funs_is_ready(shm_stream *stream) {
     struct buffer *b = ((shm_stream_funs *)stream)->shmbuffer;
@@ -28,8 +29,8 @@ size_t stream_mk_event_kinds(const char *stream_name, struct buffer *shmbuffer,
                              size_t *max_ev_size);
 
 shm_stream *shm_create_funs_stream(const char *key, const char *name) {
-    shm_stream_funs *ss        = malloc(sizeof *ss);
-    struct buffer   *shmbuffer = get_shared_buffer(key);
+    shm_stream_funs *ss = malloc(sizeof *ss);
+    struct buffer *shmbuffer = get_shared_buffer(key);
     assert(shmbuffer && "Getting the shm buffer failed");
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
@@ -47,7 +48,7 @@ const char *shm_stream_funs_get_str(shm_stream_funs *fstream, uint64_t elem) {
 }
 
 struct event_record *shm_funs_stream_get_event_spec(shm_stream_funs *stream,
-                                                    shm_kind         kind) {
+                                                    shm_kind kind) {
     for (size_t i = 0; i < stream->spec_count; ++i)
         if (stream->events[i].kind == kind)
             return stream->events + i;

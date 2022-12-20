@@ -18,11 +18,11 @@ static bool is_ready(shm_stream *s) {
 
 struct event {
     shm_event base;
-    int       i;
+    int i;
 };
 
 struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
-                                       size_t                 capacity,
+                                       size_t capacity,
                                        struct source_control *control);
 
 int main(void) {
@@ -30,7 +30,7 @@ int main(void) {
         initialize_local_buffer("/dummy", sizeof(struct event), 30, NULL);
     assert(lbuffer);
 
-    shm_stream  dummy_stream;
+    shm_stream dummy_stream;
     shm_stream *stream = &dummy_stream;
 
     shm_stream_init(stream, lbuffer, sizeof(struct event), is_ready, NULL, NULL,
@@ -43,7 +43,7 @@ int main(void) {
     struct event ev;
     for (int i = 1; i < 21; ++i) {
         ev.base.id = i;
-        ev.i       = i;
+        ev.i = i;
         shm_arbiter_buffer_push(b, &ev, sizeof(struct event));
     }
 
@@ -55,7 +55,7 @@ int main(void) {
 
     for (int i = 1; i < 21; ++i) {
         ev.base.id = 20 + 2 * i;
-        ev.i       = i;
+        ev.i = i;
         shm_arbiter_buffer_push(b, &ev, sizeof(struct event));
     }
 
@@ -69,7 +69,7 @@ int main(void) {
 
     for (int i = 1; i < 21; ++i) {
         ev.base.id = 40 + 2 * i;
-        ev.i       = i;
+        ev.i = i;
         shm_arbiter_buffer_push(b, &ev, sizeof(struct event));
     }
 

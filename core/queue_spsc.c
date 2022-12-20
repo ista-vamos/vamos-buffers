@@ -1,4 +1,5 @@
 #include "queue_spsc.h"
+
 #include <assert.h>
 #include <stdatomic.h>
 #include <stdbool.h>
@@ -6,7 +7,7 @@
 #include <string.h>
 
 #define __predict_false(x) __builtin_expect((x) != 0, 0)
-#define __predict_true(x)  __builtin_expect((x) != 0, 1)
+#define __predict_true(x) __builtin_expect((x) != 0, 1)
 
 static inline void elem_num_inc(shm_queue_spsc *q, int k) {
     /* Do ++q->elem_num atomically. */
@@ -46,7 +47,7 @@ bool shm_queue_spsc_write_offset(shm_queue_spsc *q, size_t *offset) {
     *offset = q->head;
 
 #ifndef NDEBUG
-    q->partial_head    = q->head;
+    q->partial_head = q->head;
     q->writing_k_elems = 1;
 #endif
 
@@ -93,13 +94,9 @@ size_t shm_queue_spsc_free_num(shm_queue_spsc *q) {
     return q->capacity - elem_num(q);
 }
 
-size_t shm_queue_spsc_capacity(shm_queue_spsc *q) {
-    return q->capacity;
-}
+size_t shm_queue_spsc_capacity(shm_queue_spsc *q) { return q->capacity; }
 
-size_t shm_queue_spsc_size(shm_queue_spsc *q) {
-    return elem_num(q);
-}
+size_t shm_queue_spsc_size(shm_queue_spsc *q) { return elem_num(q); }
 
 size_t shm_queue_spsc_peek(shm_queue_spsc *q, size_t n, size_t *off1,
                            size_t *len1, size_t *off2, size_t *len2) {

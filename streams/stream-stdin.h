@@ -9,8 +9,8 @@ typedef struct _shm_event_stdin {
     // mandatory
     shm_event base;
     // data
-    int            fd;
-    uint64_t       time;
+    int fd;
+    uint64_t time;
     shm_string_ref str_ref;
 } shm_event_stdin;
 
@@ -19,12 +19,12 @@ typedef struct _shm_stream_stdin {
     // user can add here some auxiliary data if needed
     // ...
     // the pointer to the read lines
-    char  *line;
+    char *line;
     size_t line_len;
     // the kind that we assign to events. If a stream can have only one
     // kind of events, we can move this to base (derive it
     // from the stream name)
-    shm_kind    ev_kind;
+    shm_kind ev_kind;
     shm_eventid last_event_id;
 } shm_stream_stdin;
 

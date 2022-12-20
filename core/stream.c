@@ -1,10 +1,11 @@
+#include "stream.h"
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "shmbuf/buffer.h"
-#include "stream.h"
 #include "utils.h"
 
 /*****
@@ -14,7 +15,7 @@
 /* FIXME: we duplicate the counter in stream here. Maybe rather set the funs to
  * NULL? */
 static void default_hole_init(shm_event *ev) {
-    ev->kind                          = shm_get_hole_kind();
+    ev->kind = shm_get_hole_kind();
     ((shm_event_default_hole *)ev)->n = 0;
 }
 
@@ -25,40 +26,39 @@ static void default_hole_update(shm_event *hole, shm_event *ev) {
 
 static shm_stream_hole_handling default_hole_handling = {
     .hole_event_size = sizeof(shm_event_default_hole),
-    .init            = default_hole_init,
-    .update          = default_hole_update
-};
+    .init = default_hole_init,
+    .update = default_hole_update};
 
 static uint64_t last_stream_id = 0;
 
 void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
                      size_t event_size, shm_stream_is_ready_fn is_ready,
                      shm_stream_filter_fn filter, shm_stream_alter_fn alter,
-                     shm_stream_destroy_fn           destroy,
+                     shm_stream_destroy_fn destroy,
                      const shm_stream_hole_handling *hole_handling,
                      const char *const type, const char *const name) {
-    stream->id                     = ++last_stream_id;
-    stream->event_size             = event_size;
+    stream->id = ++last_stream_id;
+    stream->event_size = event_size;
     stream->incoming_events_buffer = incoming_events_buffer;
-    stream->substreams_no          = 0;
+    stream->substreams_no = 0;
     /* TODO: maybe we could just have a boolean flag that would be set
      * by a particular stream implementation instead of this function call?
      * Or a special universal event that is sent by the source...*/
     stream->is_ready = is_ready;
-    stream->filter   = filter;
-    stream->alter    = alter;
-    stream->destroy  = destroy;
-    stream->type     = xstrdup(type);
-    stream->name     = xstrdup(name);
+    stream->filter = filter;
+    stream->alter = alter;
+    stream->destroy = destroy;
+    stream->type = xstrdup(type);
+    stream->name = xstrdup(name);
 #ifndef NDEBUG
     stream->last_event_id = 0;
 #endif
     stream->events_cache = NULL;
 #ifdef DUMP_STATS
-    stream->read_events          = 0;
-    stream->fetched_events       = 0;
-    stream->consumed_events      = 0;
-    stream->dropped_events       = 0;
+    stream->read_events = 0;
+    stream->fetched_events = 0;
+    stream->consumed_events = 0;
+    stream->dropped_events = 0;
     stream->slept_waiting_for_ev = 0;
 #endif
 
@@ -81,9 +81,7 @@ void shm_stream_destroy(shm_stream *stream) {
     }
 }
 
-size_t shm_stream_id(shm_stream *stream) {
-    return stream->id;
-}
+size_t shm_stream_id(shm_stream *stream) { return stream->id; }
 
 const char *shm_stream_get_name(shm_stream *stream) {
     assert(stream);
@@ -108,8 +106,8 @@ shm_stream *shm_stream_create_substream(
         return NULL;
     }
     size_t substream_no = ++stream->substreams_no;
-    char  *key          = get_sub_buffer_key(
-                  buffer_get_key(stream->incoming_events_buffer), substream_no);
+    char *key = get_sub_buffer_key(
+        buffer_get_key(stream->incoming_events_buffer), substream_no);
     struct buffer *shmbuffer = get_shared_buffer(key);
 
     shm_stream *substream = xalloc(sizeof *substream);
@@ -148,7 +146,7 @@ static shm_kind get_max_kind(struct event_record *recs, size_t size) {
 }
 
 struct event_record *shm_stream_get_event_record(shm_stream *stream,
-                                                 shm_kind    kind) {
+                                                 shm_kind kind) {
     assert(kind > 0 && "Got invalid kind");
     struct event_record *rec = NULL;
     if (stream->events_cache) {
@@ -161,7 +159,7 @@ struct event_record *shm_stream_get_event_record(shm_stream *stream,
         }
     } else {
         /* create cache */
-        size_t               sz;
+        size_t sz;
         struct event_record *recs =
             buffer_get_avail_events(stream->incoming_events_buffer, &sz);
         size_t max_kind = get_max_kind(recs, sz);
@@ -184,8 +182,8 @@ struct event_record *shm_stream_get_event_record(shm_stream *stream,
 }
 
 struct event_record *shm_stream_get_event_record_no_cache(shm_stream *stream,
-                                                          shm_kind    kind) {
-    size_t               sz;
+                                                          shm_kind kind) {
+    size_t sz;
     struct event_record *recs =
         buffer_get_avail_events(stream->incoming_events_buffer, &sz);
     for (size_t i = 0; i < sz; ++i) {
@@ -218,9 +216,7 @@ void shm_stream_prepare_hole_event(shm_stream *stream, shm_event *hole_event,
 #endif
 }
 
-bool shm_stream_is_ready(shm_stream *s) {
-    return s->is_ready(s);
-}
+bool shm_stream_is_ready(shm_stream *s) { return s->is_ready(s); }
 
 bool shm_stream_is_finished(shm_stream *s) {
     return shm_stream_buffer_size(s) == 0 && !shm_stream_is_ready(s);
@@ -244,9 +240,7 @@ const char *shm_stream_get_str(shm_stream *stream, uint64_t elem) {
     return buffer_get_str(stream->incoming_events_buffer, elem);
 }
 
-size_t shm_stream_event_size(shm_stream *s) {
-    return s->event_size;
-}
+size_t shm_stream_event_size(shm_stream *s) { return s->event_size; }
 
 int shm_stream_register_event(shm_stream *stream, const char *name,
                               size_t kind) {
@@ -284,7 +278,7 @@ void shm_stream_detach(shm_stream *stream) {
 }
 
 void shm_stream_dump_events(shm_stream *stream) {
-    size_t               evs_num;
+    size_t evs_num;
     struct event_record *events =
         buffer_get_avail_events(stream->incoming_events_buffer, &evs_num);
     for (size_t i = 0; i < evs_num; ++i) {

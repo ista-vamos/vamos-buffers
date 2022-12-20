@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include "shm_common.h"
+
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>

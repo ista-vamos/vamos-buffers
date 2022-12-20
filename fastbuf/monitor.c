@@ -1,4 +1,3 @@
-#include "shm_monitor.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,14 +5,16 @@
 #include <threads.h>
 #include <unistd.h>
 
+#include "shm_monitor.h"
+
 int isprime(int);
 
 int monitoring_active = 1;
-int do_print          = 0;
+int do_print = 0;
 
 int monitoring_thread(void *arg) {
     monitor_buffer buffer = (monitor_buffer)arg;
-    buffer_entry   buffer_buffer[32];
+    buffer_entry buffer_buffer[32];
     while (monitoring_active) {
         size_t count = copy_events_wait(buffer, buffer_buffer, 32);
         for (size_t i = 0; i < count; i++) {

@@ -17,26 +17,26 @@
 #include "stream.h"
 
 typedef struct _shm_arbiter_buffer shm_arbiter_buffer;
-typedef struct _shm_event          shm_event;
+typedef struct _shm_event shm_event;
 
 void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
                              size_t out_event_size, size_t capacity);
 shm_arbiter_buffer *shm_arbiter_buffer_create(shm_stream *stream,
-                                              size_t      out_event_size,
-                                              size_t      capacity);
+                                              size_t out_event_size,
+                                              size_t capacity);
 size_t shm_arbiter_buffer_set_drop_space_threshold(shm_arbiter_buffer *buffer,
-                                                   size_t              thr);
+                                                   size_t thr);
 
-void        shm_arbiter_buffer_free(shm_arbiter_buffer *buffer);
-void        shm_arbiter_buffer_destroy(shm_arbiter_buffer *buffer);
-void        shm_arbiter_buffer_set_active(shm_arbiter_buffer *buffer, bool val);
-size_t      shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q);
+void shm_arbiter_buffer_free(shm_arbiter_buffer *buffer);
+void shm_arbiter_buffer_destroy(shm_arbiter_buffer *buffer);
+void shm_arbiter_buffer_set_active(shm_arbiter_buffer *buffer, bool val);
+size_t shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q);
 shm_stream *shm_arbiter_buffer_stream(shm_arbiter_buffer *buffer);
-bool        shm_arbiter_buffer_active(shm_arbiter_buffer *buffer);
-size_t      shm_arbiter_buffer_size(shm_arbiter_buffer *buffer);
-size_t      shm_arbiter_buffer_capacity(shm_arbiter_buffer *buffer);
-size_t      shm_arbiter_buffer_free_space(shm_arbiter_buffer *buffer);
-size_t      shm_arbiter_buffer_sizeof(void);
+bool shm_arbiter_buffer_active(shm_arbiter_buffer *buffer);
+size_t shm_arbiter_buffer_size(shm_arbiter_buffer *buffer);
+size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *buffer);
+size_t shm_arbiter_buffer_free_space(shm_arbiter_buffer *buffer);
+size_t shm_arbiter_buffer_sizeof(void);
 
 /* writer's API */
 void shm_arbiter_buffer_push(shm_arbiter_buffer *q, const void *elem,
@@ -45,22 +45,22 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *q, const void *elem,
 /* cannot be mixed with push */
 
 void *shm_arbiter_buffer_write_ptr(shm_arbiter_buffer *q);
-void  shm_arbiter_buffer_write_finish(shm_arbiter_buffer *q);
-void  shm_arbiter_buffer_get_str(shm_arbiter_buffer *q, size_t elem);
+void shm_arbiter_buffer_write_finish(shm_arbiter_buffer *q);
+void shm_arbiter_buffer_get_str(shm_arbiter_buffer *q, size_t elem);
 
 /* reader's API */
 /* multiple threads can use top and peek if none of them uses drop/pop
  * at the time */
 shm_event *shm_arbiter_buffer_top(shm_arbiter_buffer *buffer);
-size_t     shm_arbiter_buffer_peek(shm_arbiter_buffer *buffer, size_t n,
-                                   void **data1, size_t *size1, void **data2,
-                                   size_t *size2);
+size_t shm_arbiter_buffer_peek(shm_arbiter_buffer *buffer, size_t n,
+                               void **data1, size_t *size1, void **data2,
+                               size_t *size2);
 /* peek 1 event */
 size_t shm_arbiter_buffer_peek1(shm_arbiter_buffer *buffer, void **data);
 size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t n);
 size_t shm_arbiter_buffer_drop_older_than(shm_arbiter_buffer *buffer,
-                                          shm_eventid         id);
-bool   shm_arbiter_buffer_pop(shm_arbiter_buffer *q, void *buff);
+                                          shm_eventid id);
+bool shm_arbiter_buffer_pop(shm_arbiter_buffer *q, void *buff);
 
 void *stream_fetch(shm_stream *stream, shm_arbiter_buffer *buffer);
 

@@ -16,7 +16,7 @@
 #define N 50000000
 
 static double elapsed_time(struct timespec *start, struct timespec *end) {
-    long seconds     = end->tv_sec - start->tv_sec;
+    long seconds = end->tv_sec - start->tv_sec;
     long nanoseconds = end->tv_nsec - start->tv_nsec;
     return seconds + nanoseconds * 1e-9;
 }
@@ -108,7 +108,7 @@ static void run_par_queue_push_pop_st() {
     shm_par_queue_init(&q, N, sizeof(int));
 
     struct timespec start, mid, end;
-    double          elapsed = 0;
+    double elapsed = 0;
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
     for (int i = 0; i < N; ++i) {
@@ -143,10 +143,10 @@ static void run_queue_spsc_push_pop_st() {
     int *buff = malloc(sizeof(int) * N);
     assert(buff);
 
-    int             j;
-    size_t          off;
+    int j;
+    size_t off;
     struct timespec start, mid, end;
-    double          elapsed = 0;
+    double elapsed = 0;
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
     for (int i = 0; i < N; ++i) {
@@ -169,27 +169,28 @@ static void run_queue_spsc_push_pop_st() {
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
 
     elapsed += report_time("[queue-spsc], single-threaded, pop", &mid, &end);
-    printf("\033[34m[queue-spsc], single-threaded, push/pop: %lf "
-           "seconds.\033[0m\n",
-           elapsed);
+    printf(
+        "\033[34m[queue-spsc], single-threaded, push/pop: %lf "
+        "seconds.\033[0m\n",
+        elapsed);
 
     free(buff);
 }
 
 struct thr_data {
     double elapsed;
-    void  *data_buffer;
-    void  *ringbuffer;
+    void *data_buffer;
+    void *ringbuffer;
     size_t writer_waited;
 };
 
 static int par_queue_push_pop_1_writer(void *arg) {
     struct thr_data *data = (struct thr_data *)arg;
-    shm_par_queue   *q    = (shm_par_queue *)data->ringbuffer;
+    shm_par_queue *q = (shm_par_queue *)data->ringbuffer;
 
-    int             i;
+    int i;
     struct timespec start, mid;
-    int            *addr;
+    int *addr;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
     for (i = 0; i < N; ++i) {
         while (!(addr = shm_par_queue_write_ptr(q))) {
@@ -209,14 +210,14 @@ static void run_par_queue_push_pop_1() {
     shm_par_queue q;
     shm_par_queue_init(&q, N, sizeof(int));
 
-    thrd_t          tid;
+    thrd_t tid;
     struct thr_data data = {
         .data_buffer = NULL, .ringbuffer = &q, .writer_waited = 0};
     thrd_create(&tid, par_queue_push_pop_1_writer, &data);
 
-    int             j;
-    unsigned int    n             = 0;
-    size_t          reader_waited = 0;
+    int j;
+    unsigned int n = 0;
+    size_t reader_waited = 0;
     struct timespec mid, end;
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &mid);
@@ -241,11 +242,11 @@ static void run_par_queue_push_pop_1() {
 
 static int queue_spsc_push_pop_1_writer(void *arg) {
     struct thr_data *data = (struct thr_data *)arg;
-    shm_queue_spsc  *q    = (shm_queue_spsc *)data->ringbuffer;
-    int             *buff = data->data_buffer;
+    shm_queue_spsc *q = (shm_queue_spsc *)data->ringbuffer;
+    int *buff = data->data_buffer;
 
-    int             i;
-    size_t          off;
+    int i;
+    size_t off;
     struct timespec start, mid;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
     for (i = 0; i < N; ++i) {
@@ -268,15 +269,15 @@ static void run_queue_spsc_push_pop_1() {
     int *buff = malloc(sizeof(int) * N);
     assert(buff);
 
-    thrd_t          tid;
+    thrd_t tid;
     struct thr_data data = {
         .data_buffer = buff, .ringbuffer = &q, .writer_waited = 0};
     thrd_create(&tid, queue_spsc_push_pop_1_writer, &data);
 
-    int             j;
-    unsigned int    n = 0;
-    size_t          off;
-    size_t          reader_waited = 0;
+    int j;
+    unsigned int n = 0;
+    size_t off;
+    size_t reader_waited = 0;
     struct timespec mid, end;
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &mid);
@@ -310,16 +311,16 @@ static void run_rmind_ringbuf_push_pop_st() {
     int *buff = malloc(sizeof(int) * N);
     assert(buff);
 
-    ringbuf_t        *r = malloc(ringbuf_obj_size);
+    ringbuf_t *r = malloc(ringbuf_obj_size);
     ringbuf_worker_t *w;
-    ssize_t           off;
-    size_t            uoff;
+    ssize_t off;
+    size_t uoff;
 
     ringbuf_setup(r, 1, N + 1);
     w = ringbuf_register(r, 0);
 
     struct timespec start, mid, end;
-    double          elapsed = 0;
+    double elapsed = 0;
 
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
     for (int i = 0; i < N; ++i) {
@@ -343,9 +344,10 @@ static void run_rmind_ringbuf_push_pop_st() {
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
 
     elapsed += report_time("[rmind-rbuf], single-threaded, pop", &mid, &end);
-    printf("\033[34m[rmind-rbuf], single-threaded, push/pop: %lf "
-           "seconds.\033[0m\n",
-           elapsed);
+    printf(
+        "\033[34m[rmind-rbuf], single-threaded, push/pop: %lf "
+        "seconds.\033[0m\n",
+        elapsed);
 
     ringbuf_unregister(r, w);
     free(buff);
@@ -354,13 +356,13 @@ static void run_rmind_ringbuf_push_pop_st() {
 
 static int ringbuf_push_pop_1_writer(void *arg) {
     struct thr_data *data = (struct thr_data *)arg;
-    ringbuf_t       *r    = (ringbuf_t *)data->ringbuffer;
-    int             *buff = data->data_buffer;
+    ringbuf_t *r = (ringbuf_t *)data->ringbuffer;
+    int *buff = data->data_buffer;
 
     ringbuf_worker_t *w = ringbuf_register(r, 0);
 
-    int             i;
-    ssize_t         off;
+    int i;
+    ssize_t off;
     struct timespec start, mid;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
     for (i = 0; i < N; ++i) {
@@ -387,14 +389,14 @@ static void run_rmind_ringbuf_push_pop_1() {
     ringbuf_t *r = malloc(ringbuf_obj_size);
     ringbuf_setup(r, 1, N + 1);
 
-    ssize_t         off;
-    size_t          uoff;
-    int             j;
-    unsigned int    n             = 0;
-    size_t          reader_waited = 0;
+    ssize_t off;
+    size_t uoff;
+    int j;
+    unsigned int n = 0;
+    size_t reader_waited = 0;
     struct timespec mid, end;
 
-    thrd_t          tid;
+    thrd_t tid;
     struct thr_data data = {
         .data_buffer = buff, .ringbuffer = r, .writer_waited = 0};
     thrd_create(&tid, ringbuf_push_pop_1_writer, &data);

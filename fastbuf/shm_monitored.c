@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include "shm_monitored.h"
+
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,30 +15,30 @@
 //#endif
 
 typedef struct databuffer {
-    size_t        size_in_pages;
-    size_t        free_space;
-    void         *start;
-    size_t        offset;
-    size_t        last_offset;
+    size_t size_in_pages;
+    size_t free_space;
+    void *start;
+    size_t offset;
+    size_t last_offset;
     buffer_entry *last_entry;
-    uint64_t      id;
-    int           fd;
+    uint64_t id;
+    int fd;
 } databuffer;
 
 typedef struct buffer {
-    buffer_entry   *buf_start;
-    buffer_entry   *buf_pos;
-    buffer_entry   *buf_last;
+    buffer_entry *buf_start;
+    buffer_entry *buf_pos;
+    buffer_entry *buf_last;
     buffer_entry_id current_id;
-    buffer_kind     kind;
-    int             fd;
-    size_t          size_in_pages;
-    databuffer      dbuf;
-    size_t          databuffer_alloc_size_in_pages;
-    uint64_t        dbufid;
+    buffer_kind kind;
+    int fd;
+    size_t size_in_pages;
+    databuffer dbuf;
+    size_t databuffer_alloc_size_in_pages;
+    uint64_t dbufid;
 } buffer;
 
-static buffer              appbuf;
+static buffer appbuf;
 static thread_local buffer threadbuf;
 
 static void *get_databuffer_space(buffer *buffer, size_t size);
@@ -89,20 +90,20 @@ void initialize_buffer(buffer *buf, int fd, size_t size_in_pages,
         abort();
     }
 
-    buf->buf_start                      = (buffer_entry *)mem;
-    buf->buf_pos                        = (buffer_entry *)mem;
-    buf->current_id                     = 1;
-    buf->kind                           = kind;
-    buf->size_in_pages                  = size_in_pages;
+    buf->buf_start = (buffer_entry *)mem;
+    buf->buf_pos = (buffer_entry *)mem;
+    buf->current_id = 1;
+    buf->kind = kind;
+    buf->size_in_pages = size_in_pages;
     buf->databuffer_alloc_size_in_pages = 16;
-    buf->dbufid                         = 1;
-    buf->dbuf.free_space                = 0;
-    buf->dbuf.offset                    = 0;
-    buf->dbuf.last_offset               = 0;
-    buf->dbuf.size_in_pages             = 0;
+    buf->dbufid = 1;
+    buf->dbuf.free_space = 0;
+    buf->dbuf.offset = 0;
+    buf->dbuf.last_offset = 0;
+    buf->dbuf.size_in_pages = 0;
 
     size_t entry_count = alloc_size / sizeof(buffer_entry);
-    buf->buf_last      = buf->buf_start + (entry_count - 1);
+    buf->buf_last = buf->buf_start + (entry_count - 1);
 
     for (buffer_entry *current = buf->buf_start; current < buf->buf_last;
          current++) {
@@ -120,7 +121,7 @@ static buffer_entry *buf_get_prev(buffer *buf) {
 
 void push_wait_for_monitor(buffer *buf, buffer_entry **curpos_ptr,
                            buffer_entry_id *curentryid_ptr) {
-    buffer_entry   *curpos     = *curpos_ptr;
+    buffer_entry *curpos = *curpos_ptr;
     buffer_entry_id curentryid = *curentryid_ptr;
     while (curentryid != BUF_ENTRY_FREE_ID) {
         if (curentryid == BUF_ENTRY_MAGIC_ID) {
@@ -139,16 +140,16 @@ void push_wait_for_monitor(buffer *buf, buffer_entry **curpos_ptr,
         }
     }
     *curentryid_ptr = curentryid;
-    *curpos_ptr     = curpos;
+    *curpos_ptr = curpos;
 }
 void buf_push_event_wait_64(buffer *buf, buffer_entry_kind kind,
                             int64_t payload) {
-    buffer_entry   *curpos = buf->buf_pos;
+    buffer_entry *curpos = buf->buf_pos;
     buffer_entry_id curentryid =
         atomic_load_explicit(&curpos->id, memory_order_acquire);
     push_wait_for_monitor(buf, &curpos, &curentryid);
-    curpos->flags       = TBMGMT_STD;
-    curpos->kind        = kind;
+    curpos->flags = TBMGMT_STD;
+    curpos->kind = kind;
     curpos->payload64_1 = payload;
     atomic_store_explicit(&curpos->id, buf->current_id, memory_order_release);
     buf->current_id += 2;
@@ -161,8 +162,8 @@ void buf_push_event_nowait_64(buffer *buf, buffer_entry_kind kind,
     if (curpos == buf->buf_last) {
         curpos = buf->buf_start;
     }
-    curpos->flags       = TBMGMT_STD;
-    curpos->kind        = kind;
+    curpos->flags = TBMGMT_STD;
+    curpos->kind = kind;
     curpos->payload64_1 = payload;
     atomic_store_explicit(&curpos->id, buf->current_id, memory_order_release);
     buf->current_id += 2;
@@ -171,12 +172,12 @@ void buf_push_event_nowait_64(buffer *buf, buffer_entry_kind kind,
 }
 void buf_push_event_wait_32(buffer *buf, buffer_entry_kind kind,
                             int32_t payload) {
-    buffer_entry   *curpos = buf->buf_pos;
+    buffer_entry *curpos = buf->buf_pos;
     buffer_entry_id curentryid =
         atomic_load_explicit(&curpos->id, memory_order_acquire);
     push_wait_for_monitor(buf, &curpos, &curentryid);
-    curpos->flags       = TBMGMT_STD;
-    curpos->kind        = kind;
+    curpos->flags = TBMGMT_STD;
+    curpos->kind = kind;
     curpos->payload32_1 = payload;
     atomic_store_explicit(&curpos->id, buf->current_id, memory_order_release);
     buf->current_id += 2;
@@ -189,7 +190,7 @@ void buf_push_event_nowait_32(buffer *buf, buffer_entry_kind kind,
     if (curpos == buf->buf_last) {
         curpos = buf->buf_start;
     }
-    curpos->kind        = kind;
+    curpos->kind = kind;
     curpos->payload32_1 = payload;
     atomic_store_explicit(&curpos->id, buf->current_id, memory_order_release);
     buf->current_id += 2;
@@ -198,12 +199,12 @@ void buf_push_event_nowait_32(buffer *buf, buffer_entry_kind kind,
 }
 void buf_push_event_wait_32_64(buffer *buf, buffer_entry_kind kind,
                                int32_t payload32, int64_t payload64) {
-    buffer_entry   *curpos = buf->buf_pos;
+    buffer_entry *curpos = buf->buf_pos;
     buffer_entry_id curentryid =
         atomic_load_explicit(&curpos->id, memory_order_acquire);
     push_wait_for_monitor(buf, &curpos, &curentryid);
-    curpos->flags       = TBMGMT_STD;
-    curpos->kind        = kind;
+    curpos->flags = TBMGMT_STD;
+    curpos->kind = kind;
     curpos->payload32_1 = payload32;
     curpos->payload64_1 = payload64;
     atomic_store_explicit(&curpos->id, buf->current_id, memory_order_release);
@@ -217,8 +218,8 @@ void buf_push_event_nowait_32_64(buffer *buf, buffer_entry_kind kind,
     if (curpos == buf->buf_last) {
         curpos = buf->buf_start;
     }
-    curpos->flags       = TBMGMT_STD;
-    curpos->kind        = kind;
+    curpos->flags = TBMGMT_STD;
+    curpos->kind = kind;
     curpos->payload32_1 = payload32;
     curpos->payload64_1 = payload64;
     atomic_store_explicit(&curpos->id, buf->current_id, memory_order_release);
@@ -229,12 +230,12 @@ void buf_push_event_nowait_32_64(buffer *buf, buffer_entry_kind kind,
 void buf_push_event_wait_32_64_64(buffer *buf, buffer_entry_kind kind,
                                   int32_t payload32, int64_t payload64,
                                   int64_t payload64_2) {
-    buffer_entry   *curpos = buf->buf_pos;
+    buffer_entry *curpos = buf->buf_pos;
     buffer_entry_id curentryid =
         atomic_load_explicit(&curpos->id, memory_order_acquire);
     push_wait_for_monitor(buf, &curpos, &curentryid);
-    curpos->flags       = TBMGMT_STD;
-    curpos->kind        = kind;
+    curpos->flags = TBMGMT_STD;
+    curpos->kind = kind;
     curpos->payload32_1 = payload32;
     curpos->payload64_1 = payload64;
     curpos->payload64_2 = payload64_2;
@@ -250,8 +251,8 @@ void buf_push_event_nowait_32_64_64(buffer *buf, buffer_entry_kind kind,
     if (curpos == buf->buf_last) {
         curpos = buf->buf_start;
     }
-    curpos->flags       = TBMGMT_STD;
-    curpos->kind        = kind;
+    curpos->flags = TBMGMT_STD;
+    curpos->kind = kind;
     curpos->payload32_1 = payload32;
     curpos->payload64_1 = payload64;
     curpos->payload64_2 = payload64_2;
@@ -263,13 +264,13 @@ void buf_push_event_nowait_32_64_64(buffer *buf, buffer_entry_kind kind,
 void buf_push_data_wait(buffer *buf, buffer_entry_kind kind, void *data,
                         size_t size) {
     buffer_entry *curpos = buf->buf_pos;
-    void         *target = get_databuffer_space(buf, size);
+    void *target = get_databuffer_space(buf, size);
     memcpy(target, data, size);
     buffer_entry_id curentryid =
         atomic_load_explicit(&curpos->id, memory_order_acquire);
     push_wait_for_monitor(buf, &curpos, &curentryid);
-    curpos->flags       = TBMGMT_DATA;
-    curpos->kind        = kind;
+    curpos->flags = TBMGMT_DATA;
+    curpos->kind = kind;
     curpos->payload32_1 = buf->dbuf.last_offset;
     curpos->payload64_1 = buf->dbuf.id;
     curpos->payload64_2 = size;
@@ -281,13 +282,13 @@ void buf_push_data_wait(buffer *buf, buffer_entry_kind kind, void *data,
 void buf_push_data_nowait(buffer *buf, buffer_entry_kind kind, void *data,
                           size_t size) {
     buffer_entry *curpos = buf->buf_pos;
-    void         *target = get_databuffer_space(buf, size);
+    void *target = get_databuffer_space(buf, size);
     memcpy(target, data, size);
     if (curpos == buf->buf_last) {
         curpos = buf->buf_start;
     }
-    curpos->flags       = TBMGMT_DATA;
-    curpos->kind        = kind;
+    curpos->flags = TBMGMT_DATA;
+    curpos->kind = kind;
     curpos->payload32_1 = buf->dbuf.last_offset;
     curpos->payload64_1 = buf->dbuf.id;
     curpos->payload64_2 = size;
@@ -304,7 +305,7 @@ void initialize_application_buffer() {
         return;
     }
 
-    appbuf.fd            = fd;
+    appbuf.fd = fd;
     appbuf.size_in_pages = 1;
     initialize_buffer(&appbuf, fd, 1, 0);
     buf_push_event_wait_32_64(&appbuf, ABMGMT_HELLO, 0, 0);
@@ -316,7 +317,7 @@ void intialize_thread_buffer(size_t size_in_pages, buffer_kind kind) {
         return;
     }
 
-    threadbuf.fd            = fd;
+    threadbuf.fd = fd;
     threadbuf.size_in_pages = size_in_pages;
     initialize_buffer(&threadbuf, fd, size_in_pages, kind);
     buf_push_event_wait_32_64(&appbuf, ABMGMT_NEW, gettid(), size_in_pages);
@@ -368,15 +369,15 @@ static void *get_databuffer_space(buffer *buffer, size_t size) {
             munmap(dbuf->start, dbuf->size_in_pages * page_size);
             close(dbuf->fd);
         }
-        size_t   size_in_pages = buffer->databuffer_alloc_size_in_pages;
-        uint64_t bufid         = buffer->dbufid++;
+        size_t size_in_pages = buffer->databuffer_alloc_size_in_pages;
+        uint64_t bufid = buffer->dbufid++;
         if (size_in_pages * page_size < size) {
             size_in_pages = (size / page_size) + 1;
         } else if (size_in_pages * page_size > size * buffer->size_in_pages) {
             size_in_pages = (size_in_pages / 4) | 1;
         }
         buffer->databuffer_alloc_size_in_pages = size_in_pages * 2;
-        size_t newsize                         = page_size * size_in_pages;
+        size_t newsize = page_size * size_in_pages;
 
         int fd = shamon_shm_open_data_buffer(O_RDWR, 0644, bufid);
         if (fd < 0) {
@@ -386,14 +387,14 @@ static void *get_databuffer_space(buffer *buffer, size_t size) {
         if (ftruncate(fd, newsize)) {
             abort();
         }
-        dbuf->free_space    = newsize;
+        dbuf->free_space = newsize;
         dbuf->size_in_pages = size_in_pages;
-        dbuf->id            = bufid;
-        dbuf->last_entry    = NULL;
-        dbuf->last_offset   = 0;
-        dbuf->offset        = 0;
-        dbuf->start         = mem;
-        dbuf->fd            = fd;
+        dbuf->id = bufid;
+        dbuf->last_entry = NULL;
+        dbuf->last_offset = 0;
+        dbuf->offset = 0;
+        dbuf->start = mem;
+        dbuf->fd = fd;
         buf_push_event_wait_32_64_64(&appbuf, ABMGMT_NEWDATA, gettid(),
                                      size_in_pages, bufid);
         // printf("New buffer %lu: %lu pages\n", dbuf->id, dbuf->size_in_pages);
@@ -427,21 +428,21 @@ void push_data_nowait(buffer_entry_kind kind, void *data, size_t size) {
 
 ssize_t wrap_push_read(int fd, void *data, size_t size) {
     ssize_t result = read(fd, data, size);
-    buffer *buf    = &threadbuf;
+    buffer *buf = &threadbuf;
 
     void *target =
         get_databuffer_space(buf, size + sizeof(size_t) + sizeof(int64_t));
 
-    buffer_entry *curpos       = buf->buf_pos;
-    *((int64_t *)target)       = fd;
+    buffer_entry *curpos = buf->buf_pos;
+    *((int64_t *)target) = fd;
     *(((int64_t *)target) + 1) = result;
     memcpy((void *)(((char *)target) + sizeof(int64_t) + sizeof(size_t)), data,
            size);
     buffer_entry_id curentryid =
         atomic_load_explicit(&curpos->id, memory_order_acquire);
     push_wait_for_monitor(buf, &curpos, &curentryid);
-    curpos->flags       = TBMGMT_DATA;
-    curpos->kind        = 1;
+    curpos->flags = TBMGMT_DATA;
+    curpos->kind = 1;
     curpos->payload32_1 = buf->dbuf.last_offset;
     curpos->payload64_1 = buf->dbuf.id;
     curpos->payload64_2 = size + sizeof(size_t) + sizeof(int64_t);
@@ -453,21 +454,21 @@ ssize_t wrap_push_read(int fd, void *data, size_t size) {
 }
 ssize_t wrap_push_write(int fd, const void *data, size_t size) {
     ssize_t result = write(fd, data, size);
-    buffer *buf    = &threadbuf;
+    buffer *buf = &threadbuf;
 
     void *target =
         get_databuffer_space(buf, result + sizeof(size_t) + sizeof(int64_t));
 
-    buffer_entry *curpos       = buf->buf_pos;
-    *((int64_t *)target)       = fd;
+    buffer_entry *curpos = buf->buf_pos;
+    *((int64_t *)target) = fd;
     *(((int64_t *)target) + 1) = size;
     memcpy((void *)(((char *)target) + sizeof(int64_t) + sizeof(size_t)), data,
            result);
     buffer_entry_id curentryid =
         atomic_load_explicit(&curpos->id, memory_order_acquire);
     push_wait_for_monitor(buf, &curpos, &curentryid);
-    curpos->flags       = TBMGMT_DATA;
-    curpos->kind        = 1;
+    curpos->flags = TBMGMT_DATA;
+    curpos->kind = 1;
     curpos->payload32_1 = buf->dbuf.last_offset;
     curpos->payload64_1 = buf->dbuf.id;
     curpos->payload64_2 = result + sizeof(size_t) + sizeof(int64_t);
@@ -488,16 +489,16 @@ void push_read(int fd, void *data, size_t size, ssize_t result) {
     void *target =
         get_databuffer_space(buf, result + sizeof(size_t) + sizeof(int64_t));
 
-    buffer_entry *curpos       = buf->buf_pos;
-    *((int64_t *)target)       = fd;
+    buffer_entry *curpos = buf->buf_pos;
+    *((int64_t *)target) = fd;
     *(((int64_t *)target) + 1) = size;
     memcpy((void *)(((char *)target) + sizeof(int64_t) + sizeof(size_t)), data,
            result);
     buffer_entry_id curentryid =
         atomic_load_explicit(&curpos->id, memory_order_acquire);
     push_wait_for_monitor(buf, &curpos, &curentryid);
-    curpos->flags       = TBMGMT_DATA;
-    curpos->kind        = 2;
+    curpos->flags = TBMGMT_DATA;
+    curpos->kind = 2;
     curpos->payload32_1 = buf->dbuf.last_offset;
     curpos->payload64_1 = buf->dbuf.id;
     curpos->payload64_2 = result + sizeof(size_t) + sizeof(int64_t);
@@ -516,16 +517,16 @@ void push_write(int fd, const void *data, size_t size, ssize_t result) {
     void *target =
         get_databuffer_space(buf, result + sizeof(size_t) + sizeof(int64_t));
 
-    buffer_entry *curpos       = buf->buf_pos;
-    *((int64_t *)target)       = fd;
+    buffer_entry *curpos = buf->buf_pos;
+    *((int64_t *)target) = fd;
     *(((int64_t *)target) + 1) = size;
     memcpy((void *)(((char *)target) + sizeof(int64_t) + sizeof(size_t)), data,
            result);
     buffer_entry_id curentryid =
         atomic_load_explicit(&curpos->id, memory_order_acquire);
     push_wait_for_monitor(buf, &curpos, &curentryid);
-    curpos->flags       = TBMGMT_DATA;
-    curpos->kind        = 1;
+    curpos->flags = TBMGMT_DATA;
+    curpos->kind = 1;
     curpos->payload32_1 = buf->dbuf.last_offset;
     curpos->payload64_1 = buf->dbuf.id;
     curpos->payload64_2 = result + sizeof(size_t) + sizeof(int64_t);

@@ -4,13 +4,13 @@
 #include <stddef.h>
 
 union shamon_operand {
-    unsigned char  c;
+    unsigned char c;
     unsigned short s;
-    unsigned int   i;
-    unsigned long  l;
-    float          f;
-    double         d;
-    void          *p;
+    unsigned int i;
+    unsigned long l;
+    float f;
+    double d;
+    void *p;
 };
 
 struct call_event_spec {
@@ -18,7 +18,7 @@ struct call_event_spec {
 
     /* we need one of these */
     const char *name; /* name */
-    size_t      addr; /* offset in module */
+    size_t addr;      /* offset in module */
     /* string describing what arguments to track and
      * what is their size:
      * c = (unsigned) char
@@ -39,7 +39,7 @@ size_t call_event_spec_get_size(struct call_event_spec *spec);
 
 /*  just an auxiliar struct for now */
 struct call_event_1i {
-    size_t       addr;
+    size_t addr;
     unsigned int argument;
 };
 
