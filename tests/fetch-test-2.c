@@ -59,7 +59,10 @@ void *reader_thread(void *data) {
                     /* we had a hole */
                     last_id = ev->n;
                 }
-                assert(ev->n == last_id);
+		if (ev->n != last_id) {
+		    fprintf(stderr, "%lu != %lu\n", ev->n, last_id);
+                    assert(ev->n == last_id);
+		}
                 assert(++last_id == shm_event_id((shm_event *)ev));
             }
             /*
