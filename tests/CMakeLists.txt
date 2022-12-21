@@ -53,6 +53,12 @@ add_test(NAME queue-par-cbmc-2
 	         ${CMAKE_SOURCE_DIR}/tests/queue-par-cbmc_2.c
 		 ${CMAKE_SOURCE_DIR}/core/par_queue.c
 		 ${CMAKE_SOURCE_DIR}/core/spsc_ringbuf.c)
+
+add_test(NAME queue-par-cbmc-3
+         COMMAND cbmc -I${CMAKE_SOURCE_DIR} --c11 --unwind 10
+	         ${CMAKE_SOURCE_DIR}/tests/queue-par-cbmc_3.c
+		 ${CMAKE_SOURCE_DIR}/core/par_queue.c
+		 ${CMAKE_SOURCE_DIR}/core/spsc_ringbuf.c)
  endif(CBMC_EXE)
 
 add_executable(arbiter-buffer-test arbiter-buffer.c)
