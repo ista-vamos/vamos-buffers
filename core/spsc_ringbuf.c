@@ -43,7 +43,7 @@ static inline size_t get_free_num(size_t head, size_t tail, size_t capacity) {
         return capacity - head + tail - 1;
 
     if (__predict_false(head == tail)) {
-        return capacity;
+        return capacity - 1;
     }
 
     return tail - head - 1;
