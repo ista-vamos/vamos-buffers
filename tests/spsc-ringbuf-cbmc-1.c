@@ -1,7 +1,6 @@
 #include <assert.h>
-#include <threads.h>
 
-#include "spsc_ringbuf.h"
+#include "core/spsc_ringbuf.h"
 
 extern int nondet(void);
 
