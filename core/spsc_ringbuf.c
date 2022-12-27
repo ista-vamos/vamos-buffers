@@ -18,8 +18,16 @@ void shm_spsc_ringbuf_init(shm_spsc_ringbuf *b, size_t capacity) {
     b->seen_tail = 0;
 }
 
-static inline size_t get_written_num(size_t head, size_t tail,
-                                     size_t capacity) {
+static inline size_t _is_empty(size_t head, size_t tail) {
+    return head == tail;
+}
+
+static inline size_t _is_full(size_t head, size_t tail, size_t capacity) {
+    return head + 1 == tail || (head == capacity - 1 && tail == 0);
+}
+
+static inline size_t _get_written_num(size_t head, size_t tail,
+                                      size_t capacity) {
     if (tail < head) {
         return head - tail;
     } else {
@@ -31,7 +39,7 @@ static inline size_t get_written_num(size_t head, size_t tail,
     }
 }
 
-static inline size_t get_free_num(size_t head, size_t tail, size_t capacity) {
+static inline size_t _get_free_num(size_t head, size_t tail, size_t capacity) {
     assert(head < capacity);
     assert(tail < capacity);
 
@@ -44,6 +52,46 @@ static inline size_t get_free_num(size_t head, size_t tail, size_t capacity) {
     }
 
     return tail - head - 1;
+}
+
+#define CHECK_IF(c, t) assert(!(c) || (t))
+#define CHECK_IFF(c, t) \
+    do {                \
+        CHECK_IF(c, t); \
+        CHECK_IF(t, c); \
+    } while (0)
+
+static inline size_t get_written_num(size_t head, size_t tail,
+                                     size_t capacity) {
+    /* pre */
+    assert(head < capacity);
+    assert(tail < capacity);
+
+    size_t ret = _get_written_num(head, tail, capacity);
+
+    /* post */
+    assert(ret < capacity);
+    CHECK_IFF(_is_empty(head, tail), ret == 0);
+    CHECK_IFF(_is_full(head, tail, capacity), ret == capacity - 1);
+    CHECK_IF(tail < head, ret == head - tail);
+    CHECK_IF(tail > head, ret == (head + (capacity - tail)));
+    assert(ret == capacity - 1 - _get_free_num(head, tail, capacity));
+
+    return ret;
+}
+
+static inline size_t get_free_num(size_t head, size_t tail, size_t capacity) {
+    assert(head < capacity);
+    assert(tail < capacity);
+
+    size_t ret = _get_free_num(head, tail, capacity);
+
+    assert(ret < capacity);
+    CHECK_IFF(_is_empty(head, tail), ret == capacity - 1);
+    CHECK_IFF(_is_full(head, tail, capacity), ret == 0);
+    assert(ret == capacity - 1 - _get_written_num(head, tail, capacity));
+
+    return ret;
 }
 
 size_t shm_spsc_ringbuf_capacity(shm_spsc_ringbuf *b) {
@@ -77,8 +125,7 @@ size_t shm_spsc_ringbuf_free_num(shm_spsc_ringbuf *b) {
 bool shm_spsc_ringbuf_full(shm_spsc_ringbuf *b) {
     size_t head = atomic_load_explicit(&b->head, memory_order_relaxed);
     size_t tail = atomic_load_explicit(&b->tail, memory_order_relaxed);
-    return __predict_false(head + 1 == tail ||
-                           (head == b->capacity - 1 && tail == 0));
+    return __predict_false(_is_full(head, tail, b->capacity));
 }
 
 /* Compute the write offset (with wrapping). Returns the num of free elements */
