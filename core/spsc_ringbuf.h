@@ -48,6 +48,9 @@ size_t shm_spsc_ringbuf_acquire_nowrap(shm_spsc_ringbuf *b, size_t *n);
 void shm_spsc_ringbuf_write_finish(shm_spsc_ringbuf *q, size_t n);
 
 size_t shm_spsc_ringbuf_size(shm_spsc_ringbuf *b);
+size_t shm_spsc_ringbuf_max_size(shm_spsc_ringbuf *b);
+/* capacity == max_size + 1, because we use one element as a separator.
+   Capacity - 1 is the maximal offset that the ringbuf considers. */
 size_t shm_spsc_ringbuf_capacity(shm_spsc_ringbuf *b);
 size_t shm_spsc_ringbuf_free_num(shm_spsc_ringbuf *b);
 bool shm_spsc_ringbuf_full(shm_spsc_ringbuf *b);

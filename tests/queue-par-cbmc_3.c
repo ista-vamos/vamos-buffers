@@ -1,4 +1,5 @@
 #include <assert.h>
+
 #include "core/par_queue.h"
 
 extern bool nondet(void);
@@ -38,5 +39,5 @@ int main(void) {
         }
     }
 
-   shm_par_queue_destroy(&q);
+    shm_par_queue_destroy(&q);
 }

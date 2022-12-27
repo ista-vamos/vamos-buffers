@@ -25,6 +25,10 @@ target_link_libraries(shmbuffer-test shamon-shmbuf shamon-list)
 target_include_directories(shmbuffer-test PRIVATE ${CMAKE_SOURCE_DIR})
 add_test(shmbuffer-test shmbuffer-test)
 
+add_executable(spsc-ringbuf-1 spsc-ringbuf-1.c)
+target_link_libraries(spsc-ringbuf-1 shamon-ringbuf)
+target_include_directories(spsc-ringbuf-1 PRIVATE ${CMAKE_SOURCE_DIR})
+
 add_executable(queue-par-test queue-par-test.c)
 target_link_libraries(queue-par-test shamon-parallel-queue pthread)
 target_include_directories(queue-par-test PRIVATE ${CMAKE_SOURCE_DIR})
@@ -58,6 +62,11 @@ add_test(NAME queue-par-cbmc-3
          COMMAND cbmc -I${CMAKE_SOURCE_DIR} --c11 --unwind 10
 	         ${CMAKE_SOURCE_DIR}/tests/queue-par-cbmc_3.c
 		 ${CMAKE_SOURCE_DIR}/core/par_queue.c
+		 ${CMAKE_SOURCE_DIR}/core/spsc_ringbuf.c)
+
+add_test(NAME spsc-ringbuf-cbmc-1
+         COMMAND cbmc -I${CMAKE_SOURCE_DIR} --c11 --unwind 4
+	         ${CMAKE_SOURCE_DIR}/tests/spsc-ringbuf-cbmc-1.c
 		 ${CMAKE_SOURCE_DIR}/core/spsc_ringbuf.c)
  endif(CBMC_EXE)
 
