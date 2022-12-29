@@ -207,7 +207,19 @@ static struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
             "Initializing buffer '%s' with elem size '%lu' and minimum "
             "capacity '%lu' (%lu pages)\n",
             key, elem_size, capacity, memsize / PAGE_SIZE);
-    int fd = shamon_shm_open(key, O_RDWR | O_CREAT | O_TRUNC, mode);
+
+    /* We first create a temporary key and open the SHM file with that key
+     * instead of the required key. Then we can initialize the shared memory
+     * and only then we rename the file to use the original key. This way
+     * we avoid a race when the other side opens the SHM file and reads from
+     * it before it is fully initialized */
+    char tmpkey[SHM_NAME_MAXLEN] = "";
+    if (shamon_get_tmp_key(key, tmpkey, SHM_NAME_MAXLEN) == -1) {
+        fprintf(stderr, "Failed creating a tmpkey for '%s'\n", key);
+        return NULL;
+    }
+
+    int fd = shamon_shm_open(tmpkey, O_RDWR | O_CREAT | O_TRUNC, mode);
     if (fd < 0) {
         perror("shm_open");
         return NULL;
@@ -224,7 +236,7 @@ static struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
         if (close(fd) == -1) {
             perror("closing fd after mmap failure");
         }
-        if (shamon_shm_unlink(key) != 0) {
+        if (shamon_shm_unlink(tmpkey) != 0) {
             perror("shm_unlink after mmap failure");
         }
         return NULL;
@@ -272,6 +284,19 @@ static struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
     buff->control = control;
     buff->mode = mode;
     buff->last_subbufer_no = 0;
+
+    if (shamon_shm_rename(tmpkey, key) < 0) {
+        perror("renaming SHM file");
+
+        if (close(fd) == -1) {
+            perror("closing fd after mmap failure");
+        }
+        if (shamon_shm_unlink(tmpkey) != 0) {
+            perror("shm_unlink after mmap failure");
+        }
+        free(buff);
+        return NULL;
+    }
 
     puts("Done");
     return buff;

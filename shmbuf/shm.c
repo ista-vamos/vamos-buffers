@@ -56,6 +56,28 @@ int shamon_shm_open(const char *key, int flags, mode_t mode) {
     return open(name, flags | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK, mode);
 }
 
+int shamon_get_tmp_key(const char *key, char *buf, size_t bufsize) {
+    if (strlen(key) + 5 > bufsize) {
+        return -1;
+    }
+
+    strcat(strcat(buf, key), ".tmp");
+
+    return 0;
+}
+
+int shamon_shm_rename(const char *old_key, const char *new_key) {
+    char old_name[SHM_NAME_MAXLEN];
+    char new_name[SHM_NAME_MAXLEN];
+    if (shm_mapname(old_key, old_name) == 0) {
+        return -1;
+    }
+    if (shm_mapname(new_key, new_name) == 0) {
+        return -1;
+    }
+    return rename(old_name, new_name);
+}
+
 int shamon_shm_unlink(const char *key) {
     printf("UNLINK: %s\n", key);
     char name[SHM_NAME_MAXLEN];
