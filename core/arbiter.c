@@ -638,6 +638,15 @@ void *stream_filter_fetch(shm_stream *stream, shm_arbiter_buffer *buffer,
     }
 }
 
+
+bool shm_arbiter_buffer_is_done(shm_arbiter_buffer *buffer) {
+    /* XXX: should we rather use a flag that we set to true when stream-fetch
+     * knows that the stream is done? */
+    return (shm_par_queue_size(&buffer->buffer) == 0 && buffer->dropped_num == 0)
+            && !shm_stream_is_ready(buffer->stream);
+}
+
+
 void shm_arbiter_buffer_notify_dropped(shm_arbiter_buffer *buffer,
                                        uint64_t begin_id, uint64_t end_id) {
     shm_stream_notify_dropped(buffer->stream, begin_id, end_id);

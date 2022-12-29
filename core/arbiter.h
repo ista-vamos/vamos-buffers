@@ -67,6 +67,8 @@ void *stream_fetch(shm_stream *stream, shm_arbiter_buffer *buffer);
 void *stream_filter_fetch(shm_stream *stream, shm_arbiter_buffer *buffer,
                           shm_stream_filter_fn filter);
 
+bool shm_arbiter_buffer_is_done(shm_arbiter_buffer *buffer);
+
 size_t shm_arbiter_buffer_dropped_num(shm_arbiter_buffer *buffer);
 size_t shm_arbiter_buffer_dropped_times(shm_arbiter_buffer *buffer);
 size_t shm_arbiter_buffer_written_num(shm_arbiter_buffer *buffer);

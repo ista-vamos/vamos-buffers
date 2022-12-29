@@ -840,7 +840,14 @@ struct source_control *create_shared_control_buffer(
     size_t size = control->size;
 
     printf("Initializing control buffer '%s' of size '%lu'\n", key, size);
-    int fd = shamon_shm_open(key, O_RDWR | O_CREAT, mode);
+
+    char tmpkey[SHM_NAME_MAXLEN] = "";
+    if (shamon_get_tmp_key(key, tmpkey, SHM_NAME_MAXLEN) == -1) {
+        fprintf(stderr, "Failed creating a tmpkey for '%s'\n", key);
+        return NULL;
+    }
+
+    int fd = shamon_shm_open(tmpkey, O_RDWR | O_CREAT, mode);
     if (fd < 0) {
         perror("shm_open");
         return NULL;
@@ -872,6 +879,21 @@ struct source_control *create_shared_control_buffer(
     }
 
     memcpy(mem, control, size);
+
+    if (shamon_shm_rename(tmpkey, key) < 0) {
+        perror("renaming SHM file");
+
+        if (close(fd) == -1) {
+            perror("closing fd after mmap failure");
+        }
+        if (shamon_shm_unlink(tmpkey) != 0) {
+            perror("shm_unlink after mmap failure");
+        }
+        if (munmap(mem, size) != 0) {
+            perror("munmap of control buffer");
+        }
+        return NULL;
+    }
 
     return (struct source_control *)mem;
 }
