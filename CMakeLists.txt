@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(shamon LANGUAGES C VERSION 0.1)
+project(Shamon C)
 
 enable_testing()
 
@@ -87,16 +87,3 @@ add_subdirectory(monitors)
 add_subdirectory(experiments)
 add_subdirectory(tests)
 
-install(EXPORT shamonCore
-    FILE shamon.cmake
-    #NAMESPACE shmn::
-    DESTINATION lib/cmake/shamon)
-
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(
-    "shamonVersion.cmake"
-    VERSION ${shamon_VERSION}
-    COMPATIBILITY AnyNewerVersion)
-
-install(FILES "shamonVersion.cmake"
-    DESTINATION lib/cmake/shamon)
