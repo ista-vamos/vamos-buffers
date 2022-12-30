@@ -45,3 +45,11 @@ target_link_libraries(shamon-lib PUBLIC shamon-parallel-queue
 		                 PUBLIC shamon-event
 		                 PUBLIC shamon-shmbuf)
 
+install(TARGETS shamon-utils shamon-signature shamon-string shamon-monitor shamon-stream shamon-arbiter shamon-ringbuf shamon-parallel-queue shamon shamon-lib
+    EXPORT shamonInstalled
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin)
+
+install(FILES shamon.h arbiter.h stream.h event.h spsc_ringbuf.h par_queue.h
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/shamon)
