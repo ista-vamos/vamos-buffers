@@ -67,16 +67,17 @@ static size_t compute_shm_size(size_t elem_size, size_t capacity) {
     size_t size = (elem_size * capacity) + sizeof(struct shmbuffer);
     /* round it up to page size.
      * XXX: do we need that? mmap will do this internally anyway */
-    size_t roundup = (size % PAGE_SIZE);
+    size_t roundup = PAGE_SIZE - (size % PAGE_SIZE);
     if (roundup > (PAGE_SIZE) / 4) {
         fprintf(stderr,
                 "The required capacity '%lu' of SHM buffer will result in %lu "
                 "unused bytes "
                 "in a memory page, consider changing it.\n"
                 "You have space for %lu more elements...\n",
-                capacity, roundup, roundup / elem_size);
+                capacity - 1, roundup, (roundup / elem_size));
     }
     size += roundup;
+    assert((size % PAGE_SIZE) == 0);
     return size;
 }
 
@@ -205,8 +206,8 @@ static struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
 
     fprintf(stderr,
             "Initializing buffer '%s' with elem size '%lu' and minimum "
-            "capacity '%lu' (%lu pages)\n",
-            key, elem_size, capacity, memsize / PAGE_SIZE);
+            "capacity '%lu' (%lu bytes -> %lu pages)\n",
+            key, elem_size, capacity, memsize, memsize / PAGE_SIZE);
 
     /* We first create a temporary key and open the SHM file with that key
      * instead of the required key. Then we can initialize the shared memory
