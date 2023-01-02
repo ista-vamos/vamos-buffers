@@ -205,7 +205,7 @@ static struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
     const size_t memsize = compute_shm_size(elem_size, capacity + 1);
 
     fprintf(stderr,
-            "Initializing buffer '%s' with elem size '%lu' and minimum "
+            "Initializing buffer '%s' with the element size '%lu' and the "
             "capacity '%lu' (%lu bytes -> %lu pages)\n",
             key, elem_size, capacity, memsize, memsize / PAGE_SIZE);
 
