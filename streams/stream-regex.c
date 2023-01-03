@@ -30,8 +30,8 @@ shm_stream *shm_create_sregex_stream(
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
     shm_stream_init((shm_stream *)ss, shmbuffer, elem_size, sregex_is_ready,
-                    /* filter = */ NULL, sregex_alter, NULL,
-                    hole_handling, "regex-stream", name);
+                    /* filter = */ NULL, sregex_alter, NULL, hole_handling,
+                    "regex-stream", name);
     ss->shmbuffer = shmbuffer;
 
     return (shm_stream *)ss;

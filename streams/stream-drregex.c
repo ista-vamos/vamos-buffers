@@ -28,8 +28,7 @@ shm_stream *shm_create_drregex_stream(const char *key, const char *name) {
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
     shm_stream_init((shm_stream *)ss, shmbuffer, elem_size, drregex_is_ready,
-                    NULL, drregex_alter, NULL, NULL,
-                    "drregex-stream", name);
+                    NULL, drregex_alter, NULL, NULL, "drregex-stream", name);
     ss->shmbuffer = shmbuffer;
 
     return (shm_stream *)ss;

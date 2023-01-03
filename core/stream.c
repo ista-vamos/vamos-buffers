@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "shmbuf/buffer.h"
 #include "core/vector-macro.h"
+#include "shmbuf/buffer.h"
 #include "utils.h"
 
 /*****
@@ -77,7 +77,9 @@ static void shm_substream_destroy(shm_stream *stream) {
     for (unsigned i = 0; i < VEC_SIZE(stream->substreams); ++i) {
         shm_stream *sub = stream->substreams[i];
         if (shm_stream_is_ready(sub)) {
-            fprintf(stderr, "warn: destroying substream %lu of %s (%lu) which is still ready\n",
+            fprintf(stderr,
+                    "warn: destroying substream %lu of %s (%lu) which is still "
+                    "ready\n",
                     shm_stream_id(sub), stream->name, shm_stream_id(stream));
         }
         shm_substream_destroy(sub);
@@ -95,14 +97,15 @@ static void shm_substream_destroy(shm_stream *stream) {
     free(stream);
 }
 
-
 void shm_stream_destroy(shm_stream *stream) {
     shm_stream_detach(stream);
 
     for (unsigned i = 0; i < VEC_SIZE(stream->substreams); ++i) {
         shm_stream *sub = stream->substreams[i];
         if (shm_stream_is_ready(sub)) {
-            fprintf(stderr, "warn: destroying substream %lu of %s (%lu) which is still ready\n",
+            fprintf(stderr,
+                    "warn: destroying substream %lu of %s (%lu) which is still "
+                    "ready\n",
                     shm_stream_id(sub), stream->name, shm_stream_id(stream));
         }
         shm_substream_destroy(sub);
