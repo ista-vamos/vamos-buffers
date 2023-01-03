@@ -4,8 +4,8 @@ add_library(shamon-utils STATIC utils.c)
 target_compile_definitions(shamon-utils PUBLIC -D_POSIX_C_SOURCE=200809L)
 target_compile_options(shamon-utils PRIVATE -fPIC)
 
-add_library(shamon-list OBJECT list.c list-embedded.c)
-add_library(shamon-event OBJECT event.c)
+add_library(shamon-list STATIC list.c list-embedded.c)
+add_library(shamon-event STATIC event.c)
 add_library(shamon-queue-spsc OBJECT queue_spsc.c)
 
 add_library(shamon-vector STATIC vector.c vector-aligned.c)
@@ -13,7 +13,7 @@ target_link_libraries(shamon-vector PRIVATE shamon-utils)
 
 add_library(shamon-string STATIC shm_string.c)
 
-add_library(shamon-source OBJECT source.c)
+add_library(shamon-source STATIC source.c)
 add_library(shamon-monitor STATIC monitor.c)
 
 target_compile_options(shamon-source PRIVATE -fPIC)
@@ -45,11 +45,11 @@ target_link_libraries(shamon-lib PUBLIC shamon-parallel-queue
 		                 PUBLIC shamon-event
 		                 PUBLIC shamon-shmbuf)
 
-install(TARGETS shamon-utils shamon-signature shamon-string shamon-monitor shamon-stream shamon-arbiter shamon-ringbuf shamon-parallel-queue shamon shamon-lib
-    EXPORT shamonInstalled
+install(TARGETS shamon-utils shamon-signature shamon-string shamon-monitor shamon-stream shamon-arbiter shamon-ringbuf shamon-parallel-queue shamon shamon-lib shamon-event shamon-source shamon-list shamon-vector
+    EXPORT shamonCore
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin)
 
-install(FILES shamon.h arbiter.h stream.h event.h spsc_ringbuf.h par_queue.h
-	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/shamon)
+install(FILES shamon.h arbiter.h stream.h event.h spsc_ringbuf.h par_queue.h signatures.h
+	DESTINATION include/shamon/core)
