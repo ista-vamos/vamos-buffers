@@ -1,6 +1,10 @@
 #ifndef SHAMON_VECTOR_H_
 #define SHAMON_VECTOR_H_
 
+/**
+ * Implementation of a vector similar to std::vector in C++
+ */
+
 #include <unistd.h>
 
 typedef struct _shm_vector {
