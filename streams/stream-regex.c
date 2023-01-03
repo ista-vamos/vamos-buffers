@@ -21,11 +21,6 @@ void sregex_alter(shm_stream *stream, shm_event *in, shm_event *out) {
     memcpy(out, in, stream->event_size);
 }
 
-static void sregex_destroy(shm_stream *s) {
-    release_shared_buffer(((shm_stream_sregex *)s)->shmbuffer);
-    free(s);
-}
-
 shm_stream *shm_create_sregex_stream(
     const char *key, const char *name,
     const shm_stream_hole_handling *hole_handling) {
@@ -35,7 +30,7 @@ shm_stream *shm_create_sregex_stream(
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
     shm_stream_init((shm_stream *)ss, shmbuffer, elem_size, sregex_is_ready,
-                    /* filter = */ NULL, sregex_alter, sregex_destroy,
+                    /* filter = */ NULL, sregex_alter, NULL,
                     hole_handling, "regex-stream", name);
     ss->shmbuffer = shmbuffer;
 

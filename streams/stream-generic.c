@@ -24,11 +24,6 @@ static void generic_alter(shm_stream *stream, shm_event *in, shm_event *out) {
     memcpy(out, in, stream->event_size);
 }
 
-static void generic_destroy(shm_stream *s) {
-    release_shared_buffer(s->incoming_events_buffer);
-    free(s);
-}
-
 shm_stream *shm_create_generic_stream(const char *key, const char *name,
                                       shm_stream_hole_handling *hole_handling) {
     shm_stream_generic *ss = malloc(sizeof *ss);
@@ -37,7 +32,7 @@ shm_stream *shm_create_generic_stream(const char *key, const char *name,
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
     shm_stream_init((shm_stream *)ss, shmbuffer, elem_size, generic_is_ready,
-                    NULL, generic_alter, generic_destroy, hole_handling,
+                    NULL, generic_alter, NULL, hole_handling,
                     "generic-stream", name);
     ss->shmbuffer = shmbuffer;
 

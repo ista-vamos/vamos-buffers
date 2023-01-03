@@ -3,6 +3,7 @@
 
 #include "event.h"
 #include "source.h"
+#include "vector-macro.h"
 
 typedef struct _shm_arbiter_buffer shm_arbiter_buffer;
 
@@ -41,6 +42,8 @@ typedef struct _shm_stream {
     shm_stream_alter_fn alter;
     shm_stream_destroy_fn destroy;
     shm_stream_hole_handling hole_handling;
+    /* substreams of this stream */
+    VEC(substreams, struct _shm_stream *);
 #ifndef NDEBUG
     /* for checking consistency */
     size_t last_event_id;

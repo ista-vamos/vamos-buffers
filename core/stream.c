@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "shmbuf/buffer.h"
+#include "core/vector-macro.h"
 #include "utils.h"
 
 /*****
@@ -67,18 +68,56 @@ void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
            hole_handling->init);
 
     stream->hole_handling = *hole_handling;
+    VEC_INIT(stream->substreams);
 }
 
-void shm_stream_destroy(shm_stream *stream) {
+static void shm_substream_destroy(shm_stream *stream) {
     shm_stream_detach(stream);
+
+    for (unsigned i = 0; i < VEC_SIZE(stream->substreams); ++i) {
+        shm_stream *sub = stream->substreams[i];
+        if (shm_stream_is_ready(sub)) {
+            fprintf(stderr, "warn: destroying substream %lu of %s (%lu) which is still ready\n",
+                    shm_stream_id(sub), stream->name, shm_stream_id(stream));
+        }
+        shm_substream_destroy(sub);
+    }
+
+    if (stream->destroy) {
+        stream->destroy(stream);
+    }
 
     free(stream->type);
     free(stream->name);
     free(stream->events_cache);
 
+    release_shared_sub_buffer(stream->incoming_events_buffer);
+    free(stream);
+}
+
+
+void shm_stream_destroy(shm_stream *stream) {
+    shm_stream_detach(stream);
+
+    for (unsigned i = 0; i < VEC_SIZE(stream->substreams); ++i) {
+        shm_stream *sub = stream->substreams[i];
+        if (shm_stream_is_ready(sub)) {
+            fprintf(stderr, "warn: destroying substream %lu of %s (%lu) which is still ready\n",
+                    shm_stream_id(sub), stream->name, shm_stream_id(stream));
+        }
+        shm_substream_destroy(sub);
+    }
+
     if (stream->destroy) {
         stream->destroy(stream);
     }
+
+    free(stream->type);
+    free(stream->name);
+    free(stream->events_cache);
+
+    release_shared_buffer(stream->incoming_events_buffer);
+    free(stream);
 }
 
 size_t shm_stream_id(shm_stream *stream) { return stream->id; }
@@ -109,9 +148,9 @@ shm_stream *shm_stream_create_substream(
     char *key = get_sub_buffer_key(
         buffer_get_key(stream->incoming_events_buffer), substream_no);
     struct buffer *shmbuffer = get_shared_buffer(key);
+    assert(shmbuffer && "Getting the shm buffer failed");
 
     shm_stream *substream = xalloc(sizeof *substream);
-    assert(shmbuffer && "Getting the shm buffer failed");
 
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
@@ -126,6 +165,9 @@ shm_stream *shm_stream_create_substream(
         hole_handling ? hole_handling : &stream->hole_handling,
         shm_stream_get_type(stream), substream_name);
     free(substream_name);
+
+    VEC_PUSH(stream->substreams, &substream);
+
     return substream;
 }
 
