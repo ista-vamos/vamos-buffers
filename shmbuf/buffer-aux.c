@@ -6,6 +6,22 @@
 #include "shm.h"
 
 HIDE_SYMBOL
+void drop_ranges_unlock(struct buffer *buff) {
+    /* FIXME: use explicit memory ordering, seq_cnt is not needed here */
+    buff->shmbuffer->info.dropped_ranges_lock = false;
+}
+
+HIDE_SYMBOL
+void drop_ranges_lock(struct buffer *buff) {
+    _Atomic bool *l = &buff->shmbuffer->info.dropped_ranges_lock;
+    bool unlocked;
+    do {
+        unlocked = false;
+    } while (atomic_compare_exchange_weak(l, &unlocked, true));
+}
+
+
+HIDE_SYMBOL
 void aux_buffer_release(struct aux_buffer *buffer) {
     assert((buffer->size + sizeof(struct aux_buffer)) % sysconf(_SC_PAGESIZE) ==
            0);

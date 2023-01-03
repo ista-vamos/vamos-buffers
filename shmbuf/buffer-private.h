@@ -116,17 +116,7 @@ void aux_buffer_release(struct aux_buffer *buffer);
 struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size);
 struct aux_buffer *reader_get_aux_buffer(struct buffer *buff, size_t idx);
 
-inline void drop_ranges_lock(struct buffer *buff) {
-    _Atomic bool *l = &buff->shmbuffer->info.dropped_ranges_lock;
-    bool unlocked;
-    do {
-        unlocked = false;
-    } while (atomic_compare_exchange_weak(l, &unlocked, true));
-}
-
-inline void drop_ranges_unlock(struct buffer *buff) {
-    /* FIXME: use explicit memory ordering, seq_cnt is not needed here */
-    buff->shmbuffer->info.dropped_ranges_lock = false;
-}
+void drop_ranges_lock(struct buffer *buff);
+void drop_ranges_unlock(struct buffer *buff);
 
 #endif /* SHAMON_SHM_BUFFER_PRIVATE_H */
