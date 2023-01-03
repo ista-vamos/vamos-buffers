@@ -182,7 +182,9 @@ void shamon_destroy(shamon *shmn) {
     }
 
     for (size_t i = 0; i < VEC_SIZE(shmn->streams); ++i) {
-        shm_stream_destroy(shmn->streams[i]);
+        if (!shm_stream_is_substream(shmn->streams[i])) {
+            shm_stream_destroy(shmn->streams[i]);
+        }
     }
     VEC_DESTROY(shmn->streams);
     VEC_DESTROY(shmn->buffer_threads);

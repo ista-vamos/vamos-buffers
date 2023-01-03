@@ -68,6 +68,7 @@ void shm_stream_init(shm_stream *stream, struct buffer *incoming_events_buffer,
            hole_handling->init);
 
     stream->hole_handling = *hole_handling;
+    stream->parent_stream = NULL;
     VEC_INIT(stream->substreams);
 }
 
@@ -140,6 +141,10 @@ _Bool shm_stream_has_new_substreams(shm_stream *stream) {
            stream->substreams_no;
 }
 
+_Bool shm_stream_is_substream(shm_stream *stream) {
+    return stream->parent_stream != NULL;
+}
+
 shm_stream *shm_stream_create_substream(
     shm_stream *stream, shm_stream_is_ready_fn is_ready,
     shm_stream_filter_fn filter, shm_stream_alter_fn alter,
@@ -167,6 +172,7 @@ shm_stream *shm_stream_create_substream(
         destroy ? destroy : stream->destroy,
         hole_handling ? hole_handling : &stream->hole_handling,
         shm_stream_get_type(stream), substream_name);
+    substream->parent_stream = stream;
     free(substream_name);
 
     VEC_PUSH(stream->substreams, &substream);

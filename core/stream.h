@@ -42,7 +42,8 @@ typedef struct _shm_stream {
     shm_stream_alter_fn alter;
     shm_stream_destroy_fn destroy;
     shm_stream_hole_handling hole_handling;
-    /* substreams of this stream */
+    /* substreams of this stream and the link to the parent */
+    shm_stream *parent_stream;
     VEC(substreams, struct _shm_stream *);
 #ifndef NDEBUG
     /* for checking consistency */
@@ -80,6 +81,7 @@ int shm_stream_register_events(shm_stream *, size_t sz, ...);
 int shm_stream_register_all_events(shm_stream *);
 
 _Bool shm_stream_has_new_substreams(shm_stream *stream);
+_Bool shm_stream_is_substream(shm_stream *stream);
 
 shm_stream *shm_stream_create_substream(
     shm_stream *stream, shm_stream_is_ready_fn is_ready,
