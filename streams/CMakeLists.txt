@@ -4,7 +4,6 @@ add_library(shamon-streams STATIC
             stream-regexrw.c
             stream-drregex.c
             stream-generic.c
-            #stream-fds.c
             stream-funs.c)
 target_link_libraries(shamon-streams PUBLIC shamon-signature shamon-source shamon-stream)
 target_compile_options(shamon-streams PRIVATE -fPIC)
