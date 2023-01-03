@@ -34,13 +34,6 @@ void destroy_shared_buffer(struct buffer *);
 void destroy_shared_sub_buffer(struct buffer *);
 void release_shared_sub_buffer(struct buffer *);
 
-#if 0
-struct buffer *initialize_local_buffer(size_t elem_size);
-void free_local_buffer(struct buffer *buff);
-/* get a local memory to which we can copy the shared buffer */
-//struct buffer *get_local_buffer(struct buffer *shared_buffer);
-#endif
-
 bool buffer_is_ready(struct buffer *);
 bool buffer_monitor_attached(struct buffer *);
 void buffer_set_attached(struct buffer *, bool);
