@@ -26,14 +26,19 @@ void shm_vector_swap(shm_vector *vec, shm_vector *with) {
 }
 
 void shm_vector_resize(shm_vector *vec, size_t size) {
-    if (vec->size >= size)
+    if (vec->size >= size) {
         return;
+    }
+
     if (size >= vec->alloc_size) {
         // TODO: exp. growth?
         vec->alloc_size = size;
         assert(0 < vec->element_size);
         vec->data = realloc(vec->data, vec->alloc_size * vec->element_size);
-        assert(vec->data != NULL && "Memory re-allocation failed");
+        if (vec->data == NULL) {
+            assert(0 && "Memory re-allocation failed");
+            abort();
+        }
     }
 
     void *addr = ((unsigned char *)vec->data) + vec->size * vec->element_size;
@@ -74,13 +79,20 @@ size_t shm_vector_elem_size(shm_vector *vec) {
     return vec->element_size;
 }
 
-/*
- * Return the pointer to the element at index 'idx'
- */
 void *shm_vector_at(shm_vector *vec, size_t idx) {
     assert(idx < vec->size);
     assert(0 < vec->element_size);
     return (void *)(((unsigned char *)vec->data) + idx * vec->element_size);
+}
+
+void *shm_vector_at_checked(shm_vector *vec, size_t idx) {
+    assert(0 < vec->element_size);
+
+    if (idx < vec->size) {
+        return (void *)(((unsigned char *)vec->data) + idx * vec->element_size);
+    }
+
+    return NULL;
 }
 
 void *shm_vector_top(shm_vector *vec) {

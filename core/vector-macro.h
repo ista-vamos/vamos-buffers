@@ -97,7 +97,7 @@
     } while (0)
 
 /**
- * Return the pointer to the next free space in the vector and increate
+ * Return the pointer to the next free space in the vector and increase
  * the number of elements in the vector by one.
  * The returned pointer should be used to write the element into the vector,
  * e.g.:
@@ -127,7 +127,7 @@
 /**
  * Push an element pointed by `elemptr` into `vec`.
  * Memory is reallocated if needed. By default, the new memory can store
- * 10 more * elements than the previously allocated memory.
+ * 10 more elements than the previously allocated memory.
  */
 #define VEC_PUSH(vec, elemptr)                                                \
     do {                                                                      \
