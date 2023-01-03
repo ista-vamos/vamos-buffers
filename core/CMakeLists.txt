@@ -1,6 +1,6 @@
 include_directories(${CMAKE_SOURCE_DIR})
 
-add_library(shamon-utils STATIC utils.c)
+add_library(shamon-utils OBJECT utils.c)
 target_compile_definitions(shamon-utils PUBLIC -D_POSIX_C_SOURCE=200809L)
 target_compile_options(shamon-utils PRIVATE -fPIC)
 
