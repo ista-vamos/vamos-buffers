@@ -92,10 +92,20 @@ install(EXPORT shamonCore
     DESTINATION lib/cmake/shamon)
 
 include(CMakePackageConfigHelpers)
+
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/shamonConfig.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/shamonConfig.cmake"
+  INSTALL_DESTINATION "lib/cmake/shamon"
+  NO_SET_AND_CHECK_MACRO
+  NO_CHECK_REQUIRED_COMPONENTS_MACRO
+  )
+
 write_basic_package_version_file(
     "shamonVersion.cmake"
     VERSION ${shamon_VERSION}
     COMPATIBILITY AnyNewerVersion)
 
-install(FILES "shamonVersion.cmake"
-    DESTINATION lib/cmake/shamon)
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/shamonConfig.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/shamonVersion.cmake"
+  DESTINATION lib/cmake/shamon)
