@@ -15,6 +15,12 @@ if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 	include(CheckIPOSupported)
 	check_ipo_supported()
 	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+
+	if (NOT CMAKE_C_COMPILER_ID MATCHES "Clang")
+		message(WARNING "IPO are used, but the compiler is not clang (compiler = ${CMAKE_C_COMPILER_ID})."
+			        "This may cause troubles when using compilation scripts "
+				"that are not based on cmake (e.g., gen/compile.sh).")
+	endif()
 endif()
 
 OPTION(DUMP_STATS "Collect and allow dumping statistics" OFF)
