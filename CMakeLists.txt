@@ -71,7 +71,7 @@ endif()
 
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wpedantic -Werror")
-add_compile_options(-Wall -Wextra -pedantic -Werror)
+add_compile_options(-Wall -Wextra -pedantic)
 
 if (DYNAMORIO_SOURCES)
         find_package(DynamoRIO)
