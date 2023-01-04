@@ -10,6 +10,9 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
+OPTION(ENABLE_IPO "Enable interprocedural optimizations" ON)
+
+if (ENABLE_IPO)
 if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 	cmake_policy(SET CMP0069 NEW)
 	include(CheckIPOSupported)
@@ -22,6 +25,7 @@ if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 				"that are not based on cmake (e.g., gen/compile.sh).")
 	endif()
 endif()
+endif(ENABLE_IPO)
 
 OPTION(DUMP_STATS "Collect and allow dumping statistics" OFF)
 OPTION(DYNAMORIO_SOURCES "Build sources based on DynamoRIO" ON)
