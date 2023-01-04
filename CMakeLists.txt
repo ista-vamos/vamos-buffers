@@ -96,6 +96,21 @@ add_subdirectory(monitors)
 add_subdirectory(experiments)
 add_subdirectory(tests)
 
+
+add_library(shamon-client STATIC core/source.c)
+target_link_libraries(shamon-client PUBLIC shamon-shmbuf shamon-utils shamon-event shamon-queue-spsc shamon-vector
+                                            shamon-list shamon-string shamon-ringbuf shamon-signature)
+set_property(TARGET shamon-client PROPERTY POSITION_INDEPENDENT_CODE 1)
+
+
+add_library(shamon-monitor STATIC core/monitor.c)
+target_link_libraries(shamon-monitor PUBLIC shamon-streams shamon-stream shamon-shmbuf shamon-source shamon-arbiter shamon-parallel-queue
+                                            shamon-utils shamon-event shamon-queue-spsc shamon-vector
+                                            shamon-list shamon-string shamon-ringbuf shamon-signature)
+set_property(TARGET shamon-monitor PROPERTY POSITION_INDEPENDENT_CODE 1)
+
+
+
 install(EXPORT shamonCore
     FILE shamon.cmake
     #NAMESPACE shmn::

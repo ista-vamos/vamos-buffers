@@ -5,8 +5,8 @@ add_library(shamon-streams STATIC
             stream-drregex.c
             stream-generic.c
             stream-funs.c)
-target_link_libraries(shamon-streams PUBLIC shamon-signature shamon-source shamon-stream)
-target_compile_options(shamon-streams PRIVATE -fPIC)
+target_link_libraries(shamon-streams PUBLIC shamon-shmbuf shamon-stream)
+set_property(TARGET shamon-streams PROPERTY POSITION_INDEPENDENT_CODE 1)
 target_include_directories(shamon-streams PRIVATE
                            ${CMAKE_SOURCE_DIR}
                            ${CMAKE_SOURCE_DIR}/shmbuf)
