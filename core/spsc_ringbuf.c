@@ -110,6 +110,11 @@ size_t shm_spsc_ringbuf_size(shm_spsc_ringbuf *b) {
                            b->capacity);
 }
 
+bool shm_spsc_ringbuf_empty(shm_spsc_ringbuf *b) {
+    return _is_empty(atomic_load_explicit(&b->head, memory_order_relaxed),
+                     atomic_load_explicit(&b->tail, memory_order_relaxed));
+}
+
 size_t shm_spsc_ringbuf_free_num(shm_spsc_ringbuf *b) {
     return get_free_num(atomic_load_explicit(&b->head, memory_order_relaxed),
                         atomic_load_explicit(&b->tail, memory_order_relaxed),

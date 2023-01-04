@@ -54,6 +54,7 @@ size_t shm_spsc_ringbuf_max_size(shm_spsc_ringbuf *b);
 size_t shm_spsc_ringbuf_capacity(shm_spsc_ringbuf *b);
 size_t shm_spsc_ringbuf_free_num(shm_spsc_ringbuf *b);
 bool shm_spsc_ringbuf_full(shm_spsc_ringbuf *b);
+bool shm_spsc_ringbuf_empty(shm_spsc_ringbuf *b);
 
 size_t shm_spsc_ringbuf_read_off_nowrap(shm_spsc_ringbuf *b, size_t *n);
 size_t shm_spsc_ringbuf_read_acquire(shm_spsc_ringbuf *b, size_t *n);
