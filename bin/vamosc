@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 BASEPATH=$(dirname $(readlink -f $0))/../..
-python3 $BASEPATH/shamon/compiler/main.py $@
+python3 $BASEPATH/shamon/compiler/vamosc.py $@
