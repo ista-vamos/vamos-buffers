@@ -115,6 +115,9 @@ install(EXPORT shamonCore
     FILE shamon.cmake
     #NAMESPACE shmn::
     DESTINATION lib/cmake/shamon)
+# also export the .cmake file into current build directory
+# so that we can use also non-installed builds
+export(EXPORT shamonCore FILE ${CMAKE_CURRENT_BINARY_DIR}/shamon.cmake)
 
 include(CMakePackageConfigHelpers)
 
