@@ -36,5 +36,3 @@ install(TARGETS shamon-utils shamon-list shamon-event shamon-queue-spsc
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin)
 
-install(FILES shamon.h arbiter.h stream.h event.h spsc_ringbuf.h par_queue.h signatures.h
-	DESTINATION include/shamon/core)

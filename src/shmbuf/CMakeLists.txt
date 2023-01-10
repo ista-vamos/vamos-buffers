@@ -11,5 +11,3 @@ install(TARGETS shamon-shmbuf
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin)
 
-install(FILES client.h buffer.h
-	DESTINATION include/shamon/shmbuf)

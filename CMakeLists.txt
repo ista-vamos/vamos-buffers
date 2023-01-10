@@ -97,6 +97,8 @@ add_subdirectory(monitors)
 add_subdirectory(experiments)
 add_subdirectory(tests)
 
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
 install(EXPORT shamonCore
     FILE shamon.cmake
     #NAMESPACE shmn::
