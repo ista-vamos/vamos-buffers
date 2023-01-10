@@ -2,7 +2,7 @@
 // CBMC does not handle C11 threads API
 #include <pthread.h>
 
-#include "core/par_queue.h"
+#include "shamon/core/par_queue.h"
 
 int buffer[4];
 

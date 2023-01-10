@@ -46,28 +46,28 @@ add_test(queue-par-test-3 queue-par-test-3 REPEAT 1000)
 
 if (CBMC_EXE)
 add_test(NAME queue-par-cbmc
-         COMMAND cbmc -I${CMAKE_SOURCE_DIR} --c11 --unwind 2
+         COMMAND cbmc -I${CMAKE_SOURCE_DIR}/include --c11 --unwind 2
 	         ${CMAKE_SOURCE_DIR}/tests/queue-par-cbmc.c
-		 ${CMAKE_SOURCE_DIR}/core/par_queue.c
-		 ${CMAKE_SOURCE_DIR}/core/spsc_ringbuf.c)
+                 ${CMAKE_SOURCE_DIR}/src/core/par_queue.c
+                 ${CMAKE_SOURCE_DIR}/src/core/spsc_ringbuf.c)
 
 
 add_test(NAME queue-par-cbmc-2
-         COMMAND cbmc -I${CMAKE_SOURCE_DIR} --c11 --unwind 2
+         COMMAND cbmc -I${CMAKE_SOURCE_DIR}/include --c11 --unwind 2
 	         ${CMAKE_SOURCE_DIR}/tests/queue-par-cbmc_2.c
-		 ${CMAKE_SOURCE_DIR}/core/par_queue.c
-		 ${CMAKE_SOURCE_DIR}/core/spsc_ringbuf.c)
+                 ${CMAKE_SOURCE_DIR}/src/core/par_queue.c
+                 ${CMAKE_SOURCE_DIR}/src/core/spsc_ringbuf.c)
 
 add_test(NAME queue-par-cbmc-3
-         COMMAND cbmc -I${CMAKE_SOURCE_DIR} --c11 --unwind 10
+         COMMAND cbmc -I${CMAKE_SOURCE_DIR}/include --c11 --unwind 10
 	         ${CMAKE_SOURCE_DIR}/tests/queue-par-cbmc_3.c
-		 ${CMAKE_SOURCE_DIR}/core/par_queue.c
-		 ${CMAKE_SOURCE_DIR}/core/spsc_ringbuf.c)
+                 ${CMAKE_SOURCE_DIR}/src/core/par_queue.c
+                 ${CMAKE_SOURCE_DIR}/src/core/spsc_ringbuf.c)
 
 add_test(NAME spsc-ringbuf-cbmc-1
-         COMMAND cbmc -I${CMAKE_SOURCE_DIR} --c11 --unwind 4
+         COMMAND cbmc -I${CMAKE_SOURCE_DIR}/include --c11 --unwind 4
 	         ${CMAKE_SOURCE_DIR}/tests/spsc-ringbuf-cbmc-1.c
-		 ${CMAKE_SOURCE_DIR}/core/spsc_ringbuf.c)
+                 ${CMAKE_SOURCE_DIR}/src/core/spsc_ringbuf.c)
  endif(CBMC_EXE)
 
 add_executable(arbiter-buffer-test arbiter-buffer.c)

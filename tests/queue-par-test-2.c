@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "par_queue.h"
+#include "shamon/core/par_queue.h"
 
 int main(void) {
     size_t i;

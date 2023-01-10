@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "source.h"
+#include "core/source.h"
 
 int main(void) {
     size_t i;

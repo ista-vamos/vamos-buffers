@@ -1,6 +1,6 @@
 #include <assert.h>
 
-#include "core/par_queue.h"
+#include "shamon/core/par_queue.h"
 
 extern bool nondet(void);
 

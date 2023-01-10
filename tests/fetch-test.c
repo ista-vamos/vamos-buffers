@@ -7,10 +7,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "arbiter.h"
+#include "core/arbiter.h"
 #include "shmbuf/buffer-private.h"
 #include "shmbuf/buffer.h"
-#include "stream.h"
+#include "core/stream.h"
 
 static int stream_ready = 1;
 static bool is_ready(shm_stream *s) {

@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <threads.h>
 
-#include "spsc_ringbuf.h"
+#include "core/spsc_ringbuf.h"
 
 #define CAPACITY 3
 int main(void) {

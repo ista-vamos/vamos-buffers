@@ -7,9 +7,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "arbiter.h"
+#include "core/arbiter.h"
 #include "shmbuf/buffer.h"
-#include "stream.h"
+#include "core/stream.h"
 
 static bool is_ready(shm_stream *s) {
     (void)s;

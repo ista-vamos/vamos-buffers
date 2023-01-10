@@ -1,6 +1,6 @@
 #include <assert.h>
 
-#include "core/spsc_ringbuf.h"
+#include "shamon/core/spsc_ringbuf.h"
 
 extern int nondet(void);
 
