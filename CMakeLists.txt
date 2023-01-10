@@ -10,6 +10,11 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
+if(NOT CMAKE_BUILD_TYPE)
+	message(STATUS "Build type not set. Setting default RelWithDebInfo.")
+	set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "" FORCE)
+endif()
+
 OPTION(ENABLE_IPO "Enable interprocedural optimizations" ON)
 
 if (ENABLE_IPO)
@@ -20,7 +25,7 @@ if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 	if (NOT CMAKE_C_COMPILER_ID MATCHES "Clang")
-		message(WARNING "IPO are used, but the compiler is not clang (compiler = ${CMAKE_C_COMPILER_ID})."
+		message(WARNING "IPO are used, but the compiler is not clang (compiler = ${CMAKE_C_COMPILER_ID}). "
 			        "This may cause troubles when using compilation scripts "
 				"that are not based on cmake (e.g., gen/compile.sh).")
 	endif()
