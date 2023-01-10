@@ -1,7 +1,7 @@
 from ctypes import CDLL, c_char_p, c_void_p, c_int, c_size_t
 from os.path import dirname, abspath, join as pathjoin
 
-so_file = abspath(pathjoin(dirname(__file__), "../core", "libshamon-lib.so"))
+so_file = abspath(pathjoin(dirname(__file__), "../src/", "libshamon-lib.so"))
 
 lib = CDLL(so_file)
 
