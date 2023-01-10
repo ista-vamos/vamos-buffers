@@ -3,12 +3,12 @@ project(shamon LANGUAGES C VERSION 0.1)
 
 enable_testing()
 
-include(ExternalProject)
-
-SET (CMAKE_VERBOSE_MAKEFILE 1)
+set(CMAKE_VERBOSE_MAKEFILE 1)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
+
+include(GNUInstallDirs)
 
 if(NOT CMAKE_BUILD_TYPE)
 	message(STATUS "Build type not set. Setting default RelWithDebInfo.")
@@ -56,6 +56,7 @@ endif()
 add_compile_options(-Wall -Wextra -pedantic)
 
 if (RMIND_RINGBUF)
+	include(ExternalProject)
 	ExternalProject_Add(rmind-ringbuf
 			    GIT_REPOSITORY https://github.com/rmind/ringbuf
 			    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rmind-ringbuf
