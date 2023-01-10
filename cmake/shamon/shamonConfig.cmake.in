@@ -7,10 +7,8 @@ set( shamon_CXX_COMPILER @CMAKE_CXX_COMPILER@ )
 set( shamon_BINARY_DIR @shamon_BINARY_DIR@ )
 set( shamon_SOURCE_DIR @shamon_BINARY_DIR@ )
 
-set( shamon_INCLUDE_DIRS @CMAKE_INCLUDE_DIRS@ )
-set( shamon_LIBRARIES @CMAKE_LIBRARIES@ )
-set( shamon_CXX_FLAGS @CMAKE_CXX_FLAGS@ )
-set( shamon_C_FLAGS @CMAKE_C_FLAGS@ )
+set( shamon_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/../../include" )
+
 set( shamon_INSTALL_PREFIX @CMAKE_INSTALL_PREFIX@ )
 set( shamon_ENABLE_IPO_OPTION @ENABLE_IPO@ )
 set( shamon_DYNAMORIO_SOURCES_OPTION @DYNAMORIO_SOURCES@ )

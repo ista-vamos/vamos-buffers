@@ -28,10 +28,7 @@ endif()
 endif(ENABLE_IPO)
 
 OPTION(DUMP_STATS "Collect and allow dumping statistics" OFF)
-OPTION(DYNAMORIO_SOURCES "Build sources based on DynamoRIO" ON)
 OPTION(RMIND_RINGBUF "Build and use githbu:rmind/ringbuf ring buffer" OFF)
-OPTION(BPF_SOURCES "Build and use eBPF sources" OFF)
-OPTION(LLVM_SOURCES "Build and use LLVM sources" ON)
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
@@ -50,6 +47,9 @@ if (DUMP_STATS)
 	add_compile_definitions(DUMP_STATS)
 endif()
 
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wpedantic -Werror")
+add_compile_options(-Wall -Wextra -pedantic)
+
 if (RMIND_RINGBUF)
 	ExternalProject_Add(rmind-ringbuf
 			    GIT_REPOSITORY https://github.com/rmind/ringbuf
@@ -62,29 +62,6 @@ if (RMIND_RINGBUF)
 	add_compile_definitions(RMIND_RINGBUF)
 endif()
 
-if (BPF_SOURCES)
-	ExternalProject_Add(bcc
-			    GIT_REPOSITORY https://github.com/mchalupa/bcc
-			    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bcc
-                            GIT_TAG readwrite
-			    INSTALL_COMMAND ""
-			    BUILD_IN_SOURCE 1)
-
-	add_compile_definitions(BPF_SOURCES)
-endif()
-
-
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wpedantic -Werror")
-add_compile_options(-Wall -Wextra -pedantic)
-
-if (DYNAMORIO_SOURCES)
-        find_package(DynamoRIO)
-        if (NOT DynamoRIO_FOUND)
-	        message(FATAL_ERROR
-                        "DynamoRIO package required to build DynamoRIO sources")
-        endif(NOT DynamoRIO_FOUND)
-endif()
-
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/include/shamon)
 
@@ -92,7 +69,6 @@ add_subdirectory(src)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 link_directories(${CMAKE_SOURCE_DIR}/src)
 
-add_subdirectory(sources)
 add_subdirectory(monitors)
 add_subdirectory(experiments)
 add_subdirectory(tests)
