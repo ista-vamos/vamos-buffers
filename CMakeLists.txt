@@ -75,8 +75,6 @@ add_subdirectory(src)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 link_directories(${CMAKE_SOURCE_DIR}/src)
 
-add_subdirectory(monitors)
-add_subdirectory(experiments)
 add_subdirectory(tests)
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
