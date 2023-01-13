@@ -3,15 +3,20 @@
 set( vamos_buffers_BUILD_TYPE @CMAKE_BUILD_TYPE@ )
 set( vamos_buffers_C_COMPILER @CMAKE_C_COMPILER@ )
 set( vamos_buffers_CXX_COMPILER @CMAKE_CXX_COMPILER@ )
-
 set( vamos_buffers_BINARY_DIR @vamos-buffers_BINARY_DIR@ )
 set( vamos_buffers_SOURCE_DIR @vamos-buffers_BINARY_DIR@ )
-
 set( vamos_buffers_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/../../include" )
-
 set( vamos_buffers_INSTALL_PREFIX @CMAKE_INSTALL_PREFIX@ )
 set( vamos_buffers_OPTION_ENABLE_IPO @ENABLE_IPO@ )
 
+set( vamos-buffers_BUILD_TYPE @CMAKE_BUILD_TYPE@ )
+set( vamos-buffers_C_COMPILER @CMAKE_C_COMPILER@ )
+set( vamos-buffers_CXX_COMPILER @CMAKE_CXX_COMPILER@ )
+set( vamos-buffers_BINARY_DIR @vamos-buffers_BINARY_DIR@ )
+set( vamos-buffers_SOURCE_DIR @vamos-buffers_BINARY_DIR@ )
+set( vamos-buffers_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/../../include" )
+set( vamos-buffers_INSTALL_PREFIX @CMAKE_INSTALL_PREFIX@ )
+set( vamos-buffers_OPTION_ENABLE_IPO @ENABLE_IPO@ )
 
 # legacy
 set( shamon_BUILD_TYPE @CMAKE_BUILD_TYPE@ )
