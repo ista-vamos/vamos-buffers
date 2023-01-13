@@ -1,13 +1,13 @@
-#include "shamon/core/stream.h"
+#include "vamos-buffers/core/stream.h"
 
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "shamon/core/vector-macro.h"
-#include "shamon/shmbuf/buffer.h"
-#include "shamon/core/utils.h"
+#include "vamos-buffers/core/vector-macro.h"
+#include "vamos-buffers/shmbuf/buffer.h"
+#include "vamos-buffers/core/utils.h"
 
 /*****
  * STREAM

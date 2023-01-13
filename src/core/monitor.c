@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "shamon/core/monitor.h"
-#include "shamon/core/par_queue.h"
-#include "shamon/core/utils.h"
+#include "vamos-buffers/core/monitor.h"
+#include "vamos-buffers/core/par_queue.h"
+#include "vamos-buffers/core/utils.h"
 
 typedef struct _shm_monitor_buffer {
     shm_par_queue buffer;  // the buffer itself

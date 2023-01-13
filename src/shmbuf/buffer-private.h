@@ -6,10 +6,10 @@
 #include <stdint.h>
 #include <sys/file.h>
 
-#include "core/event.h"
-#include "core/list.h"
-#include "core/spsc_ringbuf.h"
-#include "core/vector-macro.h"
+#include "vamos-buffers/core/event.h"
+#include "vamos-buffers/core/list.h"
+#include "vamos-buffers/core/spsc_ringbuf.h"
+#include "vamos-buffers/core/vector-macro.h"
 
 struct source_control;
 struct event_record;

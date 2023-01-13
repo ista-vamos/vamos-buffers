@@ -1,4 +1,4 @@
-#include "shamon/shmbuf/buffer.h"
+#include "vamos-buffers/shmbuf/buffer.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -17,11 +17,11 @@
 
 #include "buffer-private.h"
 #include "shm.h"
-#include "shamon/core/list.h"
-#include "shamon/core/source.h"
-#include "shamon/core/spsc_ringbuf.h"
-#include "shamon/core/utils.h"
-#include "shamon/core/vector-macro.h"
+#include "vamos-buffers/core/list.h"
+#include "vamos-buffers/core/source.h"
+#include "vamos-buffers/core/spsc_ringbuf.h"
+#include "vamos-buffers/core/utils.h"
+#include "vamos-buffers/core/vector-macro.h"
 
 bool buffer_is_ready(struct buffer *buff) {
     return !buff->shmbuffer->info.destroyed;

@@ -2,10 +2,10 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "shamon/core/arbiter.h"
-#include "shamon/core/par_queue.h"
-#include "shamon/core/stream.h"
-#include "shamon/core/utils.h"
+#include "vamos-buffers/core/arbiter.h"
+#include "vamos-buffers/core/par_queue.h"
+#include "vamos-buffers/core/stream.h"
+#include "vamos-buffers/core/utils.h"
 
 #define DROP_SPACE_DEFAULT_THRESHOLD 1
 

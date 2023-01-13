@@ -3,8 +3,8 @@
 #include <sys/mman.h>
 
 #include "buffer-private.h"
-#include "core/source.h"
 #include "shm.h"
+#include "vamos-buffers/core/source.h"
 
 HIDE_SYMBOL
 struct source_control *get_shared_control_buffer(const char *buff_key) {

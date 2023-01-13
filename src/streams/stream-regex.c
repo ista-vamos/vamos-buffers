@@ -1,12 +1,12 @@
-#include "shamon/streams/stream-regex.h"
+#include "vamos-buffers/streams/stream-regex.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "shamon/core/arbiter.h"
-#include "shamon/shmbuf/buffer.h"
+#include "vamos-buffers/core/arbiter.h"
+#include "vamos-buffers/shmbuf/buffer.h"
 
 bool sregex_is_ready(shm_stream *stream) {
     struct buffer *b = ((shm_stream_sregex *)stream)->shmbuffer;

@@ -11,6 +11,8 @@ if(N EQUAL 0)
     set(N 1)
 endif()
 
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
 set(CTEST_OPTS -j${N} --output-on-failure --progress ${CTEST_OPTS})
 
 find_program(CBMC_EXE "cbmc")

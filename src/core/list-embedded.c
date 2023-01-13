@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "shamon/core/list-embedded.h"
+#include "vamos-buffers/core/list-embedded.h"
 
 void shm_list_embedded_init(shm_list_embedded *list) {
     list->prev = list;

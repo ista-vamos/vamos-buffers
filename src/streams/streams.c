@@ -3,12 +3,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "shamon/streams/stream-drregex.h"
-#include "shamon/streams/stream-funs.h"
-#include "shamon/streams/stream-generic.h"
-#include "shamon/streams/stream-regex.h"
-#include "shamon/streams/stream-regexrw.h"
-#include "shamon/core/stream.h"
+#include "vamos-buffers/streams/stream-drregex.h"
+#include "vamos-buffers/streams/stream-funs.h"
+#include "vamos-buffers/streams/stream-generic.h"
+#include "vamos-buffers/streams/stream-regex.h"
+#include "vamos-buffers/streams/stream-regexrw.h"
+#include "vamos-buffers/core/stream.h"
 
 const char *find_next_part(const char *params) {
     params = strchr(params, ':');

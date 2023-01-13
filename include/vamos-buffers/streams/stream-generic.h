@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "shamon/core/event.h"
-#include "shamon/core/stream.h"
+#include "vamos-buffers/core/event.h"
+#include "vamos-buffers/core/stream.h"
 
 
 struct buffer;

@@ -69,7 +69,6 @@ if (RMIND_RINGBUF)
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/include/shamon)
 
 add_subdirectory(src)
 include_directories(${CMAKE_SOURCE_DIR}/src)
@@ -82,7 +81,7 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT vamos-buffers_Export
     FILE vamos-buffers.cmake
     #NAMESPACE shmn::
-    DESTINATION lib/cmake/shamon)
+    DESTINATION lib/cmake/vamos-buffers)
 # also export the .cmake file into current build directory
 # so that we can use also non-installed builds
 export(EXPORT vamos-buffers_Export FILE ${CMAKE_CURRENT_BINARY_DIR}/cmake/vamos-buffers/vamos-buffers.cmake)
@@ -104,5 +103,5 @@ write_basic_package_version_file(
 
 install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/cmake/vamos-buffers/vamos-buffers-config.cmake"
-  "vamos-buffers-version.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake/vamos-buffers/vamos-buffers-version.cmake"
   DESTINATION lib/cmake/vamos-buffers)

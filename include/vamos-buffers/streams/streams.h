@@ -1,7 +1,7 @@
 #ifndef SHAMON_STREAMS_H_
 #define SHAMON_STREAMS_H_
 
-#include "shamon/core/stream.h"
+#include "vamos-buffers/core/stream.h"
 
 shm_stream *shm_stream_create_from_argv(
     const char *stream_name, int argc, char *argv[],

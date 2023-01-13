@@ -14,12 +14,12 @@
 #include <unistd.h>
 
 #include "buffer-private.h"
-#include "shmbuf/buffer.h"
-#include "shamon/core/list.h"
-#include "shamon/core/source.h"
-#include "shamon/core/spsc_ringbuf.h"
-#include "shamon/core/utils.h"
-#include "shamon/core/vector-macro.h"
+#include "vamos-buffers/shmbuf/buffer.h"
+#include "vamos-buffers/core/list.h"
+#include "vamos-buffers/core/source.h"
+#include "vamos-buffers/core/spsc_ringbuf.h"
+#include "vamos-buffers/core/utils.h"
+#include "vamos-buffers/core/vector-macro.h"
 
 /* FOR TESTING */
 struct buffer *initialize_local_buffer(const char *key, size_t elem_size,

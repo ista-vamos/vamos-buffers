@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "shamon/core/list.h"
+#include "vamos-buffers/core/list.h"
 
 void shm_list_init(shm_list *list) { memset(list, 0, sizeof(shm_list)); }
 

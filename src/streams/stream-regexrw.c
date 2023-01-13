@@ -4,8 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "shamon/streams/stream-regexrw.h"
-#include "shamon/core/arbiter.h"
+#include "vamos-buffers/streams/stream-regexrw.h"
+#include "vamos-buffers/core/arbiter.h"
 
 bool sregexrw_is_ready(shm_stream *stream) {
     struct buffer *b = ((shm_stream_sregexrw *)stream)->shmbuffer;

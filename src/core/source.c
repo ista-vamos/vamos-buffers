@@ -1,11 +1,11 @@
-#include "shamon/core/source.h"
+#include "vamos-buffers/core/source.h"
 
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "shamon/core/signatures.h"
+#include "vamos-buffers/core/signatures.h"
 
 size_t source_control_get_records_num(struct source_control *sc) {
     return ((sc->size - sizeof(struct source_control)) /

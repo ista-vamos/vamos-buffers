@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "shamon/core/queue_spsc.h"
+#include "vamos-buffers/core/queue_spsc.h"
 
 #define __predict_false(x) __builtin_expect((x) != 0, 0)
 #define __predict_true(x) __builtin_expect((x) != 0, 1)

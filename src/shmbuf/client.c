@@ -4,10 +4,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "shamon/shmbuf/buffer.h"
+#include "vamos-buffers/shmbuf/buffer.h"
 #include "shm.h"
-#include "shamon/shmbuf/client.h"
-#include "shamon/core/utils.h"
+#include "vamos-buffers/shmbuf/client.h"
+#include "vamos-buffers/core/utils.h"
 
 #define SLEEP_TIME 20
 

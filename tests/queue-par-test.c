@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <threads.h>
 
-#include "shamon/core/par_queue.h"
+#include "vamos-buffers/core/par_queue.h"
 
 int buffer[4];
 

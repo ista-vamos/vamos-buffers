@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "shamon/core/event.h"
-#include "shamon/shmbuf/buffer.h"
-#include "shamon/core/stream.h"
+#include "vamos-buffers/core/event.h"
+#include "vamos-buffers/shmbuf/buffer.h"
+#include "vamos-buffers/core/stream.h"
 
 typedef struct _shm_event_regexrw {
     shm_event base;

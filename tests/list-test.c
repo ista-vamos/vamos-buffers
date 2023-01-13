@@ -1,5 +1,5 @@
 #undef NDEBUG
-#include "core/list.h"
+#include "vamos-buffers/core/list.h"
 
 #include <assert.h>
 

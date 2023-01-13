@@ -3,9 +3,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "shamon/streams/stream-drregex.h"
-#include "shamon/core/arbiter.h"
-#include "shamon/shmbuf/buffer.h"
+#include "vamos-buffers/streams/stream-drregex.h"
+#include "vamos-buffers/core/arbiter.h"
+#include "vamos-buffers/shmbuf/buffer.h"
 
 
 bool drregex_is_ready(shm_stream *stream) {

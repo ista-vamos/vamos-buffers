@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <threads.h>
 
-#include "core/spsc_ringbuf.h"
+#include "vamos-buffers/core/spsc_ringbuf.h"
 
 #define CAPACITY 3
 int main(void) {

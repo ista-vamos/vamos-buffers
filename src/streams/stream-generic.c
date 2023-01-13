@@ -1,12 +1,12 @@
-#include "shamon/streams/stream-generic.h"
+#include "vamos-buffers/streams/stream-generic.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "shamon/core/arbiter.h"
-#include "shamon/shmbuf/buffer.h"
+#include "vamos-buffers/core/arbiter.h"
+#include "vamos-buffers/shmbuf/buffer.h"
 
 
 /* A generic stream for events stored in shared memory buffer,

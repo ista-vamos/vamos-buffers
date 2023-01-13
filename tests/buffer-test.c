@@ -1,10 +1,10 @@
 #undef NDEBUG
-#include "shmbuf/buffer.h"
 
 #include <assert.h>
 #include <stdlib.h>
 
-#include "core/source.h"
+#include "vamos-buffers/shmbuf/buffer.h"
+#include "vamos-buffers/core/source.h"
 
 int main(void) {
     size_t i;

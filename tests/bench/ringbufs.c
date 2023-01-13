@@ -4,10 +4,10 @@
 #include <threads.h>
 #include <time.h>
 
-#include "core/par_queue.h"
-#include "core/queue_spsc.h"
-#include "core/source.h"
-#include "shmbuf/buffer.h"
+#include "vamos-buffers/core/par_queue.h"
+#include "vamos-buffers/core/queue_spsc.h"
+#include "vamos-buffers/core/source.h"
+#include "vamos-buffers/shmbuf/buffer.h"
 
 #ifdef RMIND_RINGBUF
 #include "ringbuf.h"

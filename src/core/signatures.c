@@ -1,4 +1,4 @@
-#include "shamon/core/signatures.h"
+#include "vamos-buffers/core/signatures.h"
 
 #include <assert.h>
 #include <stdlib.h>

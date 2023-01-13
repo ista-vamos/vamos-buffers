@@ -1,4 +1,4 @@
-#include "shamon/core/shamon.h"
+#include "vamos-buffers/core/shamon.h"
 
 #include <assert.h>
 #include <immintrin.h> /* _mm_pause */
@@ -10,12 +10,12 @@
 #include <threads.h>
 #include <unistd.h>
 
-#include "shamon/core/arbiter.h"
-#include "shamon/core/par_queue.h"
-#include "shamon/core/stream.h"
-#include "shamon/core/utils.h"
-#include "shamon/core/vector-aligned.h"
-#include "shamon/core/vector-macro.h"
+#include "vamos-buffers/core/arbiter.h"
+#include "vamos-buffers/core/par_queue.h"
+#include "vamos-buffers/core/stream.h"
+#include "vamos-buffers/core/utils.h"
+#include "vamos-buffers/core/vector-aligned.h"
+#include "vamos-buffers/core/vector-macro.h"
 
 typedef struct _shamon {
     VEC(streams, shm_stream *);

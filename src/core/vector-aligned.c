@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "shamon/core/vector-aligned.h"
-#include "shamon/core/utils.h"
+#include "vamos-buffers/core/vector-aligned.h"
+#include "vamos-buffers/core/utils.h"
 
 void shm_vector_aligned_init(shm_vector_aligned *vec, size_t elem_size,
                              size_t alignment) {

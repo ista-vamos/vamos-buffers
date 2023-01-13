@@ -1,10 +1,10 @@
-#include "shamon/core/shm_string.h"
+#include "vamos-buffers/core/shm_string.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "shamon/core/shm_string-macro.h"
+#include "vamos-buffers/core/shm_string-macro.h"
 
 void shm_string_init(shm_string *s) {
     STRING_INIT(s->data);

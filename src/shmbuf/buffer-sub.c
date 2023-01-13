@@ -4,9 +4,9 @@
 #include "buffer-private.h"
 #include "shm.h"
 
-#include "shmbuf/buffer.h"
-#include "core/source.h"
-#include "core/vector-macro.h"
+#include "vamos-buffers/shmbuf/buffer.h"
+#include "vamos-buffers/core/source.h"
+#include "vamos-buffers/core/vector-macro.h"
 
 char *get_sub_buffer_key(const char *key, size_t idx) {
     size_t tmpsize = strlen(key) + 16 /* space for index */;

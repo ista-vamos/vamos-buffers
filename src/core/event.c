@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "shamon/core/event.h"
+#include "vamos-buffers/core/event.h"
 
 static const shm_kind hole_kind = 1;
 static const shm_kind last_special_kind = 1;
