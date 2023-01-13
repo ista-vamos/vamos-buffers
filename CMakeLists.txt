@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
-project(shamon LANGUAGES C VERSION 0.1)
+project(vamos-buffers LANGUAGES C VERSION 0.1)
 
 enable_testing()
 
@@ -80,29 +80,29 @@ add_subdirectory(tests)
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(EXPORT shamonCore
-    FILE shamon.cmake
+    FILE vamos-buffers.cmake
     #NAMESPACE shmn::
     DESTINATION lib/cmake/shamon)
 # also export the .cmake file into current build directory
 # so that we can use also non-installed builds
-export(EXPORT shamonCore FILE ${CMAKE_CURRENT_BINARY_DIR}/cmake/shamon/shamon.cmake)
+export(EXPORT shamonCore FILE ${CMAKE_CURRENT_BINARY_DIR}/cmake/vamos-buffers/vamos-buffers.cmake)
 
 include(CMakePackageConfigHelpers)
 
 configure_package_config_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/shamon/shamonConfig.cmake.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/cmake/shamon/shamonConfig.cmake"
-  INSTALL_DESTINATION "lib/cmake/shamon"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/vamos-buffers/vamos-buffers-config.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake/vamos-buffers/vamos-buffers-config.cmake"
+  INSTALL_DESTINATION "lib/cmake/vamos-buffers"
   NO_SET_AND_CHECK_MACRO
   NO_CHECK_REQUIRED_COMPONENTS_MACRO
   )
 
 write_basic_package_version_file(
-    "shamonVersion.cmake"
-    VERSION ${shamon_VERSION}
+    "vamos-buffers-version.cmake"
+    VERSION ${vamos-buffers_VERSION}
     COMPATIBILITY AnyNewerVersion)
 
 install(FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/cmake/shamon/shamonConfig.cmake"
-  "${CMAKE_CURRENT_BINARY_DIR}/cmake/shamon/shamonVersion.cmake"
-  DESTINATION lib/cmake/shamon)
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake/vamos-buffers/vamos-buffers-config.cmake"
+  "vamos-buffers-version.cmake"
+  DESTINATION lib/cmake/vamos-buffers)
