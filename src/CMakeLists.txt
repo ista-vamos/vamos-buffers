@@ -2,36 +2,36 @@ add_subdirectory(streams)
 add_subdirectory(shmbuf)
 add_subdirectory(core)
 
-add_library(shamon-client STATIC core/source.c)
-target_link_libraries(shamon-client PUBLIC
-	              shamon-shmbuf shamon-utils shamon-event
-		      shamon-queue-spsc shamon-vector
-                      shamon-list shamon-string shamon-ringbuf
-		      shamon-signature)
-set_property(TARGET shamon-client PROPERTY POSITION_INDEPENDENT_CODE 1)
+add_library(vamos-buffers-client STATIC core/source.c)
+target_link_libraries(vamos-buffers-client PUBLIC
+	              vamos-buffers-shmbuf vamos-buffers-utils vamos-buffers-event
+		      vamos-buffers-queue-spsc vamos-buffers-vector
+                      vamos-buffers-list vamos-buffers-string vamos-buffers-ringbuf
+		      vamos-buffers-signature)
+set_property(TARGET vamos-buffers-client PROPERTY POSITION_INDEPENDENT_CODE 1)
 
 
-add_library(shamon-monitor STATIC core/monitor.c)
-target_link_libraries(shamon-monitor PUBLIC
-	              shamon-streams shamon-stream shamon-shmbuf
-		      shamon-source shamon-arbiter shamon-parallel-queue
-                      shamon-utils shamon-event shamon-queue-spsc shamon-vector
-                      shamon-list shamon-string shamon-ringbuf shamon-signature)
-set_property(TARGET shamon-monitor PROPERTY POSITION_INDEPENDENT_CODE 1)
+add_library(vamos-buffers-monitor STATIC core/monitor.c)
+target_link_libraries(vamos-buffers-monitor PUBLIC
+	              vamos-buffers-streams vamos-buffers-stream vamos-buffers-shmbuf
+		      vamos-buffers-source vamos-buffers-arbiter vamos-buffers-parallel-queue
+                      vamos-buffers-utils vamos-buffers-event vamos-buffers-queue-spsc vamos-buffers-vector
+                      vamos-buffers-list vamos-buffers-string vamos-buffers-ringbuf vamos-buffers-signature)
+set_property(TARGET vamos-buffers-monitor PROPERTY POSITION_INDEPENDENT_CODE 1)
 
-add_library(shamon-lib SHARED core/shamon.c)
-target_compile_definitions(shamon-lib PUBLIC -D_POSIX_C_SOURCE=200809L)
-target_link_libraries(shamon-lib PUBLIC shamon-utils shamon-list shamon-event
-                                        shamon-queue-spsc shamon-vector shamon-string
-                                        shamon-ringbuf shamon-source shamon-signature)
+add_library(vamos-buffers-lib SHARED core/shamon.c)
+target_compile_definitions(vamos-buffers-lib PUBLIC -D_POSIX_C_SOURCE=200809L)
+target_link_libraries(vamos-buffers-lib PUBLIC vamos-buffers-utils vamos-buffers-list vamos-buffers-event
+                                        vamos-buffers-queue-spsc vamos-buffers-vector vamos-buffers-string
+                                        vamos-buffers-ringbuf vamos-buffers-source vamos-buffers-signature)
 
-add_library(shamon-static STATIC core/shamon.c)
-target_link_libraries(shamon-static PUBLIC
-	              shamon-utils shamon-list shamon-event shamon-queue-spsc
-                      shamon-vector shamon-string shamon-ringbuf shamon-source
-                      shamon-signature)
-install(TARGETS shamon-lib shamon-static shamon-monitor shamon-client
-    EXPORT shamonCore
+add_library(vamos-buffers-static STATIC core/shamon.c)
+target_link_libraries(vamos-buffers-static PUBLIC
+	              vamos-buffers-utils vamos-buffers-list vamos-buffers-event vamos-buffers-queue-spsc
+                      vamos-buffers-vector vamos-buffers-string vamos-buffers-ringbuf vamos-buffers-source
+                      vamos-buffers-signature)
+install(TARGETS vamos-buffers-lib vamos-buffers-static vamos-buffers-monitor vamos-buffers-client
+    EXPORT vamos-buffers_Export
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin)

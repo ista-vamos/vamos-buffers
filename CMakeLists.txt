@@ -79,13 +79,13 @@ add_subdirectory(tests)
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-install(EXPORT shamonCore
+install(EXPORT vamos-buffers_Export
     FILE vamos-buffers.cmake
     #NAMESPACE shmn::
     DESTINATION lib/cmake/shamon)
 # also export the .cmake file into current build directory
 # so that we can use also non-installed builds
-export(EXPORT shamonCore FILE ${CMAKE_CURRENT_BINARY_DIR}/cmake/vamos-buffers/vamos-buffers.cmake)
+export(EXPORT vamos-buffers_Export FILE ${CMAKE_CURRENT_BINARY_DIR}/cmake/vamos-buffers/vamos-buffers.cmake)
 
 include(CMakePackageConfigHelpers)
 
