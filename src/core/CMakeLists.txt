@@ -1,5 +1,3 @@
-include_directories(${CMAKE_SOURCE_DIR})
-
 add_library(vamos-buffers-utils          STATIC utils.c)
 add_library(vamos-buffers-list           STATIC list.c list-embedded.c)
 add_library(vamos-buffers-event          STATIC event.c)
@@ -31,6 +29,7 @@ target_compile_definitions(vamos-buffers-shamon  PRIVATE -D_POSIX_C_SOURCE=20080
 install(TARGETS vamos-buffers-utils vamos-buffers-list vamos-buffers-event vamos-buffers-queue-spsc
                 vamos-buffers-vector vamos-buffers-string vamos-buffers-ringbuf vamos-buffers-source
 		vamos-buffers-signature vamos-buffers-stream vamos-buffers-arbiter vamos-buffers-parallel-queue
+		vamos-buffers-shamon
     EXPORT vamos-buffers_Export
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
