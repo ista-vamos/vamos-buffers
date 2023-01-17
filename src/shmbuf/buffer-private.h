@@ -95,6 +95,8 @@ struct buffer *get_shared_buffer(const char *key);
 struct buffer *try_get_shared_buffer(const char *key, size_t retry);
 
 size_t compute_shm_size(size_t elem_size, size_t capacity);
+size_t compute_shm_buffer_size(size_t nondata_size, size_t elem_size,
+                               size_t capacity);
 
 /*** LOCAL buffers ***/
 struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
