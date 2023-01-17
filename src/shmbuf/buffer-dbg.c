@@ -17,7 +17,7 @@ struct __shm_dbg_buffer {
         /* maximal number of records in the buffer */
         size_t capacity;
         /* current number of elements in the buffer */
-        size_t size;
+        _Atomic size_t size;
         /* size of key and element */
         uint16_t key_size;
         uint16_t value_size;
@@ -71,6 +71,7 @@ vms_shm_dbg_buffer *vms_shm_dbg_buffer_create(const char *key, size_t capacity,
 
     size_t allocation_size = compute_shm_buffer_size(
         sizeof(struct __shm_dbg_buffer), key_size + value_size, capacity);
+    assert(allocation_size > sizeof(struct __shm_dbg_buffer));
 
     if ((ftruncate(fd, allocation_size)) == -1) {
         perror("ftruncate");
@@ -190,10 +191,18 @@ size_t vms_shm_dbg_buffer_key_size(vms_shm_dbg_buffer *b) {
 size_t vms_shm_dbg_buffer_value_size(vms_shm_dbg_buffer *b) {
     return b->buffer->info.value_size;
 }
+
+size_t vms_shm_dbg_buffer_rec_size(vms_shm_dbg_buffer *b) {
+    return b->buffer->info.key_size + b->buffer->info.value_size;
+}
+
 unsigned char *vms_shm_dbg_buffer_data(vms_shm_dbg_buffer *b) {
     return b->data;
 }
 
+void vms_shm_dbg_buffer_inc_size(vms_shm_dbg_buffer *b, size_t size) {
+    b->buffer->info.size += size;
+}
 size_t vms_shm_dbg_buffer_version(vms_shm_dbg_buffer *b) {
     return b->buffer->info.version;
 }

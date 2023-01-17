@@ -90,8 +90,10 @@ size_t vms_shm_dbg_buffer_size(vms_shm_dbg_buffer *b);
 size_t vms_shm_dbg_buffer_capacity(vms_shm_dbg_buffer *b);
 size_t vms_shm_dbg_buffer_key_size(vms_shm_dbg_buffer *b);
 size_t vms_shm_dbg_buffer_value_size(vms_shm_dbg_buffer *b);
+size_t vms_shm_dbg_buffer_rec_size(vms_shm_dbg_buffer *b);
 unsigned char *vms_shm_dbg_buffer_data(vms_shm_dbg_buffer *b);
 
+void vms_shm_dbg_buffer_inc_size(vms_shm_dbg_buffer *b, size_t size);
 size_t vms_shm_dbg_buffer_version(vms_shm_dbg_buffer *b);
 void vms_shm_dbg_buffer_bump_version(vms_shm_dbg_buffer *b);
 
