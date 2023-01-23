@@ -11,7 +11,7 @@ struct source_control *get_shared_control_buffer(const char *buff_key) {
     char key[SHM_NAME_MAXLEN];
     shamon_map_ctrl_key(buff_key, key);
 
-    printf("Getting control buffer '%s'\n", key);
+    /* fprintf(stderr, "getting control buffer '%s'\n", key); */
     int fd = shamon_shm_open(key, O_RDWR | O_CREAT, S_IRWXU);
     if (fd < 0) {
         perror("shm_open");
@@ -23,7 +23,7 @@ struct source_control *get_shared_control_buffer(const char *buff_key) {
         perror("reading size of ctrl buffer");
         return NULL;
     }
-    printf("   ... its size is %lu\n", size);
+    /*fprintf(stderr, "   ... its size is %lu\n", size); */
 
     void *mem = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (mem == MAP_FAILED) {
@@ -48,7 +48,8 @@ struct source_control *create_shared_control_buffer(
     shamon_map_ctrl_key(buff_key, key);
     size_t size = control->size;
 
-    printf("Initializing control buffer '%s' of size '%lu'\n", key, size);
+    /* fprintf(stderr, "Initializing control buffer '%s' of size '%lu'\n", key,
+     * size); */
 
     char tmpkey[SHM_NAME_MAXLEN] = "";
     if (shamon_get_tmp_key(key, tmpkey, SHM_NAME_MAXLEN) == -1) {

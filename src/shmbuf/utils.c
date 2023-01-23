@@ -12,8 +12,9 @@ size_t compute_shm_size(size_t elem_size, size_t capacity) {
 #ifndef NDEBUG
     if (roundup > (PAGE_SIZE) / 4) {
         fprintf(stderr,
-                "The required capacity '%lu' of SHM buffer will result in %lu "
-                "unused bytes in a memory page, consider changing it.\n"
+                "[vamos] the required capacity '%lu' of SHM buffer will result "
+                "in %lu "
+                "unused bytes in a memory page, consider changing it. "
                 "You have space for %lu more elements...\n",
                 capacity - 1, roundup, (roundup / elem_size));
     }
@@ -30,12 +31,12 @@ size_t compute_shm_buffer_size(size_t nondata_size, size_t elem_size,
     size_t roundup = PAGE_SIZE - (size % PAGE_SIZE);
 #ifndef NDEBUG
     if (roundup > (PAGE_SIZE) / 4) {
-        fprintf(
-            stderr,
-            "The required capacity '%lu' of a DBG buffer will result in %lu "
-            "unused bytes in a memory page, consider changing it.\n"
-            "You have space for %lu more elements...\n",
-            capacity, roundup, (roundup / elem_size));
+        fprintf(stderr,
+                "[vamos] the required capacity '%lu' of a DBG buffer will "
+                "result in %lu "
+                "unused bytes in a memory page, consider changing it. "
+                "You have space for %lu more elements...\n",
+                capacity, roundup, (roundup / elem_size));
     }
 #endif
     size += roundup;

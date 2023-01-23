@@ -79,7 +79,7 @@ int shamon_shm_rename(const char *old_key, const char *new_key) {
 }
 
 int shamon_shm_unlink(const char *key) {
-    printf("UNLINK: %s\n", key);
+    /* fprintf(stderr, "UNLINK: %s\n", key); */
     char name[SHM_NAME_MAXLEN];
     if (shm_mapname(key, name) == 0)
         abort();

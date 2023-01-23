@@ -91,10 +91,13 @@ struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
      * by one */
     const size_t memsize = compute_shm_size(elem_size, capacity + 1);
 
-    fprintf(stderr,
-            "Initializing buffer '%s' with the element size '%lu' and the "
-            "capacity '%lu' (%lu bytes -> %lu pages)\n",
-            key, elem_size, capacity, memsize, memsize / PAGE_SIZE);
+#ifndef NDEBUG
+    fprintf(
+        stderr,
+        "[vamos] initializing buffer '%s' with the element size '%lu' and the "
+        "capacity '%lu' (%lu bytes -> %lu pages)\n",
+        key, elem_size, capacity, memsize, memsize / PAGE_SIZE);
+#endif
 
     /* We first create a temporary key and open the SHM file with that key
      * instead of the required key. Then we can initialize the shared memory
@@ -147,12 +150,14 @@ struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
     buff->shmbuffer->info.dropped_ranges_lock = false;
     buff->shmbuffer->info.subbuffers_no = 0;
 
+#if 0
     fprintf(stderr, "  .. buffer allocated size = %lu, capacity = %lu\n",
             buff->shmbuffer->info.allocated_size,
             buff->shmbuffer->info.capacity);
     fprintf(stderr, "  .. buffer memory range:  %p - %p\n",
             (void *)BUFF_START(buff->shmbuffer),
             (void *)BUFF_END(buff->shmbuffer));
+#endif
 
 #ifndef NDEBUG
     assert((size_t)(BUFF_END(buff->shmbuffer) - BUFF_START(buff->shmbuffer)) ==
@@ -373,7 +378,9 @@ void destroy_shared_buffer(struct buffer *buff) {
         aux_buffer_release(ab);
     }
     VEC_DESTROY(buff->aux_buffers);
-    fprintf(stderr, "Totally used %lu aux buffers\n", vecsize);
+#ifndef NDEBUG
+    fprintf(stderr, "[vamos] '%s' used %lu aux buffers\n", buff->key, vecsize);
+#endif
 
     if (munmap(buff->shmbuffer, buff->shmbuffer->info.allocated_size) != 0) {
         perror("destroy_shared_buffer: munmap failure");

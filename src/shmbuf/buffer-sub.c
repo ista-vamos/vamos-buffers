@@ -72,7 +72,9 @@ void destroy_shared_sub_buffer(struct buffer *buff) {
         aux_buffer_release(ab);
     }
     VEC_DESTROY(buff->aux_buffers);
-    fprintf(stderr, "Totally used %lu aux buffers\n", vecsize);
+#ifndef NDEBUG
+    fprintf(stderr, "[vamos] '%s' used %lu aux buffers\n", buff->key, vecsize);
+#endif
 
     if (munmap(buff->shmbuffer, buff->shmbuffer->info.allocated_size) != 0) {
         perror("destroy_shared_buffer: munmap failure");
