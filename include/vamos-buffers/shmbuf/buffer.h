@@ -37,6 +37,7 @@ void release_shared_sub_buffer(struct buffer *);
 bool buffer_is_ready(struct buffer *);
 bool buffer_monitor_attached(struct buffer *);
 void buffer_set_attached(struct buffer *, bool);
+void buffer_set_destroyed(struct buffer *buff);
 
 bool buffer_pop(struct buffer *buff, void *dst);
 bool buffer_push(struct buffer *buff, const void *elem, size_t size);

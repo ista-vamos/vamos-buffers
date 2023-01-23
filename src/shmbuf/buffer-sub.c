@@ -47,6 +47,19 @@ size_t buffer_get_sub_buffers_no(struct buffer *buffer) {
     return buffer->shmbuffer->info.subbuffers_no;
 }
 
+/*
+ * this function can be used e.g., from signal handlers
+ * to let the monitor/source know that buffer should not be used anymore,
+ * but without deleting its data as it sometimes may be hard to avoid
+ * accessing the data after the condition on which we call this
+ * function occurs (think again about the signal handler) and
+ * therefore destroying the buffer entirely would lead to accessing
+ * dangling data.
+ */
+void buffer_set_destroyed(struct buffer *buff) {
+    buff->shmbuffer->info.destroyed = 1;
+}
+
 /* for writers */
 void destroy_shared_sub_buffer(struct buffer *buff) {
     buff->shmbuffer->info.destroyed = 1;
