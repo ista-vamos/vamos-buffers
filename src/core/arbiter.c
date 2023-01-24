@@ -641,8 +641,18 @@ void *stream_filter_fetch(shm_stream *stream, shm_arbiter_buffer *buffer,
 bool shm_arbiter_buffer_is_done(shm_arbiter_buffer *buffer) {
     /* XXX: should we rather use a flag that we set to true when stream-fetch
      * knows that the stream is done? */
-    return (shm_par_queue_size(&buffer->buffer) == 0 && buffer->dropped_num == 0)
-            && !shm_stream_is_ready(buffer->stream);
+    return (buffer->dropped_num == 0 &&
+            shm_par_queue_size(&buffer->buffer) == 0) &&
+           !shm_stream_is_ready(buffer->stream) &&
+           /* there is a race when the buffer may be empty, but after checking
+            * the first part of the condition above (resulting in true) a new
+            * event is put there. Then the SHM buffer gets destroyed and the
+            * rest of the condition above is evaluated to true. In such a case,
+            * we could return that the buffer is done event when there is an
+            * event in it. So re-check once more that the buffer is really empty
+            * after the stream was destroyed */
+           (buffer->dropped_num == 0 &&
+            shm_par_queue_size(&buffer->buffer) == 0);
 }
 
 
