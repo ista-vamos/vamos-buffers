@@ -25,7 +25,7 @@ struct buffer *create_shared_sub_buffer(struct buffer *buffer, size_t capacity,
     struct source_control *ctrl =
         create_shared_control_buffer(key, S_IRWXU, control);
     if (!ctrl) {
-        fprintf(stderr, "Failed creating control buffer\n");
+        fprintf(stderr, "Failed creating subbuffer\n");
         return NULL;
     }
 

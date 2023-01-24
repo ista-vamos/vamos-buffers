@@ -218,9 +218,9 @@ shm_event *shamon_get_next_ev(shamon *shmn, shm_stream **streamret) {
             fprintf(stderr, "Stream %lu has a new dynamic substream\n",
                     shm_stream_id(s));
             shm_stream_register_all_events(new_stream);
-            shamon_add_stream(
-                shmn, new_stream,
-                shm_arbiter_buffer_capacity(shm_vector_at(_buffers(shmn), i)));
+            shm_arbiter_buffer *buffer = shm_vector_at(_buffers(shmn), i);
+            shamon_add_stream(shmn, new_stream,
+                              shm_arbiter_buffer_capacity(buffer));
         }
     }
 

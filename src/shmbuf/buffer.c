@@ -92,11 +92,10 @@ struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
     const size_t memsize = compute_shm_size(elem_size, capacity + 1);
 
 #ifndef NDEBUG
-    fprintf(
-        stderr,
-        "[vamos] initializing buffer '%s' with the element size '%lu' and the "
-        "capacity '%lu' (%lu bytes -> %lu pages)\n",
-        key, elem_size, capacity, memsize, memsize / PAGE_SIZE);
+    fprintf(stderr,
+            "[vamos] init buffer '%s': elem-size '%lu', "
+            "capacity '%lu' (%luB => %lu pages)\n",
+            key, elem_size, capacity, memsize, memsize / PAGE_SIZE);
 #endif
 
     /* We first create a temporary key and open the SHM file with that key
@@ -191,7 +190,6 @@ struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
         return NULL;
     }
 
-    puts("Done");
     return buff;
 }
 
@@ -230,7 +228,7 @@ struct buffer *create_shared_buffer_adv(const char *key, mode_t mode,
 }
 
 struct buffer *try_get_shared_buffer(const char *key, size_t retry) {
-    fprintf(stderr, "getting shared buffer '%s'\n", key);
+    // fprintf(stderr, "getting shared buffer '%s'\n", key);
 
     int fd = -1;
     ++retry;
@@ -255,7 +253,7 @@ struct buffer *try_get_shared_buffer(const char *key, size_t retry) {
         return NULL;
     }
 
-    fprintf(stderr, "   ... its size is %lu\n", info.allocated_size);
+    // fprintf(stderr, "   ... its size is %lu\n", info.allocated_size);
     if (info.allocated_size == 0) {
         fprintf(stderr, "Invalid allocated size of SHM buffer: %lu\n",
                 info.allocated_size);
