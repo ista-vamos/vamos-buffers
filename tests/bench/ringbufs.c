@@ -103,7 +103,7 @@ static void run_local_shmbuf_push_pop_st() {
 }
 #endif
 
-static void run_par_queue_push_pop_st() {
+static void run_par_queue_push_pop_st(void) {
     shm_par_queue q;
     shm_par_queue_init(&q, N, sizeof(int));
 
@@ -136,7 +136,7 @@ static void run_par_queue_push_pop_st() {
     shm_par_queue_destroy(&q);
 }
 
-static void run_queue_spsc_push_pop_st() {
+static void run_queue_spsc_push_pop_st(void) {
     shm_queue_spsc q;
     shm_queue_spsc_init(&q, N);
 
@@ -206,7 +206,7 @@ static int par_queue_push_pop_1_writer(void *arg) {
     thrd_exit(0);
 }
 
-static void run_par_queue_push_pop_1() {
+static void run_par_queue_push_pop_1(void) {
     shm_par_queue q;
     shm_par_queue_init(&q, N, sizeof(int));
 
@@ -263,7 +263,7 @@ static int queue_spsc_push_pop_1_writer(void *arg) {
     thrd_exit(0);
 }
 
-static void run_queue_spsc_push_pop_1() {
+static void run_queue_spsc_push_pop_1(void) {
     shm_queue_spsc q;
     shm_queue_spsc_init(&q, N);
     int *buff = malloc(sizeof(int) * N);
