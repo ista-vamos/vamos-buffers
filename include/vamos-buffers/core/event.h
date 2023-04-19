@@ -1,5 +1,9 @@
-#ifndef SHAMON_EVENT_H_
-#define SHAMON_EVENT_H_
+#ifndef VMS_EVENT_H_
+#define VMS_EVENT_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -28,12 +32,17 @@ void initialize_events(void) __attribute__((deprecated));
 void deinitialize_events(void) __attribute__((deprecated));
 
 // EVENTS
-vms_eventid vms_event_id(vms_event *event);
-vms_kind vms_event_kind(vms_event *event);
+vms_eventid vms_event_id(const vms_event *event);
+vms_kind vms_event_kind(const vms_event *event);
 
 // DROP EVENT
-bool vms_event_is_hole(vms_event *);
+bool vms_event_is_hole(const vms_event *);
 vms_kind vms_get_hole_kind(void);
 vms_kind vms_get_last_special_kind(void);
 
-#endif  // SHAMON_EVENT_H_
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif  // VMS_EVENT_H

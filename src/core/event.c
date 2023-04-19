@@ -14,7 +14,7 @@ void initialize_events(void) {
 
 void deinitialize_events(void) {}
 
-bool vms_event_is_hole(vms_event *ev) {
+bool vms_event_is_hole(const vms_event *ev) {
     assert(hole_kind > 0);
     return vms_event_kind(ev) == hole_kind;
 }
@@ -30,6 +30,6 @@ vms_kind vms_get_last_special_kind(void) {
     return last_special_kind;
 }
 
-vms_eventid vms_event_id(vms_event *event) { return event->id; }
+vms_eventid vms_event_id(const vms_event *event) { return event->id; }
 
-vms_kind vms_event_kind(vms_event *event) { return event->kind; }
+vms_kind vms_event_kind(const vms_event *event) { return event->kind; }
