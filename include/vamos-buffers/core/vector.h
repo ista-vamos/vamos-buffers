@@ -23,7 +23,6 @@ void vms_vector_destroy(vms_vector *vec);
 size_t vms_vector_size(vms_vector *vec);
 size_t vms_vector_elem_size(vms_vector *vec);
 
-
 /**
  * Return the pointer to the element at index `idx`.
  *
@@ -38,14 +37,12 @@ void *vms_vector_at(vms_vector *vec, size_t idx);
  */
 void *vms_vector_at_checked(vms_vector *vec, size_t idx);
 
-
 /**
  * Push an element pointed by `elem` into `vec`.
  * Memory is reallocated if needed. By default, the new memory can store
  * 10 more elements than the previously allocated memory.
  */
 size_t vms_vector_push(vms_vector *vec, void *elem);
-
 
 /**
  * Return the pointer to the next free space in the vector and increase
@@ -66,19 +63,16 @@ void *vms_vector_extend(vms_vector *vec);
  */
 size_t vms_vector_pop(vms_vector *vec);
 
-
 /**
  * Return the pointer to the top element or NULL
  * if the vector is empty.
  */
 void *vms_vector_top(vms_vector *vec);
 
-
 /**
  * Swap the contents of two vectors.
  */
 void vms_vector_swap(vms_vector *vec, vms_vector *with);
-
 
 /**
  * Resize the vector to hold `size` elements. If the current size

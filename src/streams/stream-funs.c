@@ -7,7 +7,6 @@
 #include "vamos-buffers/core/arbiter.h"
 #include "vamos-buffers/shmbuf/buffer.h"
 
-
 bool funs_is_ready(vms_stream *stream) {
     struct buffer *b = ((vms_stream_funs *)stream)->shmbuffer;
     /* buffer must be ready or it may not be ready anymore, but it
