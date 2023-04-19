@@ -3,12 +3,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "vamos-buffers/core/stream.h"
 #include "vamos-buffers/streams/stream-drregex.h"
 #include "vamos-buffers/streams/stream-funs.h"
 #include "vamos-buffers/streams/stream-generic.h"
 #include "vamos-buffers/streams/stream-regex.h"
 #include "vamos-buffers/streams/stream-regexrw.h"
-#include "vamos-buffers/core/stream.h"
 
 const char *find_next_part(const char *params) {
     params = strchr(params, ':');

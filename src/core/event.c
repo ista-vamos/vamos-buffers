@@ -1,8 +1,8 @@
+#include "vamos-buffers/core/event.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-
-#include "vamos-buffers/core/event.h"
 
 static const vms_kind hole_kind = 1;
 static const vms_kind last_special_kind = 1;

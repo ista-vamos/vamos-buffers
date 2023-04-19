@@ -8,7 +8,6 @@
 #include "vamos-buffers/core/arbiter.h"
 #include "vamos-buffers/shmbuf/buffer.h"
 
-
 /* A generic stream for events stored in shared memory buffer,
    no filter nor modification of events supported (unless done manually). */
 

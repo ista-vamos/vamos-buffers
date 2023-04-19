@@ -1,8 +1,9 @@
+#include "vamos-buffers/core/arbiter.h"
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
 
-#include "vamos-buffers/core/arbiter.h"
 #include "vamos-buffers/core/par_queue.h"
 #include "vamos-buffers/core/stream.h"
 #include "vamos-buffers/core/utils.h"

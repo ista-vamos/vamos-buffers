@@ -1,8 +1,8 @@
+#include "vamos-buffers/core/list.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "vamos-buffers/core/list.h"
 
 void vms_list_init(vms_list *list) { memset(list, 0, sizeof(vms_list)); }
 

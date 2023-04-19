@@ -1,8 +1,8 @@
+#include "vamos-buffers/core/list-embedded.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "vamos-buffers/core/list-embedded.h"
 
 void vms_list_embedded_init(vms_list_embedded *list) {
     list->prev = list;

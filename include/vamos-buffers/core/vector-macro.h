@@ -121,7 +121,6 @@
         VEC_SIZE(vec) += 1;                                                   \
     } while (0)
 
-
 #define VEC_EXTEND(vec, outptr) VEC_EXTEND_N(vec, outptr, 16)
 
 /**

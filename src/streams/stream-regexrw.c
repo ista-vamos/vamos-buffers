@@ -1,10 +1,11 @@
 
+#include "vamos-buffers/streams/stream-regexrw.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "vamos-buffers/streams/stream-regexrw.h"
 #include "vamos-buffers/core/arbiter.h"
 
 bool sregexrw_is_ready(vms_stream *stream) {

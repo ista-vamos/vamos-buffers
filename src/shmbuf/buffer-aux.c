@@ -20,7 +20,6 @@ void drop_ranges_lock(struct buffer *buff) {
     } while (atomic_compare_exchange_weak(l, &unlocked, true));
 }
 
-
 HIDE_SYMBOL
 void aux_buffer_release(struct aux_buffer *buffer) {
     assert((buffer->size + sizeof(struct aux_buffer)) % sysconf(_SC_PAGESIZE) ==

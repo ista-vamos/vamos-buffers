@@ -7,7 +7,6 @@
 #include "vamos-buffers/core/event.h"
 #include "vamos-buffers/core/stream.h"
 
-
 struct buffer;
 
 /* A generic stream for events stored in shared memory buffer,
