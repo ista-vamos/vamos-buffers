@@ -9,12 +9,12 @@
 HIDE_SYMBOL
 struct source_control *get_shared_control_buffer(const char *buff_key) {
     char key[SHM_NAME_MAXLEN];
-    shamon_map_ctrl_key(buff_key, key);
+    vms_shm_map_ctrl_key(buff_key, key);
 
     /* fprintf(stderr, "getting control buffer '%s'\n", key); */
-    int fd = shamon_shm_open(key, O_RDWR | O_CREAT, S_IRWXU);
+    int fd = vms_shm_open(key, O_RDWR | O_CREAT, S_IRWXU);
     if (fd < 0) {
-        perror("shm_open");
+        perror("vms_open");
         return NULL;
     }
 
@@ -31,8 +31,8 @@ struct source_control *get_shared_control_buffer(const char *buff_key) {
         if (close(fd) == -1) {
             perror("closing fd after mmap failure");
         }
-        if (shamon_shm_unlink(key) != 0) {
-            perror("shm_unlink after mmap failure");
+        if (vms_shm_unlink(key) != 0) {
+            perror("vms_unlink after mmap failure");
         }
         return NULL;
     }
@@ -45,21 +45,21 @@ HIDE_SYMBOL
 struct source_control *create_shared_control_buffer(
     const char *buff_key, mode_t mode, const struct source_control *control) {
     char key[SHM_NAME_MAXLEN];
-    shamon_map_ctrl_key(buff_key, key);
+    vms_shm_map_ctrl_key(buff_key, key);
     size_t size = control->size;
 
     /* fprintf(stderr, "Initializing control buffer '%s' of size '%lu'\n", key,
      * size); */
 
     char tmpkey[SHM_NAME_MAXLEN] = "";
-    if (shamon_get_tmp_key(key, tmpkey, SHM_NAME_MAXLEN) == -1) {
+    if (vms_shm_get_tmp_key(key, tmpkey, SHM_NAME_MAXLEN) == -1) {
         fprintf(stderr, "Failed creating a tmpkey for '%s'\n", key);
         return NULL;
     }
 
-    int fd = shamon_shm_open(tmpkey, O_RDWR | O_CREAT, mode);
+    int fd = vms_shm_open(tmpkey, O_RDWR | O_CREAT, mode);
     if (fd < 0) {
-        perror("shm_open");
+        perror("vms_open");
         return NULL;
     }
 
@@ -82,22 +82,22 @@ struct source_control *create_shared_control_buffer(
         if (close(fd) == -1) {
             perror("closing fd after mmap failure");
         }
-        if (shamon_shm_unlink(key) != 0) {
-            perror("shm_unlink after mmap failure");
+        if (vms_shm_unlink(key) != 0) {
+            perror("vms_unlink after mmap failure");
         }
         return NULL;
     }
 
     memcpy(mem, control, size);
 
-    if (shamon_shm_rename(tmpkey, key) < 0) {
+    if (vms_shm_rename(tmpkey, key) < 0) {
         perror("renaming SHM file");
 
         if (close(fd) == -1) {
             perror("closing fd after mmap failure");
         }
-        if (shamon_shm_unlink(tmpkey) != 0) {
-            perror("shm_unlink after mmap failure");
+        if (vms_shm_unlink(tmpkey) != 0) {
+            perror("vms_unlink after mmap failure");
         }
         if (munmap(mem, size) != 0) {
             perror("munmap of control buffer");
@@ -123,8 +123,8 @@ void destroy_shared_control_buffer(const char *buffkey,
     release_shared_control_buffer(buffer);
 
     char key[SHM_NAME_MAXLEN];
-    shamon_map_ctrl_key(buffkey, key);
-    if (shamon_shm_unlink(key) != 0) {
-        perror("destroy_shared_control_buffer: shm_unlink failure");
+    vms_shm_map_ctrl_key(buffkey, key);
+    if (vms_shm_unlink(key) != 0) {
+        perror("destroy_shared_control_buffer: vms_unlink failure");
     }
 }

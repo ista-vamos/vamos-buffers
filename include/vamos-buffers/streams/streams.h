@@ -3,10 +3,10 @@
 
 #include "vamos-buffers/core/stream.h"
 
-shm_stream *shm_stream_create_from_argv(
+vms_stream *vms_stream_create_from_argv(
     const char *stream_name, int argc, char *argv[],
-    const shm_stream_hole_handling *hole_handling);
-shm_stream *shm_stream_create(const char *stream_name, const char *spec,
-                              const shm_stream_hole_handling *hole_handling);
+    const vms_stream_hole_handling *hole_handling);
+vms_stream *vms_stream_create(const char *stream_name, const char *spec,
+                              const vms_stream_hole_handling *hole_handling);
 
 #endif /* SHAMON_STREAMS_H_ */

@@ -46,7 +46,7 @@
  *
  *  VEC() can be usually also used in struct declarations, but not always.
  *  For example if a struct is opaque and the vector must be accessed from
- *  outside. In such cases, we provide `shm_vector` data type.
+ *  outside. In such cases, we provide `vms_vector` data type.
  */
 
 #include <string.h>

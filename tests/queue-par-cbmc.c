@@ -7,10 +7,10 @@
 int buffer[4];
 
 void *reader(void *data) {
-    shm_par_queue *q = (shm_par_queue *)data;
+    vms_par_queue *q = (vms_par_queue *)data;
     int n = 1;
     while (n < 4) {
-        if (shm_par_queue_pop(q, &buffer[n])) {
+        if (vms_par_queue_pop(q, &buffer[n])) {
             ++n;
         }
     }
@@ -18,17 +18,17 @@ void *reader(void *data) {
 }
 
 void *writer(void *data) {
-    shm_par_queue *q = (shm_par_queue *)data;
+    vms_par_queue *q = (vms_par_queue *)data;
     for (int i = 1; i < 4; ++i) {
-        assert(shm_par_queue_push(q, &i, sizeof(i)));
+        assert(vms_par_queue_push(q, &i, sizeof(i)));
     }
 
     pthread_exit(0);
 }
 
 int main(void) {
-    shm_par_queue q;
-    shm_par_queue_init(&q, 3, sizeof(int));
+    vms_par_queue q;
+    vms_par_queue_init(&q, 3, sizeof(int));
 
     pthread_t r, w;
     pthread_create(&r, NULL, reader, &q);
@@ -41,5 +41,5 @@ int main(void) {
     }
 
     // CBMC does not handle calls to free() with threads...
-    // shm_par_queue_destroy(&q);
+    // vms_par_queue_destroy(&q);
 }

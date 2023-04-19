@@ -5,7 +5,7 @@
 
 struct event_record {
     char name[64];
-    shm_kind kind;
+    vms_kind kind;
     size_t size;
     unsigned char signature[32];
 };

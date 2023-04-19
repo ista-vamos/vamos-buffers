@@ -6,8 +6,8 @@
 
 #define DRREGEX_ONLY_ARGS
 
-typedef struct _shm_event_drregex {
-    shm_event base;
+typedef struct _vms_event_drregex {
+    vms_event base;
 #ifndef DRREGEX_ONLY_ARGS
     bool write; /* true = write, false = read */
     int fd;
@@ -15,12 +15,12 @@ typedef struct _shm_event_drregex {
 #endif
     /* the event arguments */
     unsigned char args[];
-} shm_event_drregex;
+} vms_event_drregex;
 
-typedef struct _shm_stream_drregex {
-    shm_stream base;
+typedef struct _vms_stream_drregex {
+    vms_stream base;
     struct buffer *shmbuffer;
-} shm_stream_drregex;
+} vms_stream_drregex;
 
-shm_stream *shm_create_drregex_stream(const char *key, const char *name);
-void shm_destroy_drregex_stream(shm_stream_drregex *ss);
+vms_stream *vms_create_drregex_stream(const char *key, const char *name);
+void vms_destroy_drregex_stream(vms_stream_drregex *ss);

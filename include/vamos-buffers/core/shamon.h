@@ -5,12 +5,12 @@
 #include <unistd.h>
 
 typedef struct _shamon shamon;
-typedef struct _shm_event shm_event;
-typedef struct _shm_stream shm_stream;
-typedef struct _shm_vector shm_vector;
+typedef struct _vms_event vms_event;
+typedef struct _vms_stream vms_stream;
+typedef struct _vms_vector vms_vector;
 
-typedef shm_event *(*shamon_process_events_fn)(shm_vector *buffers, void *data,
-                                               shm_stream **);
+typedef vms_event *(*shamon_process_events_fn)(vms_vector *buffers, void *data,
+                                               vms_stream **);
 
 shamon *shamon_create(shamon_process_events_fn process_events,
                       void *process_events_data);
@@ -19,10 +19,10 @@ bool shamon_is_ready(shamon *);
 /* for error handling only... */
 void shamon_detach(shamon *shmn);
 
-void shamon_add_stream(shamon *shmn, shm_stream *stream,
+void shamon_add_stream(shamon *shmn, vms_stream *stream,
                        size_t buffer_capacity);
-shm_event *shamon_get_next_ev(shamon *, shm_stream **);
-shm_vector *shamon_get_buffers(shamon *);
-shm_stream **shamon_get_streams(shamon *, size_t *);
+vms_event *shamon_get_next_ev(shamon *, vms_stream **);
+vms_vector *shamon_get_buffers(shamon *);
+vms_stream **shamon_get_streams(shamon *, size_t *);
 
 #endif  // SHAMON_H_

@@ -6,7 +6,7 @@
 #define __predict_false(x) __builtin_expect((x) != 0, 0)
 #define __predict_true(x) __builtin_expect((x) != 0, 1)
 
-void shm_spsc_ringbuf_init(shm_spsc_ringbuf *b, size_t capacity) {
+void vms_spsc_ringbuf_init(vms_spsc_ringbuf *b, size_t capacity) {
     /*  we use one element as a separator */
     assert(capacity > 0);
     assert(capacity < SIZE_MAX - 1 && "Arith. in operations can overflow.");
@@ -94,40 +94,40 @@ static inline size_t get_free_num(size_t head, size_t tail, size_t capacity) {
     return ret;
 }
 
-size_t shm_spsc_ringbuf_capacity(shm_spsc_ringbuf *b) {
+size_t vms_spsc_ringbuf_capacity(vms_spsc_ringbuf *b) {
     /* we use one element as a separator */
     return b->capacity;
 }
 
-size_t shm_spsc_ringbuf_max_size(shm_spsc_ringbuf *b) {
+size_t vms_spsc_ringbuf_max_size(vms_spsc_ringbuf *b) {
     /* we use one element as a separator */
     return b->capacity - 1;
 }
 
-size_t shm_spsc_ringbuf_size(shm_spsc_ringbuf *b) {
+size_t vms_spsc_ringbuf_size(vms_spsc_ringbuf *b) {
     return get_written_num(atomic_load_explicit(&b->head, memory_order_relaxed),
                            atomic_load_explicit(&b->tail, memory_order_relaxed),
                            b->capacity);
 }
 
-bool shm_spsc_ringbuf_empty(shm_spsc_ringbuf *b) {
+bool vms_spsc_ringbuf_empty(vms_spsc_ringbuf *b) {
     return _is_empty(atomic_load_explicit(&b->head, memory_order_relaxed),
                      atomic_load_explicit(&b->tail, memory_order_relaxed));
 }
 
-size_t shm_spsc_ringbuf_free_num(shm_spsc_ringbuf *b) {
+size_t vms_spsc_ringbuf_free_num(vms_spsc_ringbuf *b) {
     return get_free_num(atomic_load_explicit(&b->head, memory_order_relaxed),
                         atomic_load_explicit(&b->tail, memory_order_relaxed),
                         b->capacity);
 }
 
 /**
- * @brief shm_spsc_ringbuf_full checks if the ringbuffer is full.
+ * @brief vms_spsc_ringbuf_full checks if the ringbuffer is full.
  * It ignores cached head/tail and queries the shared head/tail directly.
  * However, no synchronization is used (the memory order is relaxed).
  * @return true if the ringbuf is full else false
  */
-bool shm_spsc_ringbuf_full(shm_spsc_ringbuf *b) {
+bool vms_spsc_ringbuf_full(vms_spsc_ringbuf *b) {
     size_t head = atomic_load_explicit(&b->head, memory_order_relaxed);
     size_t tail = atomic_load_explicit(&b->tail, memory_order_relaxed);
     return __predict_false(_is_full(head, tail, b->capacity));
@@ -167,7 +167,7 @@ static inline size_t get_write_off(size_t head, size_t tail, size_t capacity,
     return tail - head - 1;
 }
 
-size_t shm_spsc_ringbuf_write_off(shm_spsc_ringbuf *b, size_t *n,
+size_t vms_spsc_ringbuf_write_off(vms_spsc_ringbuf *b, size_t *n,
                                   size_t *wrap_n) {
     const size_t head = atomic_load_explicit(&b->head, memory_order_acquire);
 
@@ -184,7 +184,7 @@ size_t shm_spsc_ringbuf_write_off(shm_spsc_ringbuf *b, size_t *n,
     return head;
 }
 
-size_t shm_spsc_ringbuf_write_off_nowrap(shm_spsc_ringbuf *b, size_t *n) {
+size_t vms_spsc_ringbuf_write_off_nowrap(vms_spsc_ringbuf *b, size_t *n) {
     const size_t head = atomic_load_explicit(&b->head, memory_order_acquire);
 
     /* Update the cache if seen_tail is 0 (which very likely means it has not been updated yet,
@@ -205,7 +205,7 @@ size_t shm_spsc_ringbuf_write_off_nowrap(shm_spsc_ringbuf *b, size_t *n) {
 }
 
 /* Ask for at least *n elements */
-size_t shm_spsc_ringbuf_acquire(shm_spsc_ringbuf *b, size_t *n,
+size_t vms_spsc_ringbuf_acquire(vms_spsc_ringbuf *b, size_t *n,
                                 size_t *wrap_n) {
     const size_t head = atomic_load_explicit(&b->head, memory_order_acquire);
 
@@ -224,7 +224,7 @@ size_t shm_spsc_ringbuf_acquire(shm_spsc_ringbuf *b, size_t *n,
 }
 
 /* Ask for at least *n elements */
-size_t shm_spsc_ringbuf_acquire_nowrap(shm_spsc_ringbuf *b, size_t *n) {
+size_t vms_spsc_ringbuf_acquire_nowrap(vms_spsc_ringbuf *b, size_t *n) {
     const size_t head = atomic_load_explicit(&b->head, memory_order_acquire);
 
     size_t req = *n;
@@ -241,7 +241,7 @@ size_t shm_spsc_ringbuf_acquire_nowrap(shm_spsc_ringbuf *b, size_t *n) {
     return head;
 }
 
-void shm_spsc_ringbuf_write_finish(shm_spsc_ringbuf *b, size_t n) {
+void vms_spsc_ringbuf_write_finish(vms_spsc_ringbuf *b, size_t n) {
     assert(n <= b->capacity);
     assert((b->capacity < (~((size_t)0)) - n) && "Possible overflow");
 #ifndef NDEBUG
@@ -265,7 +265,7 @@ void shm_spsc_ringbuf_write_finish(shm_spsc_ringbuf *b, size_t n) {
     atomic_store_explicit(&b->head, new_head, memory_order_release);
 }
 
-size_t shm_spsc_ringbuf_read_off_nowrap(shm_spsc_ringbuf *b, size_t *n) {
+size_t vms_spsc_ringbuf_read_off_nowrap(vms_spsc_ringbuf *b, size_t *n) {
     const size_t tail = atomic_load_explicit(&b->tail, memory_order_acquire);
     size_t tmp = get_written_num(b->seen_head, tail, b->capacity);
     if (tmp == 0) {
@@ -278,7 +278,7 @@ size_t shm_spsc_ringbuf_read_off_nowrap(shm_spsc_ringbuf *b, size_t *n) {
     return tail;
 }
 
-size_t shm_spsc_ringbuf_read_acquire(shm_spsc_ringbuf *b, size_t *n) {
+size_t vms_spsc_ringbuf_read_acquire(vms_spsc_ringbuf *b, size_t *n) {
     const size_t tail = atomic_load_explicit(&b->tail, memory_order_acquire);
     size_t tmp = get_written_num(b->seen_head, tail, b->capacity);
     if (tmp < *n) {
@@ -294,7 +294,7 @@ size_t shm_spsc_ringbuf_read_acquire(shm_spsc_ringbuf *b, size_t *n) {
 /*
  * Consume n items from the ringbuffer. There must be at least n items.
  */
-void shm_spsc_ringbuf_consume(shm_spsc_ringbuf *b, size_t n) {
+void vms_spsc_ringbuf_consume(vms_spsc_ringbuf *b, size_t n) {
     assert(n > 0 && "Consume 0 elems");
     assert(n <= b->capacity);
     assert((b->capacity < (~((size_t)0)) - n) && "Possible overflow");
@@ -312,7 +312,7 @@ void shm_spsc_ringbuf_consume(shm_spsc_ringbuf *b, size_t n) {
  * Consume up to n items from the ringbuffer. Return the number of consumed
  * events.
  */
-size_t shm_spsc_ringbuf_consume_upto(shm_spsc_ringbuf *b, size_t n) {
+size_t vms_spsc_ringbuf_consume_upto(vms_spsc_ringbuf *b, size_t n) {
     assert(n <= b->capacity);
     assert((b->capacity < (~((size_t)0)) - n) && "Possible overflow");
 
@@ -328,14 +328,14 @@ size_t shm_spsc_ringbuf_consume_upto(shm_spsc_ringbuf *b, size_t n) {
     }
 
     if (n > 0) {
-        shm_spsc_ringbuf_consume(b, n);
+        vms_spsc_ringbuf_consume(b, n);
     }
 
     return n;
 }
 
 /* If return value is 0, values *off, *len1 and *len2 may not have been set */
-size_t shm_spsc_ringbuf_peek(shm_spsc_ringbuf *b, size_t n, size_t *off,
+size_t vms_spsc_ringbuf_peek(vms_spsc_ringbuf *b, size_t n, size_t *off,
                              size_t *len1, size_t *len2) {
     const size_t tail = atomic_load_explicit(&b->tail, memory_order_acquire);
     size_t head = b->seen_head;

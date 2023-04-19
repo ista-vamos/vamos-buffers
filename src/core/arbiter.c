@@ -9,8 +9,8 @@
 
 #define DROP_SPACE_DEFAULT_THRESHOLD 1
 
-typedef struct _shm_arbiter_buffer {
-    shm_par_queue buffer;         // the buffer itself
+typedef struct _vms_arbiter_buffer {
+    vms_par_queue buffer;         // the buffer itself
     size_t drop_space_threshold;  // the number of elements to keep free before
                                   // pushing dropped() event
     size_t dropped_num;           // the number of dropped events
@@ -24,44 +24,44 @@ typedef struct _shm_arbiter_buffer {
     int last_was_drop;      // true if the last event written was drop()
     size_t waited_to_push;  // how many times the buffer waited to push
 #endif
-    shm_eventid drop_begin_id;  // the id of the next 'dropped' event
+    vms_eventid drop_begin_id;  // the id of the next 'dropped' event
 
-    shm_stream *stream;  // the source for the buffer
-    shm_event *hole_event;
+    vms_stream *stream;  // the source for the buffer
+    vms_event *hole_event;
     bool active;  // true while the events are being queued
-} shm_arbiter_buffer;
+} vms_arbiter_buffer;
 
-size_t shm_arbiter_buffer_sizeof(void) { return sizeof(shm_arbiter_buffer); }
+size_t vms_arbiter_buffer_sizeof(void) { return sizeof(vms_arbiter_buffer); }
 
-void *shm_arbiter_buffer_write_ptr(shm_arbiter_buffer *q) {
-    return shm_par_queue_write_ptr(&q->buffer);
+void *vms_arbiter_buffer_write_ptr(vms_arbiter_buffer *q) {
+    return vms_par_queue_write_ptr(&q->buffer);
 }
 
-void shm_arbiter_buffer_write_finish(shm_arbiter_buffer *q) {
+void vms_arbiter_buffer_write_finish(vms_arbiter_buffer *q) {
 #ifdef DUMP_STATS
     ++q->written_num;
 #endif
-    shm_par_queue_write_finish(&q->buffer);
+    vms_par_queue_write_finish(&q->buffer);
 }
 
-void shm_arbiter_buffer_finish_push(shm_arbiter_buffer *q);
+void vms_arbiter_buffer_finish_push(vms_arbiter_buffer *q);
 
-size_t shm_arbiter_buffer_size(shm_arbiter_buffer *buffer) {
-    return shm_par_queue_size(&buffer->buffer);
+size_t vms_arbiter_buffer_size(vms_arbiter_buffer *buffer) {
+    return vms_par_queue_size(&buffer->buffer);
 }
 
-size_t shm_arbiter_buffer_free_space(shm_arbiter_buffer *buffer) {
-    return shm_par_queue_free_num(&buffer->buffer);
+size_t vms_arbiter_buffer_free_space(vms_arbiter_buffer *buffer) {
+    return vms_par_queue_free_num(&buffer->buffer);
 }
 
-size_t shm_arbiter_buffer_capacity(shm_arbiter_buffer *buffer) {
-    return shm_par_queue_capacity(&buffer->buffer);
+size_t vms_arbiter_buffer_capacity(vms_arbiter_buffer *buffer) {
+    return vms_par_queue_capacity(&buffer->buffer);
 }
 
-size_t shm_arbiter_buffer_set_drop_space_threshold(shm_arbiter_buffer *buffer,
+size_t vms_arbiter_buffer_set_drop_space_threshold(vms_arbiter_buffer *buffer,
                                                    size_t thr) {
     assert(thr >= 1);
-    assert(thr < shm_arbiter_buffer_capacity(buffer));
+    assert(thr < vms_arbiter_buffer_capacity(buffer));
 
     size_t old = buffer->drop_space_threshold;
     buffer->drop_space_threshold = thr;
@@ -70,22 +70,22 @@ size_t shm_arbiter_buffer_set_drop_space_threshold(shm_arbiter_buffer *buffer,
 
 /* drop an event and notify buffer the buffer that it may free up
  * the payload of this and older events */
-size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t k) {
+size_t vms_arbiter_buffer_drop(vms_arbiter_buffer *buffer, size_t k) {
 #ifdef DUMP_STATS
     buffer->volunt_dropped_num_asked += k;
 #endif
     --k; /* peek_*_at takes index from 0 */
-    shm_event *ev = shm_par_queue_peek_atmost_at(&buffer->buffer, &k);
+    vms_event *ev = vms_par_queue_peek_atmost_at(&buffer->buffer, &k);
     if (!ev)
         return 0; /* empty queue */
-    shm_eventid last_id = shm_event_id(ev);
+    vms_eventid last_id = vms_event_id(ev);
 #ifndef NDEBUG
     size_t n =
 #endif
         ++k; /* k is index, we must increase it back by one */
-    shm_par_queue_drop(&buffer->buffer, k);
+    vms_par_queue_drop(&buffer->buffer, k);
     assert(n == k && "Something changed the queue in between");
-    shm_stream_notify_last_processed_id(buffer->stream, last_id);
+    vms_stream_notify_last_processed_id(buffer->stream, last_id);
 #ifdef DUMP_STATS
     buffer->volunt_dropped_num += k;
 #endif
@@ -94,26 +94,26 @@ size_t shm_arbiter_buffer_drop(shm_arbiter_buffer *buffer, size_t k) {
 
 /* Drop all events with ID less or equal to the one of ev.
  * Return how many events were dropped */
-size_t shm_arbiter_buffer_drop_older_than(shm_arbiter_buffer *buffer,
-                                          shm_eventid id) {
+size_t vms_arbiter_buffer_drop_older_than(vms_arbiter_buffer *buffer,
+                                          vms_eventid id) {
     /* we first must find the event in the queue */
     void *ptr1, *ptr2;
     size_t len1, len2;
     const size_t n =
-        shm_par_queue_peek(&buffer->buffer, 0, &ptr1, &len1, &ptr2, &len2);
+        vms_par_queue_peek(&buffer->buffer, 0, &ptr1, &len1, &ptr2, &len2);
     if (n == 0)
         return 0;
 
-    const size_t elem_size = shm_par_queue_elem_size(&buffer->buffer);
+    const size_t elem_size = vms_par_queue_elem_size(&buffer->buffer);
     size_t k; /* the number of events to be dropped */
     size_t bot = 0, top;
     unsigned char *events;
 
     assert(len1 > 0 && "Underflow");
     top = len1 - 1;
-    shm_event *ev = (shm_event *)((unsigned char *)ptr1 + (top)*elem_size);
+    vms_event *ev = (vms_event *)((unsigned char *)ptr1 + (top)*elem_size);
     /* in which part of the buffer may the event be? */
-    if (id <= shm_event_id(ev)) {
+    if (id <= vms_event_id(ev)) {
         events = ptr1;
     } else if (len2 > 0) {
         events = ptr2;
@@ -124,8 +124,8 @@ size_t shm_arbiter_buffer_drop_older_than(shm_arbiter_buffer *buffer,
         k = len1;
         /* now consume everything up to the found event */
         if (k > 0) {
-            shm_par_queue_drop(&buffer->buffer, k);
-            shm_stream_notify_last_processed_id(buffer->stream, id);
+            vms_par_queue_drop(&buffer->buffer, k);
+            vms_stream_notify_last_processed_id(buffer->stream, id);
 
 #ifdef DUMP_STATS
             buffer->volunt_dropped_num_asked += k;
@@ -147,8 +147,8 @@ size_t shm_arbiter_buffer_drop_older_than(shm_arbiter_buffer *buffer,
         /* the search should terminate much earlier then after n steps */
         assert(steps++ < n && "BUG in binary search");
 
-        ev = (shm_event *)(events + pivot * elem_size);
-        if (id < shm_event_id(ev)) {
+        ev = (vms_event *)(events + pivot * elem_size);
+        if (id < vms_event_id(ev)) {
             if (pivot == 0) {
                 assert(bot == 0);
                 assert(top == 1);
@@ -160,7 +160,7 @@ size_t shm_arbiter_buffer_drop_older_than(shm_arbiter_buffer *buffer,
         } else {
             if (bot == pivot) {
                 assert(top == bot + 1);
-                if (shm_event_id(ev) == id) {
+                if (vms_event_id(ev) == id) {
                     top = bot;
                 } else {
                     bot = top;
@@ -172,8 +172,8 @@ size_t shm_arbiter_buffer_drop_older_than(shm_arbiter_buffer *buffer,
 
         assert(bot <= top);
         if (top == bot) {
-            ev = (shm_event *)(events + top * elem_size);
-            if (id < shm_event_id(ev)) {
+            ev = (vms_event *)(events + top * elem_size);
+            if (id < vms_event_id(ev)) {
                 /* the found event is the one to the left */
                 if (bot == 0) {
                     /* There is no event to the left in this part of the buffer.
@@ -199,8 +199,8 @@ size_t shm_arbiter_buffer_drop_older_than(shm_arbiter_buffer *buffer,
 
     /* now consume everything up to the found event */
     if (k > 0) {
-        shm_par_queue_drop(&buffer->buffer, k);
-        shm_stream_notify_last_processed_id(buffer->stream, id);
+        vms_par_queue_drop(&buffer->buffer, k);
+        vms_stream_notify_last_processed_id(buffer->stream, id);
 
 #ifdef DUMP_STATS
         buffer->volunt_dropped_num_asked += k;
@@ -211,38 +211,38 @@ size_t shm_arbiter_buffer_drop_older_than(shm_arbiter_buffer *buffer,
     return k;
 }
 
-bool shm_arbiter_buffer_active(shm_arbiter_buffer *buffer) {
+bool vms_arbiter_buffer_active(vms_arbiter_buffer *buffer) {
     return buffer->active;
 }
 
-void shm_arbiter_buffer_set_active(shm_arbiter_buffer *buffer, bool val) {
+void vms_arbiter_buffer_set_active(vms_arbiter_buffer *buffer, bool val) {
     buffer->active = val;
     if (val) {
-        shm_stream_attach(buffer->stream);
+        vms_stream_attach(buffer->stream);
     } else {
-        shm_stream_attach(buffer->stream);
+        vms_stream_attach(buffer->stream);
     }
 }
 
-shm_stream *shm_arbiter_buffer_stream(shm_arbiter_buffer *buffer) {
+vms_stream *vms_arbiter_buffer_stream(vms_arbiter_buffer *buffer) {
     return buffer->stream;
 }
 
-size_t shm_arbiter_buffer_dropped_num(shm_arbiter_buffer *buffer) {
+size_t vms_arbiter_buffer_dropped_num(vms_arbiter_buffer *buffer) {
     return buffer->total_dropped_num;
 }
 
-size_t shm_arbiter_buffer_dropped_times(shm_arbiter_buffer *buffer) {
+size_t vms_arbiter_buffer_dropped_times(vms_arbiter_buffer *buffer) {
     return buffer->total_dropped_times;
 }
 
 #ifdef DUMP_STATS
-size_t shm_arbiter_buffer_written_num(shm_arbiter_buffer *buffer) {
+size_t vms_arbiter_buffer_written_num(vms_arbiter_buffer *buffer) {
     return buffer->written_num;
 }
 #endif
 
-void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
+void vms_arbiter_buffer_init(vms_arbiter_buffer *buffer, vms_stream *stream,
                              size_t out_event_size, size_t capacity) {
     assert(ADDR_IS_CACHE_ALIGNED(buffer) &&
            "The memory for the buffer is missaligned");
@@ -257,7 +257,7 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
     if (hole_event_size > 0 && event_size < hole_event_size)
         event_size = hole_event_size;
 
-    shm_par_queue_init(&buffer->buffer, capacity, event_size);
+    vms_par_queue_init(&buffer->buffer, capacity, event_size);
 
     buffer->drop_space_threshold = DROP_SPACE_DEFAULT_THRESHOLD;
     buffer->hole_event = xalloc(stream->hole_handling.hole_event_size);
@@ -276,34 +276,34 @@ void shm_arbiter_buffer_init(shm_arbiter_buffer *buffer, shm_stream *stream,
 #endif
 }
 
-shm_arbiter_buffer *shm_arbiter_buffer_create(shm_stream *stream,
+vms_arbiter_buffer *vms_arbiter_buffer_create(vms_stream *stream,
                                               size_t out_event_size,
                                               size_t capacity) {
     /* some elements are cache-aligned, so we must make sure
      * that the memory is not allocated mis-aligned */
-    shm_arbiter_buffer *b =
-        xalloc_aligned(shm_arbiter_buffer_sizeof(), CACHELINE_SIZE);
-    shm_arbiter_buffer_init(b, stream, out_event_size, capacity);
+    vms_arbiter_buffer *b =
+        xalloc_aligned(vms_arbiter_buffer_sizeof(), CACHELINE_SIZE);
+    vms_arbiter_buffer_init(b, stream, out_event_size, capacity);
     return b;
 }
-void shm_arbiter_buffer_free(shm_arbiter_buffer *buffer) {
-    shm_arbiter_buffer_destroy(buffer);
+void vms_arbiter_buffer_free(vms_arbiter_buffer *buffer) {
+    vms_arbiter_buffer_destroy(buffer);
     free(buffer);
 }
 
-void shm_arbiter_buffer_destroy(shm_arbiter_buffer *buffer) {
-    shm_par_queue_destroy(&buffer->buffer);
+void vms_arbiter_buffer_destroy(vms_arbiter_buffer *buffer) {
+    vms_par_queue_destroy(&buffer->buffer);
     free(buffer->hole_event);
 }
 
-size_t shm_arbiter_buffer_elem_size(shm_arbiter_buffer *q) {
-    return shm_par_queue_elem_size(&q->buffer);
+size_t vms_arbiter_buffer_elem_size(vms_arbiter_buffer *q) {
+    return vms_par_queue_elem_size(&q->buffer);
 }
 
-void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
+void vms_arbiter_buffer_push(vms_arbiter_buffer *buffer, const void *elem,
                              size_t size) {
-    assert(shm_arbiter_buffer_active(buffer));
-    while (!shm_par_queue_push(&buffer->buffer, elem, size)) {
+    assert(vms_arbiter_buffer_active(buffer));
+    while (!vms_par_queue_push(&buffer->buffer, elem, size)) {
 #ifdef DUMP_STATS
         ++buffer->waited_to_push;
 #endif
@@ -312,24 +312,24 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
 }
 
 #if 0
-void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
+void vms_arbiter_buffer_push(vms_arbiter_buffer *buffer, const void *elem,
                              size_t size) {
-    assert(shm_arbiter_buffer_active(buffer));
-    shm_par_queue *queue = &buffer->buffer;
+    assert(vms_arbiter_buffer_active(buffer));
+    vms_par_queue *queue = &buffer->buffer;
 
     if (buffer->dropped_num > 0) {
-        if (shm_par_queue_free_num(queue) < 2) {
+        if (vms_par_queue_free_num(queue) < 2) {
             ++buffer->dropped_num;
         } else {
-            shm_stream_prepare_hole_event(buffer->stream, buffer->hole_event,
+            vms_stream_prepare_hole_event(buffer->stream, buffer->hole_event,
                                           buffer->drop_begin_id,
                                           buffer->dropped_num);
             assert(buffer->stream->hole_handling.hole_event_size <=
-                   shm_par_queue_elem_size(queue));
+                   vms_par_queue_elem_size(queue));
 #ifndef NDEBUG
             bool ret =
 #endif
-                shm_par_queue_push(
+                vms_par_queue_push(
                     queue, buffer->hole_event,
                     buffer->stream->hole_handling.hole_event_size);
 #ifdef DUMP_STATS
@@ -339,7 +339,7 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
 #ifndef NDEBUG
             ret =
 #endif
-                shm_par_queue_push(&buffer->buffer, elem, size);
+                vms_par_queue_push(&buffer->buffer, elem, size);
 #ifdef DUMP_STATS
             ++buffer->written_num;
 #endif
@@ -349,13 +349,13 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
             buffer->dropped_num = 0;
             /* the end id may not be precise, but we need just the upper bound
              */
-            shm_arbiter_buffer_notify_dropped(buffer, buffer->drop_begin_id,
-                                              shm_event_id((shm_event *)elem) -
+            vms_arbiter_buffer_notify_dropped(buffer, buffer->drop_begin_id,
+                                              vms_event_id((vms_event *)elem) -
                                                   1);
         }
     } else {
-        if (!shm_par_queue_push(&buffer->buffer, elem, size)) {
-            buffer->drop_begin_id = shm_event_id((shm_event *)elem);
+        if (!vms_par_queue_push(&buffer->buffer, elem, size)) {
+            buffer->drop_begin_id = vms_event_id((vms_event *)elem);
             ++buffer->dropped_num;
         }
 #ifdef DUMP_STATS
@@ -369,27 +369,27 @@ void shm_arbiter_buffer_push(shm_arbiter_buffer *buffer, const void *elem,
 
 /* NOTE: does not notify about processing the event, must
  * be done manually once all the work with data is done */
-bool shm_arbiter_buffer_pop(shm_arbiter_buffer *buffer, void *elem) {
-    return shm_par_queue_pop(&buffer->buffer, elem);
+bool vms_arbiter_buffer_pop(vms_arbiter_buffer *buffer, void *elem) {
+    return vms_par_queue_pop(&buffer->buffer, elem);
 }
 
-shm_event *shm_arbiter_buffer_top(shm_arbiter_buffer *buffer) {
-    return shm_par_queue_top(&buffer->buffer);
+vms_event *vms_arbiter_buffer_top(vms_arbiter_buffer *buffer) {
+    return vms_par_queue_top(&buffer->buffer);
 }
 
-size_t shm_arbiter_buffer_peek(shm_arbiter_buffer *buffer, size_t n,
+size_t vms_arbiter_buffer_peek(vms_arbiter_buffer *buffer, size_t n,
                                void **data1, size_t *size1, void **data2,
                                size_t *size2) {
-    return shm_par_queue_peek(&buffer->buffer, n, data1, size1, data2, size2);
+    return vms_par_queue_peek(&buffer->buffer, n, data1, size1, data2, size2);
 }
 
-size_t shm_arbiter_buffer_peek1(shm_arbiter_buffer *buffer, void **data) {
-    return shm_par_queue_peek1(&buffer->buffer, data);
+size_t vms_arbiter_buffer_peek1(vms_arbiter_buffer *buffer, void **data) {
+    return vms_par_queue_peek1(&buffer->buffer, data);
 }
 
 /* get an event from the stream, block until there is some and return it
  * or return NULL if the stream ended */
-static void *get_event(shm_stream *stream) {
+static void *get_event(vms_stream *stream) {
     /* TODO: if there is no filtering and modifications, we can push multiple
        events forward. if there are filtering and modifications, we could have
        an additional thread to handle the load of data if we copy them in chunks
@@ -400,7 +400,7 @@ static void *get_event(shm_stream *stream) {
     void *ev;
     while (1) {
         /* wait for the event */
-        ev = shm_stream_read_events(stream, &num);
+        ev = vms_stream_read_events(stream, &num);
         if (ev) {
 #ifdef DUMP_STATS
             ++stream->read_events;
@@ -424,7 +424,7 @@ static void *get_event(shm_stream *stream) {
                 /* checking for the readiness is not cheap,
                  * so do it only after we haven't read any
                  * event for some time */
-                if (!shm_stream_is_ready(stream)) {
+                if (!vms_stream_is_ready(stream)) {
                     return NULL;
                 }
             }
@@ -434,40 +434,40 @@ static void *get_event(shm_stream *stream) {
     assert(0 && "Unreachable");
 }
 
-static void push_dropped_event(shm_stream *stream, shm_arbiter_buffer *buffer,
+static void push_dropped_event(vms_stream *stream, vms_arbiter_buffer *buffer,
                                size_t notify_id) {
-    shm_stream_prepare_hole_event(stream, buffer->hole_event, notify_id,
+    vms_stream_prepare_hole_event(stream, buffer->hole_event, notify_id,
                                   buffer->dropped_num);
-    shm_par_queue_push(&buffer->buffer, buffer->hole_event,
+    vms_par_queue_push(&buffer->buffer, buffer->hole_event,
                        stream->hole_handling.hole_event_size);
 #ifdef DUMP_STATS
     ++buffer->written_num;
 #endif
     buffer->total_dropped_num += buffer->dropped_num;
     ++buffer->total_dropped_times;
-    shm_arbiter_buffer_notify_dropped(buffer, buffer->drop_begin_id, notify_id);
-    assert(shm_arbiter_buffer_free_space(buffer) > 0);
+    vms_arbiter_buffer_notify_dropped(buffer, buffer->drop_begin_id, notify_id);
+    assert(vms_arbiter_buffer_free_space(buffer) > 0);
 
     /*
     printf("PUSHED DROPPED event { kind = %lu, id = %lu, n = %lu}\n",
-            ((shm_event*)&dropped_ev)->kind,
-            ((shm_event*)&dropped_ev)->id,
+            ((vms_event*)&dropped_ev)->kind,
+            ((vms_event*)&dropped_ev)->id,
             dropped_ev.n);
     */
 }
 
-void *handle_stream_end(shm_stream *stream, shm_arbiter_buffer *buffer,
+void *handle_stream_end(vms_stream *stream, vms_arbiter_buffer *buffer,
                         size_t last_ev_id) {
     uint64_t sleep_time = SLEEP_TIME_INIT_NS;
     while (buffer->dropped_num > 0) {
         assert(buffer->drop_space_threshold <
-               shm_arbiter_buffer_capacity(buffer));
-        if (shm_arbiter_buffer_free_space(buffer) >
+               vms_arbiter_buffer_capacity(buffer));
+        if (vms_arbiter_buffer_free_space(buffer) >
             buffer->drop_space_threshold) {
             /* the end id may not be precise, but we need just the upper
              * bound */
             push_dropped_event(stream, buffer, last_ev_id - 1);
-            assert(shm_arbiter_buffer_free_space(buffer) > 0);
+            assert(vms_arbiter_buffer_free_space(buffer) > 0);
 #ifdef DUMP_STATS
             buffer->last_was_drop = 1;
 #endif
@@ -481,13 +481,13 @@ void *handle_stream_end(shm_stream *stream, shm_arbiter_buffer *buffer,
             assert(buffer->dropped_num > 0);
         }
     }
-    assert(!shm_stream_is_ready(stream));
+    assert(!vms_stream_is_ready(stream));
     assert(buffer->dropped_num == 0);
     return NULL; /* stream ended */
 }
 
-static inline void send_dropped_event(shm_stream *stream,
-                                      shm_arbiter_buffer *buffer,
+static inline void send_dropped_event(vms_stream *stream,
+                                      vms_arbiter_buffer *buffer,
                                       size_t last_ev_id) {
     assert(last_ev_id == buffer->dropped_num + buffer->drop_begin_id &&
            "Drop IDs are wrong");
@@ -495,16 +495,16 @@ static inline void send_dropped_event(shm_stream *stream,
     buffer->dropped_num = 0;
     /*
     printf("FETCH: stopped dropping { kind = %lu, id = %lu}\n",
-           ((shm_event*)ev)->kind,
-           ((shm_event*)ev)->id);
+           ((vms_event*)ev)->kind,
+           ((vms_event*)ev)->id);
     */
-    assert(shm_arbiter_buffer_free_space(buffer) > 0);
+    assert(vms_arbiter_buffer_free_space(buffer) > 0);
 }
 
-static inline void start_dropping(shm_stream *stream,
-                                  shm_arbiter_buffer *buffer,
-                                  shm_event *event) {
-    buffer->drop_begin_id = shm_event_id(event);
+static inline void start_dropping(vms_stream *stream,
+                                  vms_arbiter_buffer *buffer,
+                                  vms_event *event) {
+    buffer->drop_begin_id = vms_event_id(event);
     assert(buffer->dropped_num == 0);
     ++buffer->dropped_num;
 
@@ -513,15 +513,15 @@ static inline void start_dropping(shm_stream *stream,
     stream->hole_handling.update(buffer->hole_event, event);
     /*
      printf("FETCH: start dropping { kind = %lu, id = %lu}\n",
-            ((shm_event*)ev)->kind,
-            ((shm_event*)ev)->id);
+            ((vms_event*)ev)->kind,
+            ((vms_event*)ev)->id);
      */
-    shm_stream_consume(stream, 1);
+    vms_stream_consume(stream, 1);
 }
 
-static inline void continue_dropping(shm_stream *stream,
-                                     shm_arbiter_buffer *buffer,
-                                     shm_event *event) {
+static inline void continue_dropping(vms_stream *stream,
+                                     vms_arbiter_buffer *buffer,
+                                     vms_event *event) {
     ++buffer->dropped_num;
     stream->hole_handling.update(buffer->hole_event, event);
 
@@ -529,24 +529,24 @@ static inline void continue_dropping(shm_stream *stream,
      * long time to generate the dropped event */
     /* FIXME: % is slow... and make it configurable */
     if (buffer->dropped_num % 10000 == 0) {
-        shm_arbiter_buffer_notify_dropped(buffer, buffer->drop_begin_id,
-                                          shm_event_id(event) - 1);
+        vms_arbiter_buffer_notify_dropped(buffer, buffer->drop_begin_id,
+                                          vms_event_id(event) - 1);
     }
     /* consume the dropped event */
-    shm_stream_consume(stream, 1);
+    vms_stream_consume(stream, 1);
 }
 
 /* return true if the event should be dropped and false
    if the event should be forwarded */
-static bool handle_dropping_event(shm_stream *stream,
-                                  shm_arbiter_buffer *buffer,
-                                  shm_event *event) {
+static bool handle_dropping_event(vms_stream *stream,
+                                  vms_arbiter_buffer *buffer,
+                                  vms_event *event) {
     if (buffer->dropped_num > 0) {
         assert(buffer->drop_space_threshold <
-               shm_arbiter_buffer_capacity(buffer));
-        if (shm_arbiter_buffer_free_space(buffer) >
+               vms_arbiter_buffer_capacity(buffer));
+        if (vms_arbiter_buffer_free_space(buffer) >
             buffer->drop_space_threshold) {
-            send_dropped_event(stream, buffer, shm_event_id(event));
+            send_dropped_event(stream, buffer, vms_event_id(event));
             return false; /* forward the current event */
         }
 
@@ -555,18 +555,18 @@ static bool handle_dropping_event(shm_stream *stream,
     }
 
     assert(buffer->dropped_num == 0);
-    if (shm_arbiter_buffer_free_space(buffer) == 0) {
+    if (vms_arbiter_buffer_free_space(buffer) == 0) {
         start_dropping(stream, buffer, event);
         return true;
     }
 
-    assert(shm_arbiter_buffer_free_space(buffer) > 0);
+    assert(vms_arbiter_buffer_free_space(buffer) > 0);
     assert(buffer->dropped_num == 0);
     return false;
 }
 
 /* wait for an event on the 'stream' */
-void *stream_fetch(shm_stream *stream, shm_arbiter_buffer *buffer) {
+void *stream_fetch(vms_stream *stream, vms_arbiter_buffer *buffer) {
     void *ev;
     size_t last_ev_id = 1;
     while (1) {
@@ -576,14 +576,14 @@ void *stream_fetch(shm_stream *stream, shm_arbiter_buffer *buffer) {
         }
 
         assert(ev && "Dont have event");
-        assert(!shm_event_is_hole((shm_event *)ev) && "Got dropped event");
+        assert(!vms_event_is_hole((vms_event *)ev) && "Got dropped event");
 
-        last_ev_id = shm_event_id(ev);
+        last_ev_id = vms_event_id(ev);
         assert(last_ev_id == ++stream->last_event_id && "IDs are inconsistent");
         /*
            printf("FETCH: read event { kind = %lu, id = %lu}\n",
-                  ((shm_event*)ev)->kind,
-                  ((shm_event*)ev)->id);
+                  ((vms_event*)ev)->kind,
+                  ((vms_event*)ev)->id);
          */
 
         if (!handle_dropping_event(stream, buffer, ev)) {
@@ -598,8 +598,8 @@ void *stream_fetch(shm_stream *stream, shm_arbiter_buffer *buffer) {
 }
 
 /* FIXME: do not duplicate the code */
-void *stream_filter_fetch(shm_stream *stream, shm_arbiter_buffer *buffer,
-                          shm_stream_filter_fn filter) {
+void *stream_filter_fetch(vms_stream *stream, vms_arbiter_buffer *buffer,
+                          vms_stream_filter_fn filter) {
     void *ev;
     size_t last_ev_id = 1;
     while (1) {
@@ -609,21 +609,21 @@ void *stream_filter_fetch(shm_stream *stream, shm_arbiter_buffer *buffer,
         }
 
         assert(ev && "Dont have event");
-        assert(!shm_event_is_hole((shm_event *)ev) && "Got hole event");
+        assert(!vms_event_is_hole((vms_event *)ev) && "Got hole event");
 
-        last_ev_id = shm_event_id(ev);
+        last_ev_id = vms_event_id(ev);
         assert(last_ev_id == ++stream->last_event_id && "IDs are inconsistent");
 
         if (filter && !filter(stream, ev)) {
             /* consume the filtered event */
-            shm_stream_consume(stream, 1);
+            vms_stream_consume(stream, 1);
             continue;
         }
 
         /*
            printf("FETCH: read event { kind = %lu, id = %lu}\n",
-                  ((shm_event*)ev)->kind,
-                  ((shm_event*)ev)->id);
+                  ((vms_event*)ev)->kind,
+                  ((vms_event*)ev)->id);
          */
 
         if (!handle_dropping_event(stream, buffer, ev)) {
@@ -638,12 +638,12 @@ void *stream_filter_fetch(shm_stream *stream, shm_arbiter_buffer *buffer,
 }
 
 
-bool shm_arbiter_buffer_is_done(shm_arbiter_buffer *buffer) {
+bool vms_arbiter_buffer_is_done(vms_arbiter_buffer *buffer) {
     /* XXX: should we rather use a flag that we set to true when stream-fetch
      * knows that the stream is done? */
     return (buffer->dropped_num == 0 &&
-            shm_par_queue_size(&buffer->buffer) == 0) &&
-           !shm_stream_is_ready(buffer->stream) &&
+            vms_par_queue_size(&buffer->buffer) == 0) &&
+           !vms_stream_is_ready(buffer->stream) &&
            /* there is a race when the buffer may be empty, but after checking
             * the first part of the condition above (resulting in true) a new
             * event is put there. Then the SHM buffer gets destroyed and the
@@ -652,13 +652,13 @@ bool shm_arbiter_buffer_is_done(shm_arbiter_buffer *buffer) {
             * event in it. So re-check once more that the buffer is really empty
             * after the stream was destroyed */
            (buffer->dropped_num == 0 &&
-            shm_par_queue_size(&buffer->buffer) == 0);
+            vms_par_queue_size(&buffer->buffer) == 0);
 }
 
 
-void shm_arbiter_buffer_notify_dropped(shm_arbiter_buffer *buffer,
+void vms_arbiter_buffer_notify_dropped(vms_arbiter_buffer *buffer,
                                        uint64_t begin_id, uint64_t end_id) {
-    shm_stream_notify_dropped(buffer->stream, begin_id, end_id);
+    vms_stream_notify_dropped(buffer->stream, begin_id, end_id);
 }
 
 #ifdef DUMP_STATS
@@ -669,8 +669,8 @@ void shm_arbiter_buffer_notify_dropped(shm_arbiter_buffer *buffer,
     }
 #define COLOR_RESET fprintf(stderr, "\033[0m");
 
-void shm_arbiter_buffer_dump_stats(shm_arbiter_buffer *buffer) {
-    shm_stream *s = buffer->stream;
+void vms_arbiter_buffer_dump_stats(vms_arbiter_buffer *buffer) {
+    vms_stream *s = buffer->stream;
     fprintf(stderr, "-- Buffer for stream %lu (%s) --\n", s->id, s->name);
     fprintf(stderr, "   Stream read %lu events from SHM\n", s->read_events);
     COLOR_RED_IF(s->read_events != s->consumed_events)
