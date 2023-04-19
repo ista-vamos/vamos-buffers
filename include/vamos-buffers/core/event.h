@@ -18,7 +18,13 @@ typedef struct _vms_stream vms_stream;
 typedef struct _vms_event {
     vms_kind kind;
     vms_eventid id;
+
+#ifdef __cplusplus
+    _vms_event() {}
+    _vms_event(vms_kind kind, vms_eventid id): kind(kind), id(id) {}
+#endif
 } vms_event;
+
 
 typedef struct _vms_event_default_hole {
     vms_event base;
