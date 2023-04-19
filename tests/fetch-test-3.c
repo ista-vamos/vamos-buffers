@@ -15,13 +15,13 @@
 
 static int stream_ready = 1;
 static int main_finished = 0;
-static bool is_ready(shm_stream *s) {
+static bool is_ready(vms_stream *s) {
     (void)s;
     return !!stream_ready;
 }
 
 struct event {
-    shm_event base;
+    vms_event base;
     size_t n;
 };
 
@@ -29,7 +29,7 @@ static size_t failed_push = 0;
 void *filler_thread(void *data) {
     struct buffer *buffer = (struct buffer *)data;
     struct event ev;
-    ev.base.kind = shm_get_last_special_kind() + 1;
+    ev.base.kind = vms_get_last_special_kind() + 1;
     for (size_t i = 0; i < 10000; ++i) {
         ev.base.id = i + 1;
         ev.n = i;
@@ -42,26 +42,26 @@ void *filler_thread(void *data) {
 }
 
 void *reader_thread(void *data) {
-    shm_arbiter_buffer *arbiter_buffer_r = (shm_arbiter_buffer *)data;
+    vms_arbiter_buffer *arbiter_buffer_r = (vms_arbiter_buffer *)data;
     struct event *ev;
     size_t num;
     size_t last_id = 0;
     size_t total = 0;
     while (1) {
-        num = shm_arbiter_buffer_peek1(arbiter_buffer_r, (void **)&ev);
+        num = vms_arbiter_buffer_peek1(arbiter_buffer_r, (void **)&ev);
         if (num > 0) {
-            assert(!shm_event_is_hole((shm_event *)ev));
+            assert(!vms_event_is_hole((vms_event *)ev));
             assert(ev->n == last_id);
-            assert(++last_id == shm_event_id((shm_event *)ev));
+            assert(++last_id == vms_event_id((vms_event *)ev));
             ++total;
             /*
             printf("Abuf Event: {{%lu, %lu}, %lu}\n",
                     ev->base.id, ev->base.kind, ev->n);
             */
-            assert(shm_arbiter_buffer_drop(arbiter_buffer_r, 1) == 1);
+            assert(vms_arbiter_buffer_drop(arbiter_buffer_r, 1) == 1);
         }
         if (stream_ready == 0 && main_finished == 1 &&
-            shm_arbiter_buffer_size(arbiter_buffer_r) == 0)
+            vms_arbiter_buffer_size(arbiter_buffer_r) == 0)
             break;
     }
 
@@ -76,22 +76,22 @@ int main(void) {
     struct buffer *buffer =
         initialize_local_buffer("/dummy", sizeof(struct event), 30, NULL);
     assert(buffer);
-    shm_stream dummy_stream;
-    shm_stream *stream = &dummy_stream;
+    vms_stream dummy_stream;
+    vms_stream *stream = &dummy_stream;
 
-    shm_stream_init(stream, buffer, sizeof(struct event), is_ready, NULL, NULL,
+    vms_stream_init(stream, buffer, sizeof(struct event), is_ready, NULL, NULL,
                     NULL, NULL, "dummy-stream", "dummy");
 
     /* into this buffer, stream_fetch() will push dropped() events if any */
-    shm_arbiter_buffer *arbiter_buffer =
-        shm_arbiter_buffer_create(stream, sizeof(struct event), 10);
+    vms_arbiter_buffer *arbiter_buffer =
+        vms_arbiter_buffer_create(stream, sizeof(struct event), 10);
 
     /* into this buffer, we will push events here and read them */
-    shm_arbiter_buffer *arbiter_buffer_r =
-        shm_arbiter_buffer_create(stream, sizeof(struct event), 3);
+    vms_arbiter_buffer *arbiter_buffer_r =
+        vms_arbiter_buffer_create(stream, sizeof(struct event), 3);
 
-    shm_arbiter_buffer_set_active(arbiter_buffer, 1);
-    shm_arbiter_buffer_set_active(arbiter_buffer_r, 1);
+    vms_arbiter_buffer_set_active(arbiter_buffer, 1);
+    vms_arbiter_buffer_set_active(arbiter_buffer_r, 1);
 
     pthread_t tid, tida;
     pthread_create(&tid, NULL, filler_thread, buffer);
@@ -103,7 +103,7 @@ int main(void) {
         ev = stream_fetch(stream, arbiter_buffer);
         /* there should be no dropped event generated
          * since we are outputing the events into another buffer */
-        assert(shm_arbiter_buffer_size(arbiter_buffer) == 0);
+        assert(vms_arbiter_buffer_size(arbiter_buffer) == 0);
 
         assert(ev);
         assert(ev->n == i);
@@ -112,14 +112,14 @@ int main(void) {
         // ev->n);
 
         /* this function also automatically drops events */
-        while (!(out = shm_arbiter_buffer_write_ptr(arbiter_buffer_r))) {
+        while (!(out = vms_arbiter_buffer_write_ptr(arbiter_buffer_r))) {
             ++waiting_for_arbbuf;
         }
 
         *out = *ev;
-        shm_arbiter_buffer_write_finish(arbiter_buffer_r);
+        vms_arbiter_buffer_write_finish(arbiter_buffer_r);
 
-        shm_stream_consume(stream, 1);
+        vms_stream_consume(stream, 1);
     }
 
     ev = stream_fetch(stream, arbiter_buffer);

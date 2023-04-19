@@ -10,18 +10,18 @@
 
 #include <unistd.h>
 
-typedef struct _shm_vector {
+typedef struct _vms_vector {
     size_t size;
     size_t element_size;
     size_t alloc_size;
     void *data;
-} shm_vector;
+} vms_vector;
 
-void shm_vector_init(shm_vector *vec, size_t elem_size);
-void shm_vector_destroy(shm_vector *vec);
+void vms_vector_init(vms_vector *vec, size_t elem_size);
+void vms_vector_destroy(vms_vector *vec);
 
-size_t shm_vector_size(shm_vector *vec);
-size_t shm_vector_elem_size(shm_vector *vec);
+size_t vms_vector_size(vms_vector *vec);
+size_t vms_vector_elem_size(vms_vector *vec);
 
 
 /**
@@ -30,13 +30,13 @@ size_t shm_vector_elem_size(shm_vector *vec);
  * In debug mode, OOB checks are performed.
  * In release mode, if `idx` is OOB, the behavior is undefined.
  */
-void *shm_vector_at(shm_vector *vec, size_t idx);
+void *vms_vector_at(vms_vector *vec, size_t idx);
 
 /**
  * Return the pointer to the element at index `idx`.
  * If `idx` is OOB, return NULL.
  */
-void *shm_vector_at_checked(shm_vector *vec, size_t idx);
+void *vms_vector_at_checked(vms_vector *vec, size_t idx);
 
 
 /**
@@ -44,7 +44,7 @@ void *shm_vector_at_checked(shm_vector *vec, size_t idx);
  * Memory is reallocated if needed. By default, the new memory can store
  * 10 more elements than the previously allocated memory.
  */
-size_t shm_vector_push(shm_vector *vec, void *elem);
+size_t vms_vector_push(vms_vector *vec, void *elem);
 
 
 /**
@@ -53,31 +53,31 @@ size_t shm_vector_push(shm_vector *vec, void *elem);
  * The returned pointer should be used to write the element into the vector,
  * e.g.:
  *
- *   int *ptr = shm_vector_extend(vec);
+ *   int *ptr = vms_vector_extend(vec);
  *   *ptr = 1;
  *
  * If there is not enough space to write a single element, the memory is
  * reallocated, by default to hold 10 new elements.
  */
-void *shm_vector_extend(shm_vector *vec);
+void *vms_vector_extend(vms_vector *vec);
 
 /**
  * Remove the last element from the vector (decrease its size by 1)
  */
-size_t shm_vector_pop(shm_vector *vec);
+size_t vms_vector_pop(vms_vector *vec);
 
 
 /**
  * Return the pointer to the top element or NULL
  * if the vector is empty.
  */
-void *shm_vector_top(shm_vector *vec);
+void *vms_vector_top(vms_vector *vec);
 
 
 /**
  * Swap the contents of two vectors.
  */
-void shm_vector_swap(shm_vector *vec, shm_vector *with);
+void vms_vector_swap(vms_vector *vec, vms_vector *with);
 
 
 /**
@@ -93,6 +93,6 @@ void shm_vector_swap(shm_vector *vec, shm_vector *with);
  * as the user knows only that there is space for `size` elements
  * but nothing more.
  */
-void shm_vector_resize(shm_vector *vec, size_t size);
+void vms_vector_resize(vms_vector *vec, size_t size);
 
 #endif /* SHAMON_VECTOR_H_ */

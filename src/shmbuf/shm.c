@@ -11,12 +11,12 @@
 #include <time.h>
 #include <unistd.h>
 
-const char *shm_dir = "/dev/shm/";
-const size_t shm_dirlen = 9;
+const char *SHM_DIR = "/dev/shm/";
+const size_t SHM_DIRlen = 9;
 
-/* adapted function from musl project, src/mman/shm_open.c
+/* adapted function from musl project, src/mman/vms_open.c
  * and from libc sysdeps/posix/shm-directory.h */
-char *shm_mapname(const char *name, char *buf) {
+char *vms_shm_mapname(const char *name, char *buf) {
     assert(name[0] == '/');
     /* Construct the filename.  */
     while (name[0] == '/') ++name;
@@ -27,18 +27,18 @@ char *shm_mapname(const char *name, char *buf) {
         assert(0 && "invalid shm name");
         return 0;
     }
-    if (SHM_NAME_MAXLEN <= shm_dirlen + namelen) {
+    if (SHM_NAME_MAXLEN <= SHM_DIRlen + namelen) {
         assert(0 && "buffer too short");
         return 0;
     }
-    memcpy(buf, shm_dir, shm_dirlen);
-    memcpy(buf + shm_dirlen, name, namelen);
-    buf[shm_dirlen + namelen] = '\0';
+    memcpy(buf, SHM_DIR, SHM_DIRlen);
+    memcpy(buf + SHM_DIRlen, name, namelen);
+    buf[SHM_DIRlen + namelen] = '\0';
 
     return buf;
 }
 
-char *shamon_map_ctrl_key(const char *buffkey, char key[SHM_NAME_MAXLEN]) {
+char *vms_shm_map_ctrl_key(const char *buffkey, char key[SHM_NAME_MAXLEN]) {
     const size_t tmplen = strlen(buffkey);
     assert(tmplen < SHM_NAME_MAXLEN - 6);
     memcpy(key, buffkey, tmplen);
@@ -49,14 +49,14 @@ char *shamon_map_ctrl_key(const char *buffkey, char key[SHM_NAME_MAXLEN]) {
     return key;
 }
 
-int shamon_shm_open(const char *key, int flags, mode_t mode) {
+int vms_shm_open(const char *key, int flags, mode_t mode) {
     char name[SHM_NAME_MAXLEN];
-    if (shm_mapname(key, name) == 0)
+    if (vms_shm_mapname(key, name) == 0)
         abort();
     return open(name, flags | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK, mode);
 }
 
-int shamon_get_tmp_key(const char *key, char *buf, size_t bufsize) {
+int vms_shm_get_tmp_key(const char *key, char *buf, size_t bufsize) {
     if (strlen(key) + 5 > bufsize) {
         return -1;
     }
@@ -66,22 +66,22 @@ int shamon_get_tmp_key(const char *key, char *buf, size_t bufsize) {
     return 0;
 }
 
-int shamon_shm_rename(const char *old_key, const char *new_key) {
+int vms_shm_rename(const char *old_key, const char *new_key) {
     char old_name[SHM_NAME_MAXLEN];
     char new_name[SHM_NAME_MAXLEN];
-    if (shm_mapname(old_key, old_name) == 0) {
+    if (vms_shm_mapname(old_key, old_name) == 0) {
         return -1;
     }
-    if (shm_mapname(new_key, new_name) == 0) {
+    if (vms_shm_mapname(new_key, new_name) == 0) {
         return -1;
     }
     return rename(old_name, new_name);
 }
 
-int shamon_shm_unlink(const char *key) {
+int vms_shm_unlink(const char *key) {
     /* fprintf(stderr, "UNLINK: %s\n", key); */
     char name[SHM_NAME_MAXLEN];
-    if (shm_mapname(key, name) == 0)
+    if (vms_shm_mapname(key, name) == 0)
         abort();
     return unlink(name);
 }

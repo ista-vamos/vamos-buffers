@@ -105,8 +105,8 @@ void release_shared_sub_buffer(struct buffer *buff) {
     }
     VEC_DESTROY(buff->aux_buffers);
 
-    if (shamon_shm_unlink(buff->key) != 0) {
-        perror("release_shared_sub_buffer: shm_unlink failure");
+    if (vms_shm_unlink(buff->key) != 0) {
+        perror("release_shared_sub_buffer: vms_unlink failure");
     }
 
     destroy_shared_control_buffer(buff->key, buff->control);

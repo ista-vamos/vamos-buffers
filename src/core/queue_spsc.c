@@ -9,7 +9,7 @@
 #define __predict_false(x) __builtin_expect((x) != 0, 0)
 #define __predict_true(x) __builtin_expect((x) != 0, 1)
 
-static inline void elem_num_inc(shm_queue_spsc *q, int k) {
+static inline void elem_num_inc(vms_queue_spsc *q, int k) {
     /* Do ++q->elem_num atomically. */
     /* The increment must come after everything is done.
        The release order makes sure that the written element
@@ -17,16 +17,16 @@ static inline void elem_num_inc(shm_queue_spsc *q, int k) {
     atomic_fetch_add_explicit(&q->elem_num, k, memory_order_release);
 }
 
-static inline void elem_num_dec(shm_queue_spsc *q, int k) {
+static inline void elem_num_dec(vms_queue_spsc *q, int k) {
     /* Do q->elem_num -= k atomically. */
     atomic_fetch_sub_explicit(&q->elem_num, k, memory_order_acquire);
 }
 
-static inline size_t elem_num(shm_queue_spsc *q) {
+static inline size_t elem_num(vms_queue_spsc *q) {
     return atomic_load_explicit(&q->elem_num, memory_order_relaxed);
 }
 
-void shm_queue_spsc_init(shm_queue_spsc *q, size_t capacity) {
+void vms_queue_spsc_init(vms_queue_spsc *q, size_t capacity) {
     assert(q);
     assert(capacity > 0);
     q->elem_num = 0;
@@ -34,12 +34,12 @@ void shm_queue_spsc_init(shm_queue_spsc *q, size_t capacity) {
     q->head = q->tail = 0;
 }
 
-void shm_queue_spsc_destroy(shm_queue_spsc *q) {
+void vms_queue_spsc_destroy(vms_queue_spsc *q) {
     q->capacity = 0;
     q->elem_num = 0;
 }
 
-bool shm_queue_spsc_write_offset(shm_queue_spsc *q, size_t *offset) {
+bool vms_queue_spsc_write_offset(vms_queue_spsc *q, size_t *offset) {
     if (__predict_false(elem_num(q) == q->capacity)) {
         return false;
     }
@@ -54,7 +54,7 @@ bool shm_queue_spsc_write_offset(shm_queue_spsc *q, size_t *offset) {
     return true;
 }
 
-void shm_queue_spsc_writes_finish(shm_queue_spsc *q, size_t written_num) {
+void vms_queue_spsc_writes_finish(vms_queue_spsc *q, size_t written_num) {
     assert(q->partial_head == q->head && "Inconsistent head");
     assert(written_num <= q->writing_k_elems);
     assert(q->head + written_num <= q->capacity);
@@ -69,11 +69,11 @@ void shm_queue_spsc_writes_finish(shm_queue_spsc *q, size_t written_num) {
     elem_num_inc(q, written_num);
 }
 
-void shm_queue_spsc_write_finish(shm_queue_spsc *q) {
-    shm_queue_spsc_writes_finish(q, 1);
+void vms_queue_spsc_write_finish(vms_queue_spsc *q) {
+    vms_queue_spsc_writes_finish(q, 1);
 }
 
-size_t shm_queue_spsc_consume(shm_queue_spsc *q, size_t k) {
+size_t vms_queue_spsc_consume(vms_queue_spsc *q, size_t k) {
     assert(k > 0);
     size_t num = elem_num(q);
     if (__predict_false(num < k)) {
@@ -90,15 +90,15 @@ size_t shm_queue_spsc_consume(shm_queue_spsc *q, size_t k) {
     return k;
 }
 
-size_t shm_queue_spsc_free_num(shm_queue_spsc *q) {
+size_t vms_queue_spsc_free_num(vms_queue_spsc *q) {
     return q->capacity - elem_num(q);
 }
 
-size_t shm_queue_spsc_capacity(shm_queue_spsc *q) { return q->capacity; }
+size_t vms_queue_spsc_capacity(vms_queue_spsc *q) { return q->capacity; }
 
-size_t shm_queue_spsc_size(shm_queue_spsc *q) { return elem_num(q); }
+size_t vms_queue_spsc_size(vms_queue_spsc *q) { return elem_num(q); }
 
-size_t shm_queue_spsc_peek(shm_queue_spsc *q, size_t n, size_t *off1,
+size_t vms_queue_spsc_peek(vms_queue_spsc *q, size_t n, size_t *off1,
                            size_t *len1, size_t *off2, size_t *len2) {
     size_t cur_elem_num = elem_num(q);
     if (n > cur_elem_num)
@@ -120,27 +120,27 @@ size_t shm_queue_spsc_peek(shm_queue_spsc *q, size_t n, size_t *off1,
 }
 
 /* peak1 -- it is like top + return the number of elements */
-size_t shm_queue_spsc_read_offset(shm_queue_spsc *q, size_t *offset) {
+size_t vms_queue_spsc_read_offset(vms_queue_spsc *q, size_t *offset) {
     *offset = q->tail;
     return elem_num(q);
 }
 
 /*
-size_t shm_queue_spsc_peek_at(shm_queue_spsc *q, size_t idx) {
+size_t vms_queue_spsc_peek_at(vms_queue_spsc *q, size_t idx) {
     size_t cur_elem_num = elem_num(q);
     if (idx >= cur_elem_num)
         return NULL;
 
     size_t end = k + q->tail;
     if (end >= q->capacity) {
-        return (shm_event *)(q->data + (end - q->capacity) * q->elem_size);
+        return (vms_event *)(q->data + (end - q->capacity) * q->elem_size);
     }
 
-    return (shm_event *)(q->data + (q->tail + k) * q->elem_size);
+    return (vms_event *)(q->data + (q->tail + k) * q->elem_size);
 }
 */
 
-size_t shm_queue_spsc_peek_atmost_at(shm_queue_spsc *q, size_t *want_k,
+size_t vms_queue_spsc_peek_atmost_at(vms_queue_spsc *q, size_t *want_k,
                                      size_t *offset) {
     size_t num = elem_num(q);
     if (__predict_false(num == 0))

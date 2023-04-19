@@ -5,18 +5,18 @@
 #include "vamos-buffers/shmbuf/buffer.h"
 #include "vamos-buffers/core/stream.h"
 
-typedef struct _shm_event_regex {
-    shm_event base;
+typedef struct _vms_event_regex {
+    vms_event base;
     /* the event arguments */
     unsigned char args[];
-} shm_event_regex;
+} vms_event_regex;
 
-typedef struct _shm_stream_sregex {
-    shm_stream base;
+typedef struct _vms_stream_sregex {
+    vms_stream base;
     struct buffer *shmbuffer;
-} shm_stream_sregex;
+} vms_stream_sregex;
 
-shm_stream *shm_create_sregex_stream(
+vms_stream *vms_create_sregex_stream(
     const char *key, const char *name,
-    const shm_stream_hole_handling *hole_handling);
-void shm_destroy_sregex_stream(shm_stream_sregex *ss);
+    const vms_stream_hole_handling *hole_handling);
+void vms_destroy_sregex_stream(vms_stream_sregex *ss);

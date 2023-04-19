@@ -8,15 +8,15 @@
 
 #include "arbiter.h"
 
-static size_t read_events(shm_stream_fds *ss, shm_arbiter_buffer *buffer) {
+static size_t read_events(vms_stream_fds *ss, vms_arbiter_buffer *buffer) {
     size_t read_ev = 0;
     size_t remove_num = 0;
-    shm_event_fd_in ev;
+    vms_event_fd_in ev;
 
     for (unsigned i = 0; i < ss->fds_num; ++i) {
         struct pollfd *pfd = ss->fds + i;
         if (pfd->revents & POLLIN) {
-            shm_string *str = ss->fds_buffer + i;
+            vms_string *str = ss->fds_buffer + i;
             // FIXME: set O_NONBLOCK and read all the data right now
             // to have the right timestamps?
             ssize_t len = read(pfd->fd, str->data, str->alloc_size);
@@ -32,13 +32,13 @@ static size_t read_events(shm_stream_fds *ss, shm_arbiter_buffer *buffer) {
             } else {
                 assert(len > 0);
                 ev.time = clock();
-                // ev.base.stream = (shm_stream *) ss;
+                // ev.base.stream = (vms_stream *) ss;
                 ev.base.kind = ss->ev_kind_in;
-                ev.base.id = shm_stream_get_next_id((shm_stream *)ss);
+                ev.base.id = vms_stream_get_next_id((vms_stream *)ss);
                 ev.fd = pfd->fd;
                 ev.str_ref.size = len;
                 ev.str_ref.data = str->data;
-                shm_arbiter_buffer_push(buffer, &ev, sizeof(ev));
+                vms_arbiter_buffer_push(buffer, &ev, sizeof(ev));
                 ++read_ev;
             }
         }
@@ -54,7 +54,7 @@ static size_t read_events(shm_stream_fds *ss, shm_arbiter_buffer *buffer) {
         struct pollfd *new_fds = malloc(ss->fds_num * sizeof(struct pollfd));
         assert(new_fds);
         // we could just trim the memory, but...
-        shm_string *new_fds_buffer = malloc(ss->fds_num * sizeof(shm_string));
+        vms_string *new_fds_buffer = malloc(ss->fds_num * sizeof(vms_string));
         assert(new_fds_buffer);
 
         unsigned idx = 0;
@@ -74,9 +74,9 @@ static size_t read_events(shm_stream_fds *ss, shm_arbiter_buffer *buffer) {
     return read_ev;
 }
 
-static size_t fds_buffer_events(shm_stream *stream,
-                                shm_arbiter_buffer *buffer) {
-    shm_stream_fds *fs = (shm_stream_fds *)stream;
+static size_t fds_buffer_events(vms_stream *stream,
+                                vms_arbiter_buffer *buffer) {
+    vms_stream_fds *fs = (vms_stream_fds *)stream;
 
     int ret = poll(fs->fds, fs->fds_num, 0);
     if (ret == -1) {
@@ -88,33 +88,33 @@ static size_t fds_buffer_events(shm_stream *stream,
     return 0;
 }
 
-static bool fds_is_ready(shm_stream *stream) {
-    return ((shm_stream_fds *)stream)->fds_num > 0;
+static bool fds_is_ready(vms_stream *stream) {
+    return ((vms_stream_fds *)stream)->fds_num > 0;
 }
 
-shm_stream *shm_create_fds_stream() {
-    shm_stream_fds *ss = malloc(sizeof *ss);
-    shm_stream_init((shm_stream *)ss, sizeof(shm_event_fd_in),
+vms_stream *vms_create_fds_stream() {
+    vms_stream_fds *ss = malloc(sizeof *ss);
+    vms_stream_init((vms_stream *)ss, sizeof(vms_event_fd_in),
                     fds_buffer_events, NULL, fds_is_ready, "fds-stream");
-    ss->ev_kind_in = shm_mk_event_kind("fd-in", (shm_stream *)ss,
-                                       sizeof(shm_event_fd_in), NULL, NULL);
+    ss->ev_kind_in = vms_mk_event_kind("fd-in", (vms_stream *)ss,
+                                       sizeof(vms_event_fd_in), NULL, NULL);
     ss->fds = NULL;
     ss->fds_size = 0;
     ss->fds_num = 0;
     ss->fds_buffer = NULL;
-    shm_queue_init(&ss->pending_events, 32, sizeof(shm_event_fd_in));
+    vms_queue_init(&ss->pending_events, 32, sizeof(vms_event_fd_in));
 
-    return (shm_stream *)ss;
+    return (vms_stream *)ss;
 }
 
-void shm_stream_fds_add_fd(shm_stream_fds *stream, int fd) {
+void vms_stream_fds_add_fd(vms_stream_fds *stream, int fd) {
     size_t idx = stream->fds_num++;
     if (idx >= stream->fds_size) {
         stream->fds_size += 8;
         stream->fds =
             realloc(stream->fds, sizeof(struct pollfd) * stream->fds_size);
         stream->fds_buffer =
-            realloc(stream->fds_buffer, sizeof(shm_string) * stream->fds_size);
+            realloc(stream->fds_buffer, sizeof(vms_string) * stream->fds_size);
     }
     assert(stream->fds_num < stream->fds_size);
 
@@ -127,7 +127,7 @@ void shm_stream_fds_add_fd(shm_stream_fds *stream, int fd) {
     stream->fds_buffer[idx].size = 0;
 }
 
-void shm_destroy_fds_stream(shm_stream_fds *ss) {
+void vms_destroy_fds_stream(vms_stream_fds *ss) {
     for (unsigned i = 0; i < ss->fds_num; ++i) {
         free(ss->fds_buffer[i].data);
     }

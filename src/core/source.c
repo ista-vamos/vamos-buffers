@@ -48,7 +48,7 @@ static inline void init_record(struct event_record *ev, const char *name,
     ev->signature[max_sig_size] = '\0';
 
     ev->size =
-        signature_get_size((const unsigned char *)sig) + sizeof(shm_event);
+        signature_get_size((const unsigned char *)sig) + sizeof(vms_event);
     ev->kind = 0;
 }
 

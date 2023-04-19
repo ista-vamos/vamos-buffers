@@ -26,17 +26,17 @@ struct buffer;
 struct dropped_range {
     /* the range of autodropped events
     (for garbage collection) */
-    shm_eventid begin;
-    shm_eventid end;
+    vms_eventid begin;
+    vms_eventid end;
 };
 
 struct buffer_info {
-    shm_spsc_ringbuf ringbuf;
+    vms_spsc_ringbuf ringbuf;
 
     size_t allocated_size;
     size_t capacity;
     size_t elem_size;
-    shm_eventid last_processed_id;
+    vms_eventid last_processed_id;
     struct dropped_range dropped_ranges[DROPPED_RANGES_NUM];
     size_t dropped_ranges_next;
     _Atomic _Bool dropped_ranges_lock; /* spin lock */
@@ -65,7 +65,7 @@ struct aux_buffer {
 
 /* TODO: cache the shared state in local state
    (e.g., elem_size, etc.). Maybe we could also inline
-   the shm_spsc_ringbuf so that we can keep local cache */
+   the vms_spsc_ringbuf so that we can keep local cache */
 struct buffer {
     struct shmbuffer *shmbuffer;
     struct source_control *control;
@@ -74,7 +74,7 @@ struct buffer {
     /* the known aux_buffers that might still be needed */
     VEC(aux_buffers, struct aux_buffer *);
     size_t aux_buf_idx;
-    shm_list aux_buffers_age;
+    vms_list aux_buffers_age;
     /* shm filedescriptor */
     int fd;
     /* shm key */
@@ -94,8 +94,8 @@ struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
 struct buffer *get_shared_buffer(const char *key);
 struct buffer *try_get_shared_buffer(const char *key, size_t retry);
 
-size_t compute_shm_size(size_t elem_size, size_t capacity);
-size_t compute_shm_buffer_size(size_t nondata_size, size_t elem_size,
+size_t compute_vms_size(size_t elem_size, size_t capacity);
+size_t compute_vms_buffer_size(size_t nondata_size, size_t elem_size,
                                size_t capacity);
 
 /*** LOCAL buffers ***/

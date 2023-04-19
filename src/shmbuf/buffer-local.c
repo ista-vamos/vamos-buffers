@@ -29,7 +29,7 @@ struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
     printf("Initializing LOCAL buffer '%s' with elem size '%lu'\n", key,
            elem_size);
     void *mem;
-    const size_t memsize = compute_shm_size(elem_size, capacity);
+    const size_t memsize = compute_vms_size(elem_size, capacity);
     int succ = posix_memalign(&mem, 64, memsize);
     if (succ != 0) {
         perror("allocation failure");
@@ -48,7 +48,7 @@ struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
     /* ringbuf has one dummy element */
     buff->shmbuffer->info.capacity = capacity;
     buff->shmbuffer->info.allocated_size = memsize;
-    shm_spsc_ringbuf_init(_ringbuf(buff), capacity + 1);
+    vms_spsc_ringbuf_init(_ringbuf(buff), capacity + 1);
     printf("  .. buffer allocated size = %lu, capacity = %lu\n",
            buff->shmbuffer->info.allocated_size,
            buff->shmbuffer->info.capacity);
@@ -59,7 +59,7 @@ struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
 
     buff->key = strdup(key);
     VEC_INIT(buff->aux_buffers);
-    shm_list_init(&buff->aux_buffers_age);
+    vms_list_init(&buff->aux_buffers_age);
     buff->aux_buf_idx = 0;
     buff->cur_aux_buff = NULL;
     buff->fd = -1;

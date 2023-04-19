@@ -4,33 +4,33 @@
 #include <unistd.h>
 
 /* non-circular doubly-linked-list */
-typedef struct _shm_list_elem {
-    struct _shm_list_elem *next, *prev;
+typedef struct _vms_list_elem {
+    struct _vms_list_elem *next, *prev;
     void *data;
-} shm_list_elem;
+} vms_list_elem;
 
-typedef struct _shm_list {
-    shm_list_elem *first;
-    shm_list_elem *last;
+typedef struct _vms_list {
+    vms_list_elem *first;
+    vms_list_elem *last;
     size_t size;
-} shm_list;
+} vms_list;
 
-typedef void(shm_list_elem_destroy_fn)(void *);
+typedef void(vms_list_elem_destroy_fn)(void *);
 
-void shm_list_init(shm_list *list);
-void shm_list_destroy(shm_list *list, shm_list_elem_destroy_fn destroy);
+void vms_list_init(vms_list *list);
+void vms_list_destroy(vms_list *list, vms_list_elem_destroy_fn destroy);
 
-size_t shm_list_prepend(shm_list *list, void *elem);
-size_t shm_list_append(shm_list *list, void *elem);
-size_t shm_list_append_elem(shm_list *list, shm_list_elem *elem);
-size_t shm_list_insert_after(shm_list *list, shm_list_elem *elem, void *data);
-size_t shm_list_insert_before(shm_list *list, shm_list_elem *elem, void *data);
-size_t shm_list_insert_elem_after(shm_list *list, shm_list_elem *elem,
-                                  shm_list_elem *new);
-size_t shm_list_remove(shm_list *list, shm_list_elem *elem);
-size_t shm_list_size(shm_list *list);
+size_t vms_list_prepend(vms_list *list, void *elem);
+size_t vms_list_append(vms_list *list, void *elem);
+size_t vms_list_append_elem(vms_list *list, vms_list_elem *elem);
+size_t vms_list_insert_after(vms_list *list, vms_list_elem *elem, void *data);
+size_t vms_list_insert_before(vms_list *list, vms_list_elem *elem, void *data);
+size_t vms_list_insert_elem_after(vms_list *list, vms_list_elem *elem,
+                                  vms_list_elem *new);
+size_t vms_list_remove(vms_list *list, vms_list_elem *elem);
+size_t vms_list_size(vms_list *list);
 
-shm_list_elem *shm_list_first(shm_list *list);
-shm_list_elem *shm_list_last(shm_list *list);
+vms_list_elem *vms_list_first(vms_list *list);
+vms_list_elem *vms_list_last(vms_list *list);
 
 #endif /* SHAMON_LIST_H_ */

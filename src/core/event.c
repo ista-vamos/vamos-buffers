@@ -4,8 +4,8 @@
 
 #include "vamos-buffers/core/event.h"
 
-static const shm_kind hole_kind = 1;
-static const shm_kind last_special_kind = 1;
+static const vms_kind hole_kind = 1;
+static const vms_kind last_special_kind = 1;
 
 void initialize_events(void) {
     assert(hole_kind == 1 && "We assume that the 'hole_kind' is 1 for now");
@@ -14,22 +14,22 @@ void initialize_events(void) {
 
 void deinitialize_events(void) {}
 
-bool shm_event_is_hole(shm_event *ev) {
+bool vms_event_is_hole(vms_event *ev) {
     assert(hole_kind > 0);
-    return shm_event_kind(ev) == hole_kind;
+    return vms_event_kind(ev) == hole_kind;
 }
 
-shm_kind shm_get_hole_kind(void) {
+vms_kind vms_get_hole_kind(void) {
     assert(hole_kind > 0);
     assert(last_special_kind >= hole_kind);
     return hole_kind;
 }
 
-shm_kind shm_get_last_special_kind(void) {
+vms_kind vms_get_last_special_kind(void) {
     assert(last_special_kind > 0);
     return last_special_kind;
 }
 
-shm_eventid shm_event_id(shm_event *event) { return event->id; }
+vms_eventid vms_event_id(vms_event *event) { return event->id; }
 
-shm_kind shm_event_kind(shm_event *event) { return event->kind; }
+vms_kind vms_event_kind(vms_event *event) { return event->kind; }
