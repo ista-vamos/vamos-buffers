@@ -8,8 +8,8 @@
 #include <stdio.h>
 
 #include "vamos-buffers/core/arbiter.h"
-#include "vamos-buffers/shmbuf/buffer.h"
 #include "vamos-buffers/core/stream.h"
+#include "vamos-buffers/shmbuf/buffer.h"
 
 static bool is_ready(vms_stream *s) {
     (void)s;

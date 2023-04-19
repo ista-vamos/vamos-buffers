@@ -83,9 +83,9 @@ void vms_vector_swap(vms_vector *vec, vms_vector *with);
  *
  * Note that the vector may have allocated memory for more than `size`
  * elements. In that case the memory remains non-0'ed.
- * This should not be a problem as the uninitialized memory should not be touched
- * as the user knows only that there is space for `size` elements
- * but nothing more.
+ * This should not be a problem as the uninitialized memory should not be
+ * touched as the user knows only that there is space for `size` elements but
+ * nothing more.
  */
 void vms_vector_resize(vms_vector *vec, size_t size);
 

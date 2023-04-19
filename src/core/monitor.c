@@ -1,10 +1,11 @@
+#include "vamos-buffers/core/monitor.h"
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "vamos-buffers/core/monitor.h"
 #include "vamos-buffers/core/par_queue.h"
 #include "vamos-buffers/core/utils.h"
 

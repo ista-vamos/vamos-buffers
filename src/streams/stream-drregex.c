@@ -1,9 +1,10 @@
+#include "vamos-buffers/streams/stream-drregex.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "vamos-buffers/streams/stream-drregex.h"
 #include "vamos-buffers/core/arbiter.h"
 #include "vamos-buffers/shmbuf/buffer.h"
 

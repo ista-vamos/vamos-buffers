@@ -1,7 +1,7 @@
+#include "vamos-buffers/core/spsc_ringbuf.h"
+
 #include <assert.h>
 #include <stdatomic.h>
-
-#include "vamos-buffers/core/spsc_ringbuf.h"
 
 #define __predict_false(x) __builtin_expect((x) != 0, 0)
 #define __predict_true(x) __builtin_expect((x) != 0, 1)
@@ -32,7 +32,7 @@ static inline size_t _get_written_num(size_t head, size_t tail,
         return head - tail;
     } else {
         if (__predict_false(tail == head)) {
-             return 0;
+            return 0;
         } else {
             return capacity - tail + head;
         }
@@ -187,9 +187,9 @@ size_t vms_spsc_ringbuf_write_off(vms_spsc_ringbuf *b, size_t *n,
 size_t vms_spsc_ringbuf_write_off_nowrap(vms_spsc_ringbuf *b, size_t *n) {
     const size_t head = atomic_load_explicit(&b->head, memory_order_acquire);
 
-    /* Update the cache if seen_tail is 0 (which very likely means it has not been updated yet,
-     * but can be of course also after wrapping around) or if there is no space left considering
-     * the cached information. */
+    /* Update the cache if seen_tail is 0 (which very likely means it has not
+     * been updated yet, but can be of course also after wrapping around) or if
+     * there is no space left considering the cached information. */
     if (b->seen_tail == 0 ||
         get_write_off(head, b->seen_tail, b->capacity, n, NULL) == 0) {
         b->seen_tail = atomic_load_explicit(&b->tail, memory_order_relaxed);
@@ -340,8 +340,8 @@ size_t vms_spsc_ringbuf_peek(vms_spsc_ringbuf *b, size_t n, size_t *off,
     const size_t tail = atomic_load_explicit(&b->tail, memory_order_acquire);
     size_t head = b->seen_head;
     size_t cur_elem_num = get_written_num(head, tail, b->capacity);
-    /* update the information if needed or when n == 0 (which means we want to get an up-to-date the number
-     * of elements) */
+    /* update the information if needed or when n == 0 (which means we want to
+     * get an up-to-date the number of elements) */
     if (cur_elem_num < n || n == 0) {
         b->seen_head = head =
             atomic_load_explicit(&b->head, memory_order_acquire);

@@ -1,13 +1,14 @@
+#include "vamos-buffers/shmbuf/client.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
 
-#include "vamos-buffers/shmbuf/buffer.h"
 #include "shm.h"
-#include "vamos-buffers/shmbuf/client.h"
 #include "vamos-buffers/core/utils.h"
+#include "vamos-buffers/shmbuf/buffer.h"
 
 #define SLEEP_TIME 20
 

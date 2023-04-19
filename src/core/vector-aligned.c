@@ -1,8 +1,9 @@
+#include "vamos-buffers/core/vector-aligned.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "vamos-buffers/core/vector-aligned.h"
 #include "vamos-buffers/core/utils.h"
 
 void vms_vector_aligned_init(vms_vector_aligned *vec, size_t elem_size,

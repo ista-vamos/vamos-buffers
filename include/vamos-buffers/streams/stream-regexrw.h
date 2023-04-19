@@ -2,8 +2,8 @@
 #include <unistd.h>
 
 #include "vamos-buffers/core/event.h"
-#include "vamos-buffers/shmbuf/buffer.h"
 #include "vamos-buffers/core/stream.h"
+#include "vamos-buffers/shmbuf/buffer.h"
 
 typedef struct _vms_event_regexrw {
     vms_event base;

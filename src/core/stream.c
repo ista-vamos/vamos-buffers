@@ -5,9 +5,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "vamos-buffers/core/utils.h"
 #include "vamos-buffers/core/vector-macro.h"
 #include "vamos-buffers/shmbuf/buffer.h"
-#include "vamos-buffers/core/utils.h"
 
 /*****
  * STREAM

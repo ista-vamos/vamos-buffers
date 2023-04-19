@@ -1,10 +1,10 @@
+#include "vamos-buffers/core/par_queue.h"
+
 #include <assert.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "vamos-buffers/core/par_queue.h"
 
 #define __predict_false(x) __builtin_expect((x) != 0, 0)
 #define __predict_true(x) __builtin_expect((x) != 0, 1)
