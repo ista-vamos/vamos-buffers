@@ -132,7 +132,7 @@ public:
     }
 
     void set_tail(size_t new_tail, std::memory_order mo) {
-        _head.store(new_tail, mo);
+        _tail.store(new_tail, mo);
     }
 
     bool is_full() const {
@@ -148,7 +148,7 @@ class RingBufferAccessor {
 protected:
     RingBufferTy &rb;
     // the cache for the head/tail last seen by this thread
-    size_t seen;
+    size_t seen{0};
 
 public:
     RingBufferAccessor(RingBufferTy &rb) : rb(rb) {} //, _capacity(rb.capacity()) {}
@@ -276,7 +276,7 @@ public:
     }
 
     void write_finish(size_t n) {
-        constexpr auto c = this->capacity();
+        constexpr auto c = RingBufferTy::Capacity;
         assert(n <= c);
         assert((c < (~((size_t)0)) - n) && "Possible overflow");
 
