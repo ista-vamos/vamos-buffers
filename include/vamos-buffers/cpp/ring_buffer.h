@@ -102,30 +102,23 @@ size_t _free_num(size_t head, size_t tail) {
     return ret;
 }
 
-} // namespace
-
+}  // namespace
 
 template <uint64_t CAPACITY, uint64_t ELEM_SIZE>
 class RingBuffer {
     CACHELINE_ALIGNED std::atomic<size_t> _tail;
     CACHELINE_ALIGNED std::atomic<size_t> _head;
 
-public:
+   public:
     static constexpr uint64_t Capacity = CAPACITY;
 
     constexpr uint64_t capacity() const { return CAPACITY; }
 
-    RingBuffer(): _tail(0), _head(0) {
-        static_assert(CAPACITY > 0);
-    }
+    RingBuffer() : _tail(0), _head(0) { static_assert(CAPACITY > 0); }
 
-    size_t load_head(std::memory_order mo) const {
-        return _head.load(mo);
-    }
+    size_t load_head(std::memory_order mo) const { return _head.load(mo); }
 
-    size_t load_tail(std::memory_order mo) const {
-        return _tail.load(mo);
-    }
+    size_t load_tail(std::memory_order mo) const { return _tail.load(mo); }
 
     void set_head(size_t new_head, std::memory_order mo) {
         _head.store(new_head, mo);
@@ -136,8 +129,9 @@ public:
     }
 
     bool is_full() const {
-        return __predict_false(_is_full<CAPACITY>(load_head(std::memory_order_relaxed),
-                                                  load_tail(std::memory_order_relaxed)));
+        return __predict_false(
+            _is_full<CAPACITY>(load_head(std::memory_order_relaxed),
+                               load_tail(std::memory_order_relaxed)));
     }
 };
 
@@ -145,18 +139,16 @@ template <typename RingBufferTy>
 class RingBufferAccessor {
     static constexpr uint64_t _capacity = RingBufferTy::Capacity;
 
-protected:
+   protected:
     RingBufferTy &rb;
     // the cache for the head/tail last seen by this thread
     size_t seen{0};
 
-public:
-    RingBufferAccessor(RingBufferTy &rb) : rb(rb) {} //, _capacity(rb.capacity()) {}
+   public:
+    RingBufferAccessor(RingBufferTy &rb)
+        : rb(rb) {}  //, _capacity(rb.capacity()) {}
 
-
-    constexpr size_t capacity() const {
-        return _capacity;
-    }
+    constexpr size_t capacity() const { return _capacity; }
 
     size_t max_size() const {
         /* we use one element as a separator */
@@ -164,26 +156,28 @@ public:
     }
 
     size_t size() const {
-        return _written_num<RingBufferTy::Capacity>(rb.load_head(std::memory_order_relaxed),
-                                                    rb.load_tail(std::memory_order_relaxed));
+        return _written_num<RingBufferTy::Capacity>(
+            rb.load_head(std::memory_order_relaxed),
+            rb.load_tail(std::memory_order_relaxed));
     }
 
     bool empty() const {
-      return _is_empty<RingBufferTy::Capacity>(rb.load_head(std::memory_order_relaxed),
-                                               rb.load_tail(std::memory_order_relaxed));
+        return _is_empty<RingBufferTy::Capacity>(
+            rb.load_head(std::memory_order_relaxed),
+            rb.load_tail(std::memory_order_relaxed));
     }
 
     size_t free_num() const {
-        return _free_num<RingBufferTy::Capacity>(rb.load_head(std::memory_order_relaxed),
-                                                 rb.load_tail(std::memory_order_relaxed));
+        return _free_num<RingBufferTy::Capacity>(
+            rb.load_head(std::memory_order_relaxed),
+            rb.load_tail(std::memory_order_relaxed));
     }
 };
 
 namespace {
 /* Compute the write offset (with wrapping). Returns the num of free elements */
 template <uint64_t capacity>
-size_t _write_off(size_t head, size_t tail,
-                  size_t &n, size_t *wrap_n) {
+size_t _write_off(size_t head, size_t tail, size_t &n, size_t *wrap_n) {
     if (tail < head) {
         if (__predict_false(tail == 0)) {
             n = capacity - head - 1;
@@ -215,19 +209,21 @@ size_t _write_off(size_t head, size_t tail,
     return tail - head - 1;
 }
 
-}
+}  // namespace
 
 template <typename RingBufferTy>
 class RingBufferWriter : public RingBufferAccessor<RingBufferTy> {
-public:
+   public:
     RingBufferWriter(RingBufferTy &rb) : RingBufferAccessor<RingBufferTy>(rb) {}
 
-    /* Return the offset for writing and set the number of writable elements to `n`
-     * and also to `wrap_n` if there is a wrap-around the end of the buffer */
+    /* Return the offset for writing and set the number of writable elements to
+     * `n` and also to `wrap_n` if there is a wrap-around the end of the buffer
+     */
     size_t write_off(size_t &n, size_t *wrap_n) {
         const size_t head = this->rb.load_head(std::memory_order_acquire);
 
-        if (_write_off<RingBufferTy::Capacity>(head, this->seen, n, wrap_n) == 0) {
+        if (_write_off<RingBufferTy::Capacity>(head, this->seen, n, wrap_n) ==
+            0) {
             this->seen = this->rb.load_tail(std::memory_order_relaxed);
             _write_off<RingBufferTy::Capacity>(head, this->seen, n, wrap_n);
         }
@@ -238,11 +234,12 @@ public:
     size_t write_off(size_t &n) {
         const size_t head = this->rb.load_head(std::memory_order_acquire);
 
-        /* Update the cache if seen_tail is 0 (which very likely means it has not
-         * been updated yet, but can be of course also after wrapping around) or if
-         * there is no space left considering the cached information. */
-        if (this->seen == 0 ||
-            _write_off<RingBufferTy::Capacity>(head, this->seen, n, NULL) == 0) {
+        /* Update the cache if seen_tail is 0 (which very likely means it has
+         * not been updated yet, but can be of course also after wrapping
+         * around) or if there is no space left considering the cached
+         * information. */
+        if (this->seen == 0 || _write_off<RingBufferTy::Capacity>(
+                                   head, this->seen, n, NULL) == 0) {
             this->seen = this->rb.load_tail(std::memory_order_relaxed);
             _write_off<RingBufferTy::Capacity>(head, this->seen, n, NULL);
         }
@@ -255,7 +252,8 @@ public:
         const size_t head = this->rb.load_head(std::memory_order_acquire);
 
         size_t req = n;
-        if (_write_off<RingBufferTy::Capacity>(head, this->seen, n, wrap_n) < req) {
+        if (_write_off<RingBufferTy::Capacity>(head, this->seen, n, wrap_n) <
+            req) {
             this->seen = this->rb.load_tail(std::memory_order_relaxed);
             _write_off<RingBufferTy::Capacity>(head, this->seen, n, wrap_n);
         }
@@ -268,7 +266,8 @@ public:
         const size_t head = this->rb.load_head(std::memory_order_acquire);
 
         size_t req = n;
-        if (_write_off<RingBufferTy::Capacity>(head, this->seen, n, NULL) < req) {
+        if (_write_off<RingBufferTy::Capacity>(head, this->seen, n, NULL) <
+            req) {
             this->seen = this->rb.load_tail(std::memory_order_relaxed);
             _write_off<RingBufferTy::Capacity>(head, this->seen, n, NULL);
         }
@@ -292,13 +291,11 @@ public:
 
         this->rb.set_head(new_head, std::memory_order_release);
     }
-
-
 };
 
 template <typename RingBufferTy>
 class RingBufferReader : public RingBufferAccessor<RingBufferTy> {
-public:
+   public:
     RingBufferReader(RingBufferTy &rb) : RingBufferAccessor<RingBufferTy>(rb) {}
 
     size_t read_off(size_t &n) {
@@ -343,14 +340,14 @@ public:
         this->rb.set_tail(new_tail, std::memory_order_release);
     }
 
-
-    /* If return value is 0, values *off, *len1 and *len2 may not have been set */
+    /* If return value is 0, values *off, *len1 and *len2 may not have been set
+     */
     size_t peek(size_t n, size_t &off, size_t &len1, size_t &len2) {
         const size_t tail = this->rb.load_tail(std::memory_order_acquire);
         size_t head = this->seen;
         size_t cur_elem_num = _written_num<RingBufferTy::Capacity>(head, tail);
-        /* update the information if needed or when n == 0 (which means we want to
-         * get an up-to-date the number of elements) */
+        /* update the information if needed or when n == 0 (which means we want
+         * to get an up-to-date the number of elements) */
         if (cur_elem_num < n || n == 0) {
             this->seen = head = this->rb.load_head(std::memory_order_acquire);
             cur_elem_num = _written_num<RingBufferTy::Capacity>(head, tail);
@@ -386,7 +383,6 @@ public:
     }
 };
 
-
-} // namespace vamos
+}  // namespace vamos
 
 #endif

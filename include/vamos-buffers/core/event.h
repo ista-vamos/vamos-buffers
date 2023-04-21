@@ -21,10 +21,9 @@ typedef struct _vms_event {
 
 #ifdef __cplusplus
     _vms_event() {}
-    _vms_event(vms_kind kind, vms_eventid id): kind(kind), id(id) {}
+    _vms_event(vms_kind kind, vms_eventid id) : kind(kind), id(id) {}
 #endif
 } vms_event;
-
 
 typedef struct _vms_event_default_hole {
     vms_event base;
@@ -45,7 +44,6 @@ vms_kind vms_event_kind(const vms_event *event);
 bool vms_event_is_hole(const vms_event *);
 vms_kind vms_get_hole_kind(void);
 vms_kind vms_get_last_special_kind(void);
-
 
 #ifdef __cplusplus
 }
