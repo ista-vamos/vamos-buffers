@@ -12,6 +12,7 @@ struct Event : public vms_event {
     vms_eventid id() const { return vms_event_id(this); }
     vms_kind kind() const { return vms_event_kind(this); };
     bool is_hole() const { return vms_event_is_hole(this); }
+    bool is_done() const { return vms_event_is_done(this); }
 };
 
 }  // namespace vamos
