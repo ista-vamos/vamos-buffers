@@ -26,7 +26,7 @@ struct event {
 void *filler_thread(void *data) {
     struct buffer *buffer = (struct buffer *)data;
     struct event ev;
-    ev.base.kind = vms_get_last_special_kind() + 1;
+    ev.base.kind = vms_event_get_last_special_kind() + 1;
     for (int i = 0; i < 4; ++i) {
         ev.base.id = i + 1;
         ev.n = i;

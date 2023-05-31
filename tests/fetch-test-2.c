@@ -28,7 +28,7 @@ static size_t failed_push = 0;
 void* filler_thread(void* data) {
     struct buffer* buffer = (struct buffer*)data;
     struct event ev;
-    ev.base.kind = vms_get_last_special_kind() + 1;
+    ev.base.kind = vms_event_get_last_special_kind() + 1;
     for (size_t i = 1; i <= 10000; ++i) {
         ev.base.id = i;
         ev.n = i;

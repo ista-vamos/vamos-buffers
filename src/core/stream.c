@@ -16,7 +16,7 @@
 /* FIXME: we duplicate the counter in stream here. Maybe rather set the funs to
  * NULL? */
 static void default_hole_init(vms_event *ev) {
-    ev->kind = vms_get_hole_kind();
+    ev->kind = vms_event_get_hole_kind();
     ((vms_event_default_hole *)ev)->n = 0;
 }
 
@@ -295,7 +295,7 @@ size_t vms_stream_event_size(vms_stream *s) { return s->event_size; }
 
 int vms_stream_register_event(vms_stream *stream, const char *name,
                               size_t kind) {
-    assert(kind > vms_get_last_special_kind() && "Invalid event kind, it overlaps special kinds");
+    assert(kind > vms_event_get_last_special_kind() && "Invalid event kind, it overlaps special kinds");
     return buffer_register_event(stream->incoming_events_buffer, name, kind);
 }
 
