@@ -37,14 +37,19 @@ void initialize_events(void) __attribute__((deprecated));
 void deinitialize_events(void) __attribute__((deprecated));
 
 // EVENTS
+#define VMS_EVENT_HOLE_KIND 1
+#define VMS_EVENT_DONE_KIND 2
+#define VMS_EVENT_LAST_SPECIAL_KIND 9
+
 vms_eventid vms_event_id(const vms_event *event);
 vms_kind vms_event_kind(const vms_event *event);
 
 // DROP EVENT
 bool vms_event_is_hole(const vms_event *);
 bool vms_event_is_done(const vms_event *);
-vms_kind vms_get_hole_kind(void);
-vms_kind vms_get_last_special_kind(void);
+vms_kind vms_event_get_hole_kind(void);
+vms_kind vms_event_get_done_kind(void);
+vms_kind vms_event_get_last_special_kind(void);
 
 #ifdef __cplusplus
 }
