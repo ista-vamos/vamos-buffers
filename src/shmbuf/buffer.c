@@ -592,6 +592,7 @@ void buffer_notify_dropped(struct buffer *buff, uint64_t begin_id,
 }
 
 int buffer_register_event(struct buffer *b, const char *name, uint64_t kind) {
+    assert(kind > vms_get_last_special_kind() && "Invalid event kind, it overlaps special kinds");
     struct event_record *rec = source_control_get_event(b->control, name);
     if (rec == NULL) {
         return -1;
@@ -608,6 +609,7 @@ int buffer_register_events(struct buffer *b, size_t ev_nums, ...) {
     for (size_t i = 0; i < ev_nums; ++i) {
         const char *name = va_arg(ap, const char *);
         vms_kind kind = va_arg(ap, vms_kind);
+        assert(kind > vms_get_last_special_kind() && "Invalid event kind, it overlaps special kinds");
         if (buffer_register_event(b, name, kind) < 0) {
             va_end(ap);
             return -1;

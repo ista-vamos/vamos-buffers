@@ -42,6 +42,7 @@ vms_kind vms_event_kind(const vms_event *event);
 
 // DROP EVENT
 bool vms_event_is_hole(const vms_event *);
+bool vms_event_is_done(const vms_event *);
 vms_kind vms_get_hole_kind(void);
 vms_kind vms_get_last_special_kind(void);
 
