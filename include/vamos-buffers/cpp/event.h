@@ -13,6 +13,7 @@ struct Event : public vms_event {
     vms_kind kind() const { return vms_event_kind(this); };
     bool is_hole() const { return vms_event_is_hole(this); }
     bool is_done() const { return vms_event_is_done(this); }
+    void set_id(vms_eventid id) { vms_event_set_id(this, id); }
 
     static Event getDone(vms_eventid id) {
         return Event(vms_event_get_done_kind(), id);

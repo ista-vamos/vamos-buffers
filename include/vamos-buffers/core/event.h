@@ -44,6 +44,10 @@ void deinitialize_events(void) __attribute__((deprecated));
 vms_eventid vms_event_id(const vms_event *event);
 vms_kind vms_event_kind(const vms_event *event);
 
+// Sometimes we want to generate the event step-by-step
+// and then we may need this fun.
+void vms_event_set_id(vms_event *event, vms_eventid id);
+
 // DROP EVENT
 bool vms_event_is_hole(const vms_event *);
 bool vms_event_is_done(const vms_event *);
