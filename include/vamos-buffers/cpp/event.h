@@ -7,6 +7,7 @@ namespace vamos {
 
 struct Event : public vms_event {
     Event() {}
+    Event(vms_kind kind) : _vms_event(kind) {}
     Event(vms_kind kind, vms_eventid id) : _vms_event(kind, id) {}
 
     vms_eventid id() const { return vms_event_id(this); }
