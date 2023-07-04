@@ -21,6 +21,7 @@ typedef struct _vms_event {
 
 #ifdef __cplusplus
     _vms_event() {}
+    _vms_event(vms_kind kind) : kind(kind) {}
     _vms_event(vms_kind kind, vms_eventid id) : kind(kind), id(id) {}
 #endif
 } vms_event;
