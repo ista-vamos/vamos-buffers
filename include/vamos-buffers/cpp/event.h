@@ -10,8 +10,6 @@ struct Event : public vms_event {
     Event(vms_kind kind) : _vms_event(kind) {}
     Event(vms_kind kind, vms_eventid id) : _vms_event(kind, id) {}
 
-    vms_eventid id() const { return vms_event_id(this); }
-    vms_kind kind() const { return vms_event_kind(this); };
     bool is_hole() const { return vms_event_is_hole(this); }
     bool is_done() const { return vms_event_is_done(this); }
     void set_id(vms_eventid id) { vms_event_set_id(this, id); }
