@@ -23,6 +23,9 @@ typedef struct _vms_event {
     _vms_event() {}
     _vms_event(vms_kind kind) : kind(kind) {}
     _vms_event(vms_kind kind, vms_eventid id) : kind(kind), id(id) {}
+
+    vms_kind get_kind() const { return kind; }
+    vms_eventid get_id() const { return id; }
 #endif
 } vms_event;
 
@@ -42,8 +45,8 @@ void deinitialize_events(void) __attribute__((deprecated));
 #define VMS_EVENT_DONE_KIND 2
 #define VMS_EVENT_LAST_SPECIAL_KIND 9
 
-vms_eventid vms_event_id(const vms_event *event);
-vms_kind vms_event_kind(const vms_event *event);
+vms_eventid vms_event_id(const vms_event *event) __attribute__((always_inline));
+vms_kind vms_event_kind(const vms_event *event) __attribute__((always_inline));
 
 // Sometimes we want to generate the event step-by-step
 // and then we may need this fun.
