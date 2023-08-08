@@ -45,8 +45,8 @@ void deinitialize_events(void) __attribute__((deprecated));
 #define VMS_EVENT_DONE_KIND 2
 #define VMS_EVENT_LAST_SPECIAL_KIND 9
 
-vms_eventid vms_event_id(const vms_event *event) __attribute__((always_inline));
-vms_kind vms_event_kind(const vms_event *event) __attribute__((always_inline));
+vms_eventid vms_event_id(const vms_event *event);
+vms_kind vms_event_kind(const vms_event *event);
 
 // Sometimes we want to generate the event step-by-step
 // and then we may need this fun.
