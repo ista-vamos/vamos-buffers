@@ -111,7 +111,7 @@ struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
 
     int fd = vms_shm_open(tmpkey, O_RDWR | O_CREAT | O_TRUNC, mode);
     if (fd < 0) {
-        perror("vms_open");
+        perror("vms_shm_open");
         return NULL;
     }
 
@@ -241,7 +241,7 @@ struct buffer *try_get_shared_buffer(const char *key, size_t retry) {
     } while (--retry > 0);
 
     if (fd == -1) {
-        perror("vms_open");
+        perror("vms_shm_open");
         fprintf(stderr, "Failed getting shared buffer '%s'\n", key);
         return NULL;
     }

@@ -65,7 +65,7 @@ vms_vms_dbg_buffer *vms_vms_dbg_buffer_create(const char *key, size_t capacity,
 
     int fd = vms_shm_open(tmpkey, O_RDWR | O_CREAT, S_IRWXU);
     if (fd < 0) {
-        perror("vms_open");
+        perror("vms_shm_open");
         return NULL;
     }
 
@@ -124,7 +124,7 @@ vms_vms_dbg_buffer *vms_vms_dbg_buffer_get(const char *key) {
 
     int fd = vms_shm_open(key, O_RDWR | O_CREAT, S_IRWXU);
     if (fd < 0) {
-        perror("vms_open");
+        perror("vms_shm_open");
         return NULL;
     }
 

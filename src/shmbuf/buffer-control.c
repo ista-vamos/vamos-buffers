@@ -14,7 +14,7 @@ struct source_control *get_shared_control_buffer(const char *buff_key) {
     /* fprintf(stderr, "getting control buffer '%s'\n", key); */
     int fd = vms_shm_open(key, O_RDWR | O_CREAT, S_IRWXU);
     if (fd < 0) {
-        perror("vms_open");
+        perror("vms_shm_open");
         return NULL;
     }
 
@@ -59,7 +59,7 @@ struct source_control *create_shared_control_buffer(
 
     int fd = vms_shm_open(tmpkey, O_RDWR | O_CREAT, mode);
     if (fd < 0) {
-        perror("vms_open");
+        perror("vms_shm_open");
         return NULL;
     }
 
