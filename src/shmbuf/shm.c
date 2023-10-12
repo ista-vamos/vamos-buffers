@@ -14,7 +14,7 @@
 const char *SHM_DIR = "/dev/shm/";
 const size_t SHM_DIRlen = 9;
 
-/* adapted function from musl project, src/mman/vms_open.c
+/* adapted function from musl project, src/mman/shm_open.c
  * and from libc sysdeps/posix/shm-directory.h */
 char *vms_shm_mapname(const char *name, char *buf) {
     assert(name[0] == '/');

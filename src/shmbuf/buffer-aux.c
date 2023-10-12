@@ -66,7 +66,7 @@ static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
 
     int fd = vms_shm_open(key, O_RDWR | O_CREAT, buff->mode);
     if (fd < 0) {
-        perror("vms_open");
+        perror("vms_shm_open");
         abort();
     }
 
@@ -183,7 +183,7 @@ struct aux_buffer *reader_get_aux_buffer(struct buffer *buff, size_t idx) {
 
     int fd = vms_shm_open(key, O_RDWR, S_IRWXU);
     if (fd < 0) {
-        perror("vms_open");
+        perror("vms_shm_open");
         abort();
     }
 
