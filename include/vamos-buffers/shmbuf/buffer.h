@@ -6,17 +6,18 @@
 #include <stdint.h>
 #include <sys/file.h>
 
-struct source_control;
+struct vms_source_control;
 struct event_record;
 struct buffer;
 
 struct buffer *create_shared_buffer(const char *key, size_t capacity,
-                                    const struct source_control *control);
-struct buffer *create_shared_buffer_adv(const char *key, mode_t mode,
-                                        size_t elem_size, size_t capacity,
-                                        const struct source_control *control);
-struct buffer *create_shared_sub_buffer(struct buffer *buffer, size_t capacity,
-                                        const struct source_control *control);
+                                    const struct vms_source_control *control);
+struct buffer *create_shared_buffer_adv(
+    const char *key, mode_t mode, size_t elem_size, size_t capacity,
+    const struct vms_source_control *control);
+struct buffer *create_shared_sub_buffer(
+    struct buffer *buffer, size_t capacity,
+    const struct vms_source_control *control);
 size_t buffer_get_sub_buffers_no(struct buffer *buffer);
 
 struct buffer *try_get_shared_buffer(const char *key, size_t retry);

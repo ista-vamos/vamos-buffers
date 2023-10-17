@@ -18,17 +18,18 @@ char *get_sub_buffer_key(const char *key, size_t idx) {
     return tmp;
 }
 
-struct buffer *create_shared_sub_buffer(struct buffer *buffer, size_t capacity,
-                                        const struct source_control *control) {
+struct buffer *create_shared_sub_buffer(
+    struct buffer *buffer, size_t capacity,
+    const struct vms_source_control *control) {
     char *key = get_sub_buffer_key(buffer->key, ++buffer->last_subbufer_no);
-    struct source_control *ctrl =
+    struct vms_source_control *ctrl =
         create_shared_control_buffer(key, S_IRWXU, control);
     if (!ctrl) {
         fprintf(stderr, "Failed creating subbuffer\n");
         return NULL;
     }
 
-    size_t elem_size = source_control_max_event_size(ctrl);
+    size_t elem_size = vms_source_control_max_event_size(ctrl);
     if (capacity == 0)
         capacity = buffer_capacity(buffer);
     struct buffer *sbuf =

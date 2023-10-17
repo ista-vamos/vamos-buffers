@@ -24,7 +24,7 @@
 /* FOR TESTING */
 struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
                                        size_t capacity,
-                                       struct source_control *control) {
+                                       struct vms_source_control *control) {
     assert(elem_size > 0 && "Element size is 0");
     printf("Initializing LOCAL buffer '%s' with elem size '%lu'\n", key,
            elem_size);

@@ -30,7 +30,7 @@ static double report_time(const char *msg, struct timespec *start,
 
 #if 0
 static void run_shmbuf_push_pop_st() {
-    struct source_control *ctrl = source_control_define(1, "dummy", "i");
+    struct vms_source_control *ctrl = vms_source_control_define(1, "dummy", "i");
     struct buffer *buff = create_shared_buffer("/test", sizeof(int), ctrl);
 	assert(buff);
 
@@ -65,11 +65,11 @@ static void run_shmbuf_push_pop_st() {
 
 /* to see if there is any difference between malloce'd and shared memory */
 struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
-                                       struct source_control *control);
+                                       struct vms_source_control *control);
 void release_local_buffer(struct buffer *buff);
 
 static void run_local_shmbuf_push_pop_st() {
-    struct source_control *ctrl = source_control_define(1, "dummy", "i");
+    struct vms_source_control *ctrl = vms_source_control_define(1, "dummy", "i");
     struct buffer *buff = initialize_local_buffer("/test", sizeof(int), ctrl);
 
     assert(buff);

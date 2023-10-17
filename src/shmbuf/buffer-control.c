@@ -7,7 +7,7 @@
 #include "vamos-buffers/core/source.h"
 
 HIDE_SYMBOL
-struct source_control *get_shared_control_buffer(const char *buff_key) {
+struct vms_source_control *get_shared_control_buffer(const char *buff_key) {
     char key[SHM_NAME_MAXLEN];
     vms_shm_map_ctrl_key(buff_key, key);
 
@@ -38,12 +38,13 @@ struct source_control *get_shared_control_buffer(const char *buff_key) {
     }
 
     /* FIXME: we leak fd */
-    return (struct source_control *)mem;
+    return (struct vms_source_control *)mem;
 }
 
 HIDE_SYMBOL
-struct source_control *create_shared_control_buffer(
-    const char *buff_key, mode_t mode, const struct source_control *control) {
+struct vms_source_control *create_shared_control_buffer(
+    const char *buff_key, mode_t mode,
+    const struct vms_source_control *control) {
     char key[SHM_NAME_MAXLEN];
     vms_shm_map_ctrl_key(buff_key, key);
     size_t size = control->size;
@@ -105,11 +106,11 @@ struct source_control *create_shared_control_buffer(
         return NULL;
     }
 
-    return (struct source_control *)mem;
+    return (struct vms_source_control *)mem;
 }
 
 HIDE_SYMBOL
-void release_shared_control_buffer(struct source_control *buffer) {
+void release_shared_control_buffer(struct vms_source_control *buffer) {
     if (munmap(buffer, buffer->size) != 0) {
         perror("munmap failure");
     }
@@ -119,7 +120,7 @@ void release_shared_control_buffer(struct source_control *buffer) {
 
 HIDE_SYMBOL
 void destroy_shared_control_buffer(const char *buffkey,
-                                   struct source_control *buffer) {
+                                   struct vms_source_control *buffer) {
     release_shared_control_buffer(buffer);
 
     char key[SHM_NAME_MAXLEN];
