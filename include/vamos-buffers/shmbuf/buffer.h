@@ -1,5 +1,5 @@
-#ifndef SHAMON_SHM_BUFFER_H
-#define SHAMON_SHM_BUFFER_H
+#ifndef VAMOS_SHM_BUFFER_H
+#define VAMOS_SHM_BUFFER_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -98,4 +98,4 @@ void vms_vms_dbg_buffer_inc_size(vms_vms_dbg_buffer *b, size_t size);
 size_t vms_vms_dbg_buffer_version(vms_vms_dbg_buffer *b);
 void vms_vms_dbg_buffer_bump_version(vms_vms_dbg_buffer *b);
 
-#endif /* SHAMON_SHM_BUFFER_H */
+#endif /* VAMOS_SHM_BUFFER_H */

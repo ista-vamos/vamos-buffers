@@ -1,5 +1,5 @@
-#ifndef SHAMON_UTILS_H_
-#define SHAMON_UTILS_H_
+#ifndef VAMOS_UTILS_H_
+#define VAMOS_UTILS_H_
 
 #include <stddef.h> /* size_t */
 #include <stdint.h>
@@ -20,4 +20,4 @@ void *xalloc_aligned(size_t size, size_t alignment);
 
 char *xstrdup(const char *str);
 
-#endif /* SHAMON_UTILS_H_ */
+#endif /* VAMOS_UTILS_H_ */

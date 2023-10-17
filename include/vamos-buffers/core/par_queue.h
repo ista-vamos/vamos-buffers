@@ -1,5 +1,5 @@
-#ifndef SHAMON_PARALLEL_QUEUE_H
-#define SHAMON_PARALLEL_QUEUE_H
+#ifndef VAMOS_PARALLEL_QUEUE_H
+#define VAMOS_PARALLEL_QUEUE_H
 
 #include <stdbool.h>
 #include <unistd.h>
@@ -48,4 +48,4 @@ vms_event *vms_par_queue_peek_atmost_at(vms_par_queue *q, size_t *k);
 void *vms_par_queue_write_ptr(vms_par_queue *q);
 void vms_par_queue_write_finish(vms_par_queue *q);
 
-#endif /* SHAMON_PARALLEL_QUEUE_H */
+#endif /* VAMOS_PARALLEL_QUEUE_H */

@@ -2,8 +2,8 @@
  * Implementation of the buffer for the monitor.
  ************************************************/
 
-#ifndef SHAMON_MONITOR_H_
-#define SHAMON_MONITOR_H_
+#ifndef VAMOS_MONITOR_H_
+#define VAMOS_MONITOR_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -63,4 +63,4 @@ void vms_monitor_buffer_notify_dropped(vms_monitor_buffer *buffer,
                                        uint64_t begin_id, uint64_t end_id);
                                        */
 
-#endif /* SHAMON_MONITOR_H_ */
+#endif /* VAMOS_MONITOR_H_ */

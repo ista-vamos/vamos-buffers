@@ -1,5 +1,5 @@
-#ifndef SHAMON_H_
-#define SHAMON_H_
+#ifndef VAMOS_H_
+#define VAMOS_H_
 
 #include <stdbool.h>
 #include <unistd.h>
@@ -25,4 +25,4 @@ vms_event *shamon_get_next_ev(shamon *, vms_stream **);
 vms_vector *shamon_get_buffers(shamon *);
 vms_stream **shamon_get_streams(shamon *, size_t *);
 
-#endif  // SHAMON_H_
+#endif  // VAMOS_H_

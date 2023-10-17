@@ -1,5 +1,5 @@
-#ifndef SHAMON_CLIENT_H
-#define SHAMON_CLIENT_H
+#ifndef VAMOS_CLIENT_H
+#define VAMOS_CLIENT_H
 
 struct buffer;
 

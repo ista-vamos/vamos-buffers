@@ -1,5 +1,5 @@
-#ifndef SHAMON_LIST_H_
-#define SHAMON_LIST_H_
+#ifndef VAMOS_LIST_H_
+#define VAMOS_LIST_H_
 
 #include <unistd.h>
 
@@ -33,4 +33,4 @@ size_t vms_list_size(vms_list *list);
 vms_list_elem *vms_list_first(vms_list *list);
 vms_list_elem *vms_list_last(vms_list *list);
 
-#endif /* SHAMON_LIST_H_ */
+#endif /* VAMOS_LIST_H_ */
