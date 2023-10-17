@@ -3,7 +3,7 @@
 
 #include "event.h"
 
-struct event_record {
+struct vms_event_record {
     char name[64];
     vms_kind kind;
     size_t size;
@@ -12,7 +12,7 @@ struct event_record {
 
 struct vms_source_control {
     size_t size; /* size of this structure (it's variable) */
-    struct event_record events[];
+    struct vms_event_record events[];
 };
 
 size_t vms_source_control_get_records_num(struct vms_source_control *sc);
@@ -26,7 +26,7 @@ struct vms_source_control *vms_source_control_define_str(const char *str);
 
 size_t vms_source_control_max_event_size(struct vms_source_control *control);
 
-struct event_record *vms_source_control_get_event(
+struct vms_event_record *vms_source_control_get_event(
     struct vms_source_control *control, const char *name);
 
 struct vms_source_control *vms_source_control_allocate(size_t ev_nums);

@@ -320,7 +320,7 @@ struct buffer *get_shared_buffer(const char *key) {
     return try_get_shared_buffer(key, 10);
 }
 
-struct event_record *buffer_get_avail_events(struct buffer *buff,
+struct vms_event_record *buffer_get_avail_events(struct buffer *buff,
                                              size_t *evs_num) {
     assert(buff);
     assert(evs_num);
@@ -593,7 +593,7 @@ void buffer_notify_dropped(struct buffer *buff, uint64_t begin_id,
 
 int buffer_register_event(struct buffer *b, const char *name, uint64_t kind) {
     assert(kind > vms_event_get_last_special_kind() && "Invalid event kind, it overlaps special kinds");
-    struct event_record *rec = vms_source_control_get_event(b->control, name);
+    struct vms_event_record *rec = vms_source_control_get_event(b->control, name);
     if (rec == NULL) {
         return -1;
     }
@@ -622,7 +622,7 @@ int buffer_register_events(struct buffer *b, size_t ev_nums, ...) {
 }
 
 int buffer_register_all_events(struct buffer *b) {
-    struct event_record *recs = b->control->events;
+    struct vms_event_record *recs = b->control->events;
     const size_t ev_nums = vms_source_control_get_records_num(b->control);
 
     for (size_t i = 0; i < ev_nums; ++i) {

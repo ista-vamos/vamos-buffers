@@ -9,7 +9,7 @@
 
 size_t vms_source_control_get_records_num(struct vms_source_control *sc) {
     return ((sc->size - sizeof(struct vms_source_control)) /
-            sizeof(struct event_record));
+            sizeof(struct vms_event_record));
 }
 
 size_t vms_source_control_max_event_size(struct vms_source_control *control) {
@@ -22,7 +22,7 @@ size_t vms_source_control_max_event_size(struct vms_source_control *control) {
     return max_size;
 }
 
-struct event_record *vms_source_control_get_event(
+struct vms_event_record *vms_source_control_get_event(
     struct vms_source_control *control, const char *name) {
     const size_t en = vms_source_control_get_records_num(control);
     for (size_t i = 0; i < en; ++i) {
@@ -34,7 +34,7 @@ struct event_record *vms_source_control_get_event(
     return NULL;
 }
 
-static inline void init_record(struct event_record *ev, const char *name,
+static inline void init_record(struct vms_event_record *ev, const char *name,
                                const char *sig) {
     const size_t max_name_size = sizeof(ev->name) - 1;
     const size_t max_sig_size = sizeof(ev->signature) - 1;
@@ -54,7 +54,7 @@ static inline void init_record(struct event_record *ev, const char *name,
 
 struct vms_source_control *vms_source_control_allocate(size_t ev_nums) {
     size_t control_size =
-        sizeof(size_t) + ev_nums * sizeof(struct event_record);
+        sizeof(size_t) + ev_nums * sizeof(struct vms_event_record);
     struct vms_source_control *control = malloc(control_size);
     if (!control) {
         assert(0 && "Allocation failed");
@@ -108,17 +108,17 @@ struct vms_source_control *vms_source_control_define_str(const char *str) {
     }
 
     size_t control_size =
-        sizeof(size_t) + ev_nums * sizeof(struct event_record);
+        sizeof(size_t) + ev_nums * sizeof(struct vms_event_record);
     struct vms_source_control *control = malloc(control_size);
     assert(control);
 
     control->size = control_size;
 
     const size_t max_name_size =
-        sizeof(((struct event_record *)NULL)->name) - 1;
+        sizeof(((struct vms_event_record *)NULL)->name) - 1;
 #ifndef NDEBUG
     const size_t max_sig_size =
-        sizeof(((struct event_record *)NULL)->signature) - 1;
+        sizeof(((struct vms_event_record *)NULL)->signature) - 1;
 #endif
 
     char name[max_name_size];

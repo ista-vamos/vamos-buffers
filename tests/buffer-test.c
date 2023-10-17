@@ -9,7 +9,7 @@
 
 int main(void) {
     size_t i;
-    const size_t ctrl_size = sizeof(size_t) + sizeof(struct event_record);
+    const size_t ctrl_size = sizeof(size_t) + sizeof(struct vms_event_record);
     struct vms_source_control *ctrl = malloc(ctrl_size);
     ctrl->size = ctrl_size;
     ctrl->events[0].size = sizeof(size_t);

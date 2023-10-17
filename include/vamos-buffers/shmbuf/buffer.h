@@ -7,7 +7,7 @@
 #include <sys/file.h>
 
 struct vms_source_control;
-struct event_record;
+struct vms_event_record;
 struct buffer;
 
 struct buffer *create_shared_buffer(const char *key, size_t capacity,
@@ -22,7 +22,7 @@ size_t buffer_get_sub_buffers_no(struct buffer *buffer);
 
 struct buffer *try_get_shared_buffer(const char *key, size_t retry);
 struct buffer *get_shared_buffer(const char *key);
-struct event_record *buffer_get_avail_events(struct buffer *, size_t *);
+struct vms_event_record *buffer_get_avail_events(struct buffer *, size_t *);
 
 int buffer_get_key_path(struct buffer *, char keypath[], size_t keypathsize);
 int buffer_get_ctrl_key_path(struct buffer *, char keypath[],
