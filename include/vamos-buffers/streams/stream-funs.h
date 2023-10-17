@@ -13,7 +13,7 @@ typedef struct _vms_event_funcall {
 
 typedef struct _vms_stream_funs {
     vms_stream base;
-    struct buffer *shmbuffer;
+    vms_shm_buffer *shmbuffer;
     struct vms_event_record *events;
     /* buffer for reading and publishing the event */
     vms_event_funcall *ev;

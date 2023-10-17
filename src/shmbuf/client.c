@@ -25,7 +25,7 @@ static inline void restore_sigfunc(void (*sigfunc)(int)) {
     }
 }
 
-int buffer_wait_for_monitor(struct buffer *buff) {
+int buffer_wait_for_monitor(vms_shm_buffer *buff) {
     void (*sigfunc)(int);
     sigfunc = signal(SIGINT, sig_int);
     int err = 0;

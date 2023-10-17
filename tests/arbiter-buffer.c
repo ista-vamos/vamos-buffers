@@ -21,12 +21,12 @@ struct event {
     int i;
 };
 
-struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
-                                       size_t capacity,
-                                       struct vms_source_control *control);
+vms_shm_buffer *initialize_local_buffer(const char *key, size_t elem_size,
+                                        size_t capacity,
+                                        struct vms_source_control *control);
 
 int main(void) {
-    struct buffer *lbuffer =
+    vms_shm_buffer *lbuffer =
         initialize_local_buffer("/dummy", sizeof(struct event), 30, NULL);
     assert(lbuffer);
 

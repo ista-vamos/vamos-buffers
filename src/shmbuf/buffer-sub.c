@@ -18,8 +18,8 @@ char *get_sub_buffer_key(const char *key, size_t idx) {
     return tmp;
 }
 
-struct buffer *create_shared_sub_buffer(
-    struct buffer *buffer, size_t capacity,
+vms_shm_buffer *create_shared_sub_buffer(
+    vms_shm_buffer *buffer, size_t capacity,
     const struct vms_source_control *control) {
     char *key = get_sub_buffer_key(buffer->key, ++buffer->last_subbufer_no);
     struct vms_source_control *ctrl =
@@ -32,7 +32,7 @@ struct buffer *create_shared_sub_buffer(
     size_t elem_size = vms_source_control_max_event_size(ctrl);
     if (capacity == 0)
         capacity = buffer_capacity(buffer);
-    struct buffer *sbuf =
+    vms_shm_buffer *sbuf =
         initialize_shared_buffer(key, S_IRWXU, elem_size, capacity, ctrl);
     /* XXX: we copy the key in 'initialize_shared_buffer' which is redundant as
      * we have created it in `get_sub_buffer_key` and can just move it */
@@ -43,7 +43,7 @@ struct buffer *create_shared_sub_buffer(
     return sbuf;
 }
 
-size_t buffer_get_sub_buffers_no(struct buffer *buffer) {
+size_t buffer_get_sub_buffers_no(vms_shm_buffer *buffer) {
     return buffer->shmbuffer->info.subbuffers_no;
 }
 
@@ -56,12 +56,12 @@ size_t buffer_get_sub_buffers_no(struct buffer *buffer) {
  * therefore destroying the buffer entirely would lead to accessing
  * dangling data.
  */
-void buffer_set_destroyed(struct buffer *buff) {
+void buffer_set_destroyed(vms_shm_buffer *buff) {
     buff->shmbuffer->info.destroyed = 1;
 }
 
 /* for writers */
-void destroy_shared_sub_buffer(struct buffer *buff) {
+void destroy_shared_sub_buffer(vms_shm_buffer *buff) {
     buff->shmbuffer->info.destroyed = 1;
 
     size_t vecsize = VEC_SIZE(buff->aux_buffers);
@@ -90,7 +90,7 @@ void destroy_shared_sub_buffer(struct buffer *buff) {
 }
 
 /* for readers */
-void release_shared_sub_buffer(struct buffer *buff) {
+void release_shared_sub_buffer(vms_shm_buffer *buff) {
     if (munmap(buff->shmbuffer, buff->shmbuffer->info.allocated_size) != 0) {
         perror("release_shared_sub_buffer: munmap failure");
     }

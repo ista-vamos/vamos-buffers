@@ -26,7 +26,7 @@ struct event {
 
 static size_t failed_push = 0;
 void *filler_thread(void *data) {
-    struct buffer *buffer = (struct buffer *)data;
+    vms_shm_buffer *buffer = (vms_shm_buffer *)data;
     struct event ev;
     ev.base.kind = vms_event_get_last_special_kind() + 1;
     for (size_t i = 0; i < 10000; ++i) {
@@ -72,7 +72,7 @@ void *reader_thread(void *data) {
 static size_t waiting_for_arbbuf = 0;
 
 int main(void) {
-    struct buffer *buffer =
+    vms_shm_buffer *buffer =
         initialize_local_buffer("/dummy", sizeof(struct event), 30, NULL);
     assert(buffer);
     vms_stream dummy_stream;

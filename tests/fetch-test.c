@@ -24,7 +24,7 @@ struct event {
 };
 
 void *filler_thread(void *data) {
-    struct buffer *buffer = (struct buffer *)data;
+    vms_shm_buffer *buffer = (vms_shm_buffer *)data;
     struct event ev;
     ev.base.kind = vms_event_get_last_special_kind() + 1;
     for (int i = 0; i < 4; ++i) {
@@ -39,7 +39,7 @@ void *filler_thread(void *data) {
 }
 
 int main(void) {
-    struct buffer *buffer =
+    vms_shm_buffer *buffer =
         initialize_local_buffer("/dummy", sizeof(struct event), 30, NULL);
     assert(buffer);
     vms_stream dummy_stream;

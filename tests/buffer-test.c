@@ -17,7 +17,7 @@ int main(void) {
     ctrl->events[0].name[0] = '\0';
     ctrl->events[0].signature[0] = '\0';
 
-    struct buffer *b = create_shared_buffer("/testkey", 128, ctrl);
+    vms_shm_buffer *b = create_shared_buffer("/testkey", 128, ctrl);
     assert(b);
     assert(buffer_elem_size(b) >= sizeof(size_t));
     free(ctrl);

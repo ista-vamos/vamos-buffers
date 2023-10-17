@@ -9,7 +9,7 @@
 #include "vamos-buffers/shmbuf/buffer.h"
 
 bool funs_is_ready(vms_stream *stream) {
-    struct buffer *b = ((vms_stream_funs *)stream)->shmbuffer;
+    vms_shm_buffer *b = ((vms_stream_funs *)stream)->shmbuffer;
     /* buffer must be ready or it may not be ready anymore, but it
      * still has some data that we haven't read */
     return buffer_is_ready(b) || buffer_size(b) > 0;
@@ -19,12 +19,12 @@ void funs_alter(vms_stream *stream, vms_event *in, vms_event *out) {
     memcpy(out, in, stream->event_size);
 }
 
-size_t stream_mk_event_kinds(const char *stream_name, struct buffer *shmbuffer,
+size_t stream_mk_event_kinds(const char *stream_name, vms_shm_buffer *shmbuffer,
                              size_t *max_ev_size);
 
 vms_stream *vms_create_funs_stream(const char *key, const char *name) {
     vms_stream_funs *ss = malloc(sizeof *ss);
-    struct buffer *shmbuffer = get_shared_buffer(key);
+    vms_shm_buffer *shmbuffer = get_shared_buffer(key);
     assert(shmbuffer && "Getting the shm buffer failed");
     size_t elem_size = buffer_elem_size(shmbuffer);
     assert(elem_size > 0);

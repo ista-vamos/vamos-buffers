@@ -6,6 +6,7 @@
 #include "vector-macro.h"
 
 typedef struct _vms_arbiter_buffer vms_arbiter_buffer;
+typedef struct _vms_shm_buffer vms_shm_buffer;
 
 typedef size_t (*vms_stream_buffer_events_fn)(struct _vms_stream *,
                                               vms_arbiter_buffer *buffer);
@@ -30,7 +31,7 @@ typedef struct _vms_stream {
     char *type;
     size_t event_size;
     /* shared-memory buffer */
-    struct buffer *incoming_events_buffer;
+    vms_shm_buffer *incoming_events_buffer;
     /* the number of created substreams (sub-buffers) for the
      * shared memory buffer */
     size_t substreams_no;
@@ -58,7 +59,7 @@ typedef struct _vms_stream {
 #endif
 } vms_stream;
 
-void vms_stream_init(vms_stream *stream, struct buffer *incoming_events_buffer,
+void vms_stream_init(vms_stream *stream, vms_shm_buffer *incoming_events_buffer,
                      size_t event_size, vms_stream_is_ready_fn is_ready,
                      vms_stream_filter_fn filter, vms_stream_alter_fn alter,
                      vms_stream_destroy_fn destroy,

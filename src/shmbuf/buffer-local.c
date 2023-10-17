@@ -22,9 +22,9 @@
 #include "vamos-buffers/shmbuf/buffer.h"
 
 /* FOR TESTING */
-struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
-                                       size_t capacity,
-                                       struct vms_source_control *control) {
+vms_shm_buffer *initialize_local_buffer(const char *key, size_t elem_size,
+                                        size_t capacity,
+                                        struct vms_source_control *control) {
     assert(elem_size > 0 && "Element size is 0");
     printf("Initializing LOCAL buffer '%s' with elem size '%lu'\n", key,
            elem_size);
@@ -36,14 +36,14 @@ struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
         return NULL;
     }
 
-    struct buffer *buff = malloc(sizeof(struct buffer));
+    vms_shm_buffer *buff = malloc(sizeof(vms_shm_buffer));
     assert(buff && "Memory allocation failed");
     buff->shmbuffer = (struct shmbuffer *)mem;
 
     assert(ADDR_IS_CACHE_ALIGNED(buff->shmbuffer->data));
     assert(ADDR_IS_CACHE_ALIGNED(&buff->shmbuffer->info.ringbuf));
 
-    memset(buff->shmbuffer, 0, sizeof(struct buffer_info));
+    memset(buff->shmbuffer, 0, sizeof(vms_shm_buffer_info));
 
     /* ringbuf has one dummy element */
     buff->shmbuffer->info.capacity = capacity;
@@ -69,7 +69,7 @@ struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
     return buff;
 }
 
-void release_local_buffer(struct buffer *buff) {
+void release_local_buffer(vms_shm_buffer *buff) {
     free(buff->key);
 
     size_t vecsize = VEC_SIZE(buff->aux_buffers);

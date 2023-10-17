@@ -6,13 +6,13 @@
 #include "shm.h"
 
 HIDE_SYMBOL
-void drop_ranges_unlock(struct buffer *buff) {
+void drop_ranges_unlock(vms_shm_buffer *buff) {
     /* FIXME: use explicit memory ordering, seq_cnt is not needed here */
     buff->shmbuffer->info.dropped_ranges_lock = false;
 }
 
 HIDE_SYMBOL
-void drop_ranges_lock(struct buffer *buff) {
+void drop_ranges_lock(vms_shm_buffer *buff) {
     _Atomic bool *l = &buff->shmbuffer->info.dropped_ranges_lock;
     bool unlocked;
     do {
@@ -53,7 +53,7 @@ void aux_buffer_destroy(struct aux_buffer *buffer) {
 }
 */
 
-static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
+static struct aux_buffer *new_aux_buffer(vms_shm_buffer *buff, size_t size) {
     size_t idx = buff->aux_buf_idx++;
     const size_t pg_size = sysconf(_SC_PAGESIZE);
     size = (((size + sizeof(struct aux_buffer)) / pg_size) + 2) * pg_size;
@@ -104,8 +104,8 @@ static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
     return ab;
 }
 
-static inline bool ab_was_dropped(struct aux_buffer *ab, struct buffer *buff) {
-    struct buffer_info *info = &buff->shmbuffer->info;
+static inline bool ab_was_dropped(struct aux_buffer *ab, vms_shm_buffer *buff) {
+    vms_shm_buffer_info *info = &buff->shmbuffer->info;
     drop_ranges_lock(buff);
     for (size_t i = 0; i < DROPPED_RANGES_NUM; ++i) {
         struct dropped_range *r = &info->dropped_ranges[i];
@@ -122,7 +122,7 @@ static inline bool ab_was_dropped(struct aux_buffer *ab, struct buffer *buff) {
 }
 
 HIDE_SYMBOL
-struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size) {
+struct aux_buffer *writer_get_aux_buffer(vms_shm_buffer *buff, size_t size) {
     if (!buff->cur_aux_buff ||
         aux_buffer_free_space(buff->cur_aux_buff) < size) {
         /* try to find a free buffer */
@@ -160,7 +160,7 @@ struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size) {
 }
 
 HIDE_SYMBOL
-struct aux_buffer *reader_get_aux_buffer(struct buffer *buff, size_t idx) {
+struct aux_buffer *reader_get_aux_buffer(vms_shm_buffer *buff, size_t idx) {
     /* cache the last use */
     if (buff->cur_aux_buff && buff->cur_aux_buff->idx == idx)
         return buff->cur_aux_buff;
