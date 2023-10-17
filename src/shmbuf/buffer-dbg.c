@@ -8,7 +8,7 @@
 /**
  * @brief The __vms_dbg_buffer class
  *
- * vms_vms_dbg_buffer is a versioned array of key+value records
+ * vms_shm_dbg_buffer is a versioned array of key+value records
  */
 struct __vms_dbg_buffer {
     CACHELINE_ALIGNED struct {
@@ -30,7 +30,7 @@ struct __vms_dbg_buffer {
     unsigned char data[];
 };
 
-typedef struct _vms_vms_dbg_buffer {
+typedef struct _vms_shm_dbg_buffer {
     /* shared-memory buffer */
     struct __vms_dbg_buffer *buffer;
 
@@ -39,7 +39,7 @@ typedef struct _vms_vms_dbg_buffer {
     char *key;
     /* data pointer */
     unsigned char *data; /* = buffer->data */
-} vms_vms_dbg_buffer;
+} vms_shm_dbg_buffer;
 
 static void dbg_buffer_init(struct __vms_dbg_buffer *b, size_t allocation_size,
                             size_t capacity, uint16_t key_size,
@@ -52,7 +52,7 @@ static void dbg_buffer_init(struct __vms_dbg_buffer *b, size_t allocation_size,
     b->info.version = 0;
 }
 
-vms_vms_dbg_buffer *vms_vms_dbg_buffer_create(const char *key, size_t capacity,
+vms_shm_dbg_buffer *vms_shm_dbg_buffer_create(const char *key, size_t capacity,
                                               uint16_t key_size,
                                               uint16_t value_size) {
     printf("Initializing dbg buffer '%s' of capacity '%lu'\n", key, capacity);
@@ -91,7 +91,7 @@ vms_vms_dbg_buffer *vms_vms_dbg_buffer_create(const char *key, size_t capacity,
         return NULL;
     }
 
-    vms_vms_dbg_buffer *buff = (vms_vms_dbg_buffer *)xalloc(sizeof(*buff));
+    vms_shm_dbg_buffer *buff = (vms_shm_dbg_buffer *)xalloc(sizeof(*buff));
     buff->buffer = (struct __vms_dbg_buffer *)mem;
     dbg_buffer_init(buff->buffer, allocation_size, capacity, key_size,
                     value_size);
@@ -119,7 +119,7 @@ vms_vms_dbg_buffer *vms_vms_dbg_buffer_create(const char *key, size_t capacity,
     return buff;
 }
 
-vms_vms_dbg_buffer *vms_vms_dbg_buffer_get(const char *key) {
+vms_shm_dbg_buffer *vms_shm_dbg_buffer_get(const char *key) {
     printf("Getting dbg buffer '%s'\n", key);
 
     int fd = vms_shm_open(key, O_RDWR | O_CREAT, S_IRWXU);
@@ -150,7 +150,7 @@ vms_vms_dbg_buffer *vms_vms_dbg_buffer_get(const char *key) {
         return NULL;
     }
 
-    vms_vms_dbg_buffer *buff = (vms_vms_dbg_buffer *)xalloc(sizeof(*buff));
+    vms_shm_dbg_buffer *buff = (vms_shm_dbg_buffer *)xalloc(sizeof(*buff));
     buff->buffer = (struct __vms_dbg_buffer *)mem;
     buff->data = buff->buffer->data;
     buff->key = xstrdup(key);
@@ -159,7 +159,7 @@ vms_vms_dbg_buffer *vms_vms_dbg_buffer_get(const char *key) {
     return buff;
 }
 
-void vms_vms_dbg_buffer_release(vms_vms_dbg_buffer *buff) {
+void vms_shm_dbg_buffer_release(vms_shm_dbg_buffer *buff) {
     if (close(buff->fd) == -1) {
         perror("closing fd when releasing dbg buffer");
     }
@@ -171,41 +171,41 @@ void vms_vms_dbg_buffer_release(vms_vms_dbg_buffer *buff) {
     free(buff);
 }
 
-void vms_vms_dbg_buffer_destroy(vms_vms_dbg_buffer *buff) {
+void vms_shm_dbg_buffer_destroy(vms_shm_dbg_buffer *buff) {
     if (vms_shm_unlink(buff->key) != 0) {
         perror("vms_unlink when destroying a dbg buffer");
     }
 
-    vms_vms_dbg_buffer_release(buff);
+    vms_shm_dbg_buffer_release(buff);
 }
 
-size_t vms_vms_dbg_buffer_size(vms_vms_dbg_buffer *b) {
+size_t vms_shm_dbg_buffer_size(vms_shm_dbg_buffer *b) {
     return b->buffer->info.size;
 }
-size_t vms_vms_dbg_buffer_capacity(vms_vms_dbg_buffer *b) {
+size_t vms_shm_dbg_buffer_capacity(vms_shm_dbg_buffer *b) {
     return b->buffer->info.capacity;
 }
-size_t vms_vms_dbg_buffer_key_size(vms_vms_dbg_buffer *b) {
+size_t vms_shm_dbg_buffer_key_size(vms_shm_dbg_buffer *b) {
     return b->buffer->info.key_size;
 }
-size_t vms_vms_dbg_buffer_value_size(vms_vms_dbg_buffer *b) {
+size_t vms_shm_dbg_buffer_value_size(vms_shm_dbg_buffer *b) {
     return b->buffer->info.value_size;
 }
 
-size_t vms_vms_dbg_buffer_rec_size(vms_vms_dbg_buffer *b) {
+size_t vms_shm_dbg_buffer_rec_size(vms_shm_dbg_buffer *b) {
     return b->buffer->info.key_size + b->buffer->info.value_size;
 }
 
-unsigned char *vms_vms_dbg_buffer_data(vms_vms_dbg_buffer *b) {
+unsigned char *vms_shm_dbg_buffer_data(vms_shm_dbg_buffer *b) {
     return b->data;
 }
 
-void vms_vms_dbg_buffer_inc_size(vms_vms_dbg_buffer *b, size_t size) {
+void vms_shm_dbg_buffer_inc_size(vms_shm_dbg_buffer *b, size_t size) {
     b->buffer->info.size += size;
 }
-size_t vms_vms_dbg_buffer_version(vms_vms_dbg_buffer *b) {
+size_t vms_shm_dbg_buffer_version(vms_shm_dbg_buffer *b) {
     return b->buffer->info.version;
 }
-void vms_vms_dbg_buffer_bump_version(vms_vms_dbg_buffer *b) {
+void vms_shm_dbg_buffer_bump_version(vms_shm_dbg_buffer *b) {
     ++b->buffer->info.version;
 }

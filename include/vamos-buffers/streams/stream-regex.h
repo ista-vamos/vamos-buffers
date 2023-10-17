@@ -13,7 +13,7 @@ typedef struct _vms_event_regex {
 
 typedef struct _vms_stream_sregex {
     vms_stream base;
-    struct buffer *shmbuffer;
+    vms_shm_buffer *shmbuffer;
 } vms_stream_sregex;
 
 vms_stream *vms_create_sregex_stream(

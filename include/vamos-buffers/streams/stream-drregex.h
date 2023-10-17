@@ -19,7 +19,7 @@ typedef struct _vms_event_drregex {
 
 typedef struct _vms_stream_drregex {
     vms_stream base;
-    struct buffer *shmbuffer;
+    vms_shm_buffer *shmbuffer;
 } vms_stream_drregex;
 
 vms_stream *vms_create_drregex_stream(const char *key, const char *name);

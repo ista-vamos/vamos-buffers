@@ -13,7 +13,7 @@
 
 struct vms_source_control;
 struct vms_event_record;
-struct buffer;
+typedef struct _vms_shm_buffer vms_shm_buffer;
 
 #define MAX_AUX_BUF_KEY_SIZE 16
 #define DROPPED_RANGES_NUM 5
@@ -30,7 +30,7 @@ struct dropped_range {
     vms_eventid end;
 };
 
-struct buffer_info {
+typedef struct _vms_shm_buffer_info {
     vms_spsc_ringbuf ringbuf;
 
     size_t allocated_size;
@@ -45,10 +45,10 @@ struct buffer_info {
     /* the monitored program exited/destroyed the buffer */
     volatile _Bool destroyed;
     volatile _Bool monitor_attached;
-} __attribute__((aligned(CACHELINE_SIZE)));
+} vms_shm_buffer_info __attribute__((aligned(CACHELINE_SIZE)));
 
 struct shmbuffer {
-    struct buffer_info info;
+    vms_shm_buffer_info info;
     /* pointer to the beginning of data */
     unsigned char data[];
 };
@@ -66,7 +66,7 @@ struct aux_buffer {
 /* TODO: cache the shared state in local state
    (e.g., elem_size, etc.). Maybe we could also inline
    the vms_spsc_ringbuf so that we can keep local cache */
-struct buffer {
+typedef struct _vms_shm_buffer {
     struct shmbuffer *shmbuffer;
     struct vms_source_control *control;
     /* shared memory of auxiliary buffer */
@@ -83,26 +83,26 @@ struct buffer {
     mode_t mode;
     /* The number of the last subbufer */
     _Atomic size_t last_subbufer_no;
-};
+} vms_shm_buffer;
 
 #define _ringbuf(buff) (&buff->shmbuffer->info.ringbuf)
 
-struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
-                                        size_t elem_size, size_t capacity,
-                                        struct vms_source_control *control);
+vms_shm_buffer *initialize_shared_buffer(const char *key, mode_t mode,
+                                         size_t elem_size, size_t capacity,
+                                         struct vms_source_control *control);
 
-struct buffer *get_shared_buffer(const char *key);
-struct buffer *try_get_shared_buffer(const char *key, size_t retry);
+vms_shm_buffer *get_shared_buffer(const char *key);
+vms_shm_buffer *try_get_shared_buffer(const char *key, size_t retry);
 
 size_t compute_vms_size(size_t elem_size, size_t capacity);
 size_t compute_vms_buffer_size(size_t nondata_size, size_t elem_size,
                                size_t capacity);
 
 /*** LOCAL buffers ***/
-struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
-                                       size_t capacity,
-                                       struct vms_source_control *control);
-void release_local_buffer(struct buffer *buff);
+vms_shm_buffer *initialize_local_buffer(const char *key, size_t elem_size,
+                                        size_t capacity,
+                                        struct vms_source_control *control);
+void release_local_buffer(vms_shm_buffer *buff);
 
 /*** CONTROL buffers ***/
 struct vms_source_control *get_shared_control_buffer(const char *buff_key);
@@ -116,10 +116,10 @@ void destroy_shared_control_buffer(const char *buffkey,
 /*** AUX buffers ***/
 size_t aux_buffer_free_space(struct aux_buffer *buff);
 void aux_buffer_release(struct aux_buffer *buffer);
-struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size);
-struct aux_buffer *reader_get_aux_buffer(struct buffer *buff, size_t idx);
+struct aux_buffer *writer_get_aux_buffer(vms_shm_buffer *buff, size_t size);
+struct aux_buffer *reader_get_aux_buffer(vms_shm_buffer *buff, size_t idx);
 
-void drop_ranges_lock(struct buffer *buff);
-void drop_ranges_unlock(struct buffer *buff);
+void drop_ranges_lock(vms_shm_buffer *buff);
+void drop_ranges_unlock(vms_shm_buffer *buff);
 
 #endif /* VAMOS_SHM_BUFFER_PRIVATE_H */

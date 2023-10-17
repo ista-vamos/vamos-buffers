@@ -32,7 +32,7 @@ static vms_stream_hole_handling default_hole_handling = {
 
 static uint64_t last_stream_id = 0;
 
-void vms_stream_init(vms_stream *stream, struct buffer *incoming_events_buffer,
+void vms_stream_init(vms_stream *stream, vms_shm_buffer *incoming_events_buffer,
                      size_t event_size, vms_stream_is_ready_fn is_ready,
                      vms_stream_filter_fn filter, vms_stream_alter_fn alter,
                      vms_stream_destroy_fn destroy,
@@ -155,7 +155,7 @@ vms_stream *vms_stream_create_substream(
     size_t substream_no = ++stream->substreams_no;
     char *key = get_sub_buffer_key(
         buffer_get_key(stream->incoming_events_buffer), substream_no);
-    struct buffer *shmbuffer = get_shared_buffer(key);
+    vms_shm_buffer *shmbuffer = get_shared_buffer(key);
     assert(shmbuffer && "Getting the shm buffer failed");
 
     vms_stream *substream = xalloc(sizeof *substream);
