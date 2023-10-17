@@ -11,7 +11,7 @@
 #include "vamos-buffers/core/spsc_ringbuf.h"
 #include "vamos-buffers/core/vector-macro.h"
 
-struct source_control;
+struct vms_source_control;
 struct event_record;
 struct buffer;
 
@@ -68,7 +68,7 @@ struct aux_buffer {
    the vms_spsc_ringbuf so that we can keep local cache */
 struct buffer {
     struct shmbuffer *shmbuffer;
-    struct source_control *control;
+    struct vms_source_control *control;
     /* shared memory of auxiliary buffer */
     struct aux_buffer *cur_aux_buff;
     /* the known aux_buffers that might still be needed */
@@ -89,7 +89,7 @@ struct buffer {
 
 struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
                                         size_t elem_size, size_t capacity,
-                                        struct source_control *control);
+                                        struct vms_source_control *control);
 
 struct buffer *get_shared_buffer(const char *key);
 struct buffer *try_get_shared_buffer(const char *key, size_t retry);
@@ -101,16 +101,17 @@ size_t compute_vms_buffer_size(size_t nondata_size, size_t elem_size,
 /*** LOCAL buffers ***/
 struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
                                        size_t capacity,
-                                       struct source_control *control);
+                                       struct vms_source_control *control);
 void release_local_buffer(struct buffer *buff);
 
 /*** CONTROL buffers ***/
-struct source_control *get_shared_control_buffer(const char *buff_key);
-struct source_control *create_shared_control_buffer(
-    const char *buff_key, mode_t mode, const struct source_control *control);
-void release_shared_control_buffer(struct source_control *buffer);
+struct vms_source_control *get_shared_control_buffer(const char *buff_key);
+struct vms_source_control *create_shared_control_buffer(
+    const char *buff_key, mode_t mode,
+    const struct vms_source_control *control);
+void release_shared_control_buffer(struct vms_source_control *buffer);
 void destroy_shared_control_buffer(const char *buffkey,
-                                   struct source_control *buffer);
+                                   struct vms_source_control *buffer);
 
 /*** AUX buffers ***/
 size_t aux_buffer_free_space(struct aux_buffer *buff);

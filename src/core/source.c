@@ -7,13 +7,13 @@
 
 #include "vamos-buffers/core/signatures.h"
 
-size_t source_control_get_records_num(struct source_control *sc) {
-    return ((sc->size - sizeof(struct source_control)) /
+size_t vms_source_control_get_records_num(struct vms_source_control *sc) {
+    return ((sc->size - sizeof(struct vms_source_control)) /
             sizeof(struct event_record));
 }
 
-size_t source_control_max_event_size(struct source_control *control) {
-    const size_t en = source_control_get_records_num(control);
+size_t vms_source_control_max_event_size(struct vms_source_control *control) {
+    const size_t en = vms_source_control_get_records_num(control);
     size_t max_size = 0;
     for (size_t i = 0; i < en; ++i) {
         if (max_size < control->events[i].size)
@@ -22,9 +22,9 @@ size_t source_control_max_event_size(struct source_control *control) {
     return max_size;
 }
 
-struct event_record *source_control_get_event(struct source_control *control,
-                                              const char *name) {
-    const size_t en = source_control_get_records_num(control);
+struct event_record *vms_source_control_get_event(
+    struct vms_source_control *control, const char *name) {
+    const size_t en = vms_source_control_get_records_num(control);
     for (size_t i = 0; i < en; ++i) {
         if (strncmp(control->events[i].name, name,
                     sizeof(control->events[0].name)) == 0) {
@@ -52,10 +52,10 @@ static inline void init_record(struct event_record *ev, const char *name,
     ev->kind = 0;
 }
 
-struct source_control *source_control_allocate(size_t ev_nums) {
+struct vms_source_control *vms_source_control_allocate(size_t ev_nums) {
     size_t control_size =
         sizeof(size_t) + ev_nums * sizeof(struct event_record);
-    struct source_control *control = malloc(control_size);
+    struct vms_source_control *control = malloc(control_size);
     if (!control) {
         assert(0 && "Allocation failed");
         abort();
@@ -66,8 +66,8 @@ struct source_control *source_control_allocate(size_t ev_nums) {
     return control;
 }
 
-struct source_control *source_control_define(size_t ev_nums, ...) {
-    struct source_control *control = source_control_allocate(ev_nums);
+struct vms_source_control *vms_source_control_define(size_t ev_nums, ...) {
+    struct vms_source_control *control = vms_source_control_allocate(ev_nums);
     va_list ap;
     va_start(ap, ev_nums);
 
@@ -82,9 +82,9 @@ struct source_control *source_control_define(size_t ev_nums, ...) {
     return control;
 }
 
-struct source_control *source_control_define_pairwise(
+struct vms_source_control *vms_source_control_define_pairwise(
     size_t ev_nums, const char *names[], const char *signatures[]) {
-    struct source_control *control = source_control_allocate(ev_nums);
+    struct vms_source_control *control = vms_source_control_allocate(ev_nums);
     for (size_t i = 0; i < ev_nums; ++i) {
         init_record(control->events + i, names[i], signatures[i]);
     }
@@ -92,7 +92,7 @@ struct source_control *source_control_define_pairwise(
     return control;
 }
 
-struct source_control *source_control_define_str(const char *str) {
+struct vms_source_control *vms_source_control_define_str(const char *str) {
     size_t ev_nums = 0;
     size_t com_nums = 0;
     /* count the number of events */
@@ -109,7 +109,7 @@ struct source_control *source_control_define_str(const char *str) {
 
     size_t control_size =
         sizeof(size_t) + ev_nums * sizeof(struct event_record);
-    struct source_control *control = malloc(control_size);
+    struct vms_source_control *control = malloc(control_size);
     assert(control);
 
     control->size = control_size;
@@ -178,8 +178,8 @@ err:
     return NULL;
 }
 
-_Bool source_control_define_partially(struct source_control *control,
-                                      size_t from, size_t ev_nums, ...) {
+_Bool vms_source_control_define_partially(struct vms_source_control *control,
+                                          size_t from, size_t ev_nums, ...) {
     va_list ap;
     va_start(ap, ev_nums);
 
@@ -192,7 +192,7 @@ _Bool source_control_define_partially(struct source_control *control,
 
     const size_t end = from + ev_nums;
     for (size_t i = from; i < end; ++i) {
-        assert(i < source_control_get_records_num(control));
+        assert(i < vms_source_control_get_records_num(control));
         const char *name = va_arg(ap, const char *);
         const char *sig = va_arg(ap, const char *);
         init_record(control->events + i, name, sig);
@@ -203,10 +203,9 @@ _Bool source_control_define_partially(struct source_control *control,
     return 1;
 }
 
-_Bool source_control_define_pairwise_partially(struct source_control *control,
-                                               size_t from, size_t ev_nums,
-                                               const char *names[],
-                                               const char *signatures[]) {
+_Bool vms_source_control_define_pairwise_partially(
+    struct vms_source_control *control, size_t from, size_t ev_nums,
+    const char *names[], const char *signatures[]) {
 #ifndef NDEBUG
     for (size_t i = 0; i < from; ++i) {
         assert(control->events[i].size > 0 &&
@@ -217,7 +216,7 @@ _Bool source_control_define_pairwise_partially(struct source_control *control,
     size_t n = 0;
     const size_t end = from + ev_nums;
     for (size_t i = from; i < end; ++i) {
-        assert(i < source_control_get_records_num(control));
+        assert(i < vms_source_control_get_records_num(control));
         init_record(control->events + i, names[n], signatures[n]);
         ++n;
     }

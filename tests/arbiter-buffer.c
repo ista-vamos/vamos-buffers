@@ -23,7 +23,7 @@ struct event {
 
 struct buffer *initialize_local_buffer(const char *key, size_t elem_size,
                                        size_t capacity,
-                                       struct source_control *control);
+                                       struct vms_source_control *control);
 
 int main(void) {
     struct buffer *lbuffer =

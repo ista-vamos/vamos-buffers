@@ -84,7 +84,7 @@ int buffer_get_ctrl_key_path(struct buffer *buff, char keypath[],
 HIDE_SYMBOL
 struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
                                         size_t elem_size, size_t capacity,
-                                        struct source_control *control) {
+                                        struct vms_source_control *control) {
     assert(elem_size > 0 && "Element size is 0");
     assert(capacity > 0 && "Capacity is 0");
     /* the ringbuffer has one unusable dummy element, so increase the capacity
@@ -194,22 +194,22 @@ struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
 }
 
 struct buffer *create_shared_buffer(const char *key, size_t capacity,
-                                    const struct source_control *control) {
-    struct source_control *ctrl =
+                                    const struct vms_source_control *control) {
+    struct vms_source_control *ctrl =
         create_shared_control_buffer(key, S_IRWXU, control);
     if (!ctrl) {
         fprintf(stderr, "Failed creating control buffer\n");
         return NULL;
     }
 
-    size_t elem_size = source_control_max_event_size(ctrl);
+    size_t elem_size = vms_source_control_max_event_size(ctrl);
     return initialize_shared_buffer(key, S_IRWXU, elem_size, capacity, ctrl);
 }
 
-struct buffer *create_shared_buffer_adv(const char *key, mode_t mode,
-                                        size_t elem_size, size_t capacity,
-                                        const struct source_control *control) {
-    struct source_control *ctrl =
+struct buffer *create_shared_buffer_adv(
+    const char *key, mode_t mode, size_t elem_size, size_t capacity,
+    const struct vms_source_control *control) {
+    struct vms_source_control *ctrl =
         create_shared_control_buffer(key, mode, control);
     if (!ctrl) {
         fprintf(stderr, "Failed creating control buffer\n");
@@ -217,7 +217,7 @@ struct buffer *create_shared_buffer_adv(const char *key, mode_t mode,
     }
 
     if (elem_size == 0) {
-        elem_size = source_control_max_event_size(ctrl);
+        elem_size = vms_source_control_max_event_size(ctrl);
     }
 
     if (mode == 0) {
@@ -326,7 +326,7 @@ struct event_record *buffer_get_avail_events(struct buffer *buff,
     assert(evs_num);
     assert(buff->control);
 
-    *evs_num = source_control_get_records_num(buff->control);
+    *evs_num = vms_source_control_get_records_num(buff->control);
     return buff->control->events;
 }
 
@@ -593,7 +593,7 @@ void buffer_notify_dropped(struct buffer *buff, uint64_t begin_id,
 
 int buffer_register_event(struct buffer *b, const char *name, uint64_t kind) {
     assert(kind > vms_event_get_last_special_kind() && "Invalid event kind, it overlaps special kinds");
-    struct event_record *rec = source_control_get_event(b->control, name);
+    struct event_record *rec = vms_source_control_get_event(b->control, name);
     if (rec == NULL) {
         return -1;
     }
@@ -623,7 +623,7 @@ int buffer_register_events(struct buffer *b, size_t ev_nums, ...) {
 
 int buffer_register_all_events(struct buffer *b) {
     struct event_record *recs = b->control->events;
-    const size_t ev_nums = source_control_get_records_num(b->control);
+    const size_t ev_nums = vms_source_control_get_records_num(b->control);
 
     for (size_t i = 0; i < ev_nums; ++i) {
         recs[i].kind = 1 + i + vms_event_get_last_special_kind();
