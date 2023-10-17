@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-SHAMONDIR=$(readlink -f $(dirname $0))
-echo $SHAMONDIR
+VAMOSDIR=$(readlink -f $(dirname $0))
+echo $VAMOSDIR
 
 for FILE in bin/*; do
-  echo $SHAMONDIR/$FILE;
-  sed "s|\$BASEPATH/shamon|$SHAMONDIR|" $FILE > tmpfile
+  echo $VAMOSDIR/$FILE;
+  sed "s|\$BASEPATH/shamon|$VAMOSDIR|" $FILE > tmpfile
   sudo chmod +xxx tmpfile
   sudo mv tmpfile /usr/$FILE
 done

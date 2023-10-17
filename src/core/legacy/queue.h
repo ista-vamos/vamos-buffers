@@ -1,5 +1,5 @@
-#ifndef SHAMON_QUEUE_H
-#define SHAMON_QUEUE_H
+#ifndef VAMOS_QUEUE_H
+#define VAMOS_QUEUE_H
 
 #include <stdbool.h>
 #include <unistd.h>
@@ -24,4 +24,4 @@ size_t vms_queue_max_size(vms_queue *q);
 // The returned memory can be filled manually.
 void *vms_queue_extend(vms_queue *q);
 
-#endif  // SHAMON_QUEUE_H
+#endif  // VAMOS_QUEUE_H

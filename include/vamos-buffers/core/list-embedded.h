@@ -1,5 +1,5 @@
-#ifndef SHAMON_LIST_EMBEDDED_H_
-#define SHAMON_LIST_EMBEDDED_H_
+#ifndef VAMOS_LIST_EMBEDDED_H_
+#define VAMOS_LIST_EMBEDDED_H_
 
 #include <unistd.h>
 
@@ -43,4 +43,4 @@ _Bool vms_list_embedded_empty(const vms_list_embedded *list);
          &pos->member != (head); pos = tmp,                                 \
         tmp = vms_list_embedded_object_of(pos->member.prev, tmp, member))
 
-#endif /* SHAMON_LIST_EMBEDDED_H_ */
+#endif /* VAMOS_LIST_EMBEDDED_H_ */

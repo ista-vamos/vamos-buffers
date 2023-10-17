@@ -1,5 +1,5 @@
-#ifndef SHAMON_VECTOR_H_
-#define SHAMON_VECTOR_H_
+#ifndef VAMOS_VECTOR_H_
+#define VAMOS_VECTOR_H_
 
 /**
  * Implementation of a vector similar to std::vector in C++.
@@ -89,4 +89,4 @@ void vms_vector_swap(vms_vector *vec, vms_vector *with);
  */
 void vms_vector_resize(vms_vector *vec, size_t size);
 
-#endif /* SHAMON_VECTOR_H_ */
+#endif /* VAMOS_VECTOR_H_ */

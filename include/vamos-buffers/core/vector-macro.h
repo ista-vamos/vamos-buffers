@@ -1,5 +1,5 @@
-#ifndef SHAMON_VECTOR_MACRO_H_
-#define SHAMON_VECTOR_MACRO_H_
+#ifndef VAMOS_VECTOR_MACRO_H_
+#define VAMOS_VECTOR_MACRO_H_
 
 /**
  * Macro for creating inlined vector, that is, a piece of continuous memory
@@ -175,4 +175,4 @@
  */
 #define VEC_POP_TOP(vec) (--VEC_SIZE(vec), *((vec) + VEC_SIZE(vec)))
 
-#endif /* SHAMON_VECTOR_MACRO_H_ */
+#endif /* VAMOS_VECTOR_MACRO_H_ */

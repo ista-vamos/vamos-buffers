@@ -8,8 +8,8 @@
  * at the same time is not thread-safe.
  ************************************************/
 
-#ifndef SHAMON_ARBITER_H_
-#define SHAMON_ARBITER_H_
+#ifndef VAMOS_ARBITER_H_
+#define VAMOS_ARBITER_H_
 
 #include <stdbool.h>
 #include <unistd.h>
@@ -77,4 +77,4 @@ void vms_arbiter_buffer_notify_dropped(vms_arbiter_buffer *buffer,
                                        uint64_t begin_id, uint64_t end_id);
 
 void vms_arbiter_buffer_dump_stats(vms_arbiter_buffer *buffer);
-#endif /* SHAMON_ARBITER_H_ */
+#endif /* VAMOS_ARBITER_H_ */

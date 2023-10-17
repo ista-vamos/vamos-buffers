@@ -1,5 +1,5 @@
-#ifndef SHAMON_SPSC_RINGBUF_H
-#define SHAMON_SPSC_RINGBUF_H
+#ifndef VAMOS_SPSC_RINGBUF_H
+#define VAMOS_SPSC_RINGBUF_H
 
 #include <stdatomic.h>
 #include <stdbool.h>
@@ -61,4 +61,4 @@ size_t vms_spsc_ringbuf_read_acquire(vms_spsc_ringbuf *b, size_t *n);
 void *vms_spsc_ringbuf_top(vms_spsc_ringbuf *b);
 size_t vms_spsc_ringbuf_peek(vms_spsc_ringbuf *b, size_t n, size_t *off,
                              size_t *len1, size_t *len2);
-#endif /* SHAMON_SPSC_RINGBUF_H */
+#endif /* VAMOS_SPSC_RINGBUF_H */

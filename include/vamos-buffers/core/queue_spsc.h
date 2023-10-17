@@ -1,5 +1,5 @@
-#ifndef SHAMON_QUEUE_SPSC_H
-#define SHAMON_QUEUE_SPSC_H
+#ifndef VAMOS_QUEUE_SPSC_H
+#define VAMOS_QUEUE_SPSC_H
 
 #include <stdbool.h>
 #include <unistd.h>
@@ -69,4 +69,4 @@ size_t vms_queue_spsc_peek_at(vms_queue_spsc *q, size_t k);
 size_t vms_queue_spsc_peek_atmost_at(vms_queue_spsc *q, size_t *k,
                                      size_t *offset);
 
-#endif /* SHAMON_QUEUE_SPSC_H */
+#endif /* VAMOS_QUEUE_SPSC_H */

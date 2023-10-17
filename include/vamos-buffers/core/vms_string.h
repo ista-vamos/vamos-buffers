@@ -1,5 +1,5 @@
-#ifndef SHAMON_STRING_H_
-#define SHAMON_STRING_H_
+#ifndef VAMOS_STRING_H_
+#define VAMOS_STRING_H_
 
 #include <unistd.h>
 
@@ -33,4 +33,4 @@ char vms_string_at(vms_string *s, ssize_t idx);
 void vms_string_swap(vms_string *s, vms_string *with);
 void vms_string_grow(vms_string *s, size_t size);
 
-#endif /* SHAMON_VECTOR_H_ */
+#endif /* VAMOS_VECTOR_H_ */

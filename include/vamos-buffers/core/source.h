@@ -1,5 +1,5 @@
-#ifndef SHAMON_SOURCE_H_
-#define SHAMON_SOURCE_H_
+#ifndef VAMOS_SOURCE_H_
+#define VAMOS_SOURCE_H_
 
 #include "event.h"
 
@@ -39,4 +39,4 @@ _Bool source_control_define_pairwise_partially(struct source_control *control,
 
 _Bool source_control_define_partially(struct source_control *control,
                                       size_t from, size_t ev_nums, ...);
-#endif /* SHAMON_SOURCE_H_ */
+#endif /* VAMOS_SOURCE_H_ */

@@ -1,5 +1,5 @@
-#ifndef SHAMON_SHM_BUFFER_PRIVATE_H
-#define SHAMON_SHM_BUFFER_PRIVATE_H
+#ifndef VAMOS_SHM_BUFFER_PRIVATE_H
+#define VAMOS_SHM_BUFFER_PRIVATE_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -121,4 +121,4 @@ struct aux_buffer *reader_get_aux_buffer(struct buffer *buff, size_t idx);
 void drop_ranges_lock(struct buffer *buff);
 void drop_ranges_unlock(struct buffer *buff);
 
-#endif /* SHAMON_SHM_BUFFER_PRIVATE_H */
+#endif /* VAMOS_SHM_BUFFER_PRIVATE_H */

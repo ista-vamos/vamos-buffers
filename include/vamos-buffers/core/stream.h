@@ -1,5 +1,5 @@
-#ifndef SHAMON_STREAMS_H
-#define SHAMON_STREAMS_H
+#ifndef VAMOS_STREAMS_H
+#define VAMOS_STREAMS_H
 
 #include "event.h"
 #include "source.h"
@@ -121,4 +121,4 @@ inline size_t vms_stream_last_event_id(vms_stream *s) {
 #endif
 
 void vms_stream_dump_events(vms_stream *stream);
-#endif  // SHAMON_STREAMS_H
+#endif  // VAMOS_STREAMS_H

@@ -1,5 +1,5 @@
-#ifndef SHAMON_VECTOR_ALIGNED_H_
-#define SHAMON_VECTOR_ALIGNED_H_
+#ifndef VAMOS_VECTOR_ALIGNED_H_
+#define VAMOS_VECTOR_ALIGNED_H_
 
 #include <unistd.h>
 
@@ -20,4 +20,4 @@ void vms_vector_aligned_resize(vms_vector *vec, size_t size);
 
 /* the rest of functions is inherited from vms_vector, use those */
 
-#endif /* SHAMON_VECTOR_ALIGNED_H_ */
+#endif /* VAMOS_VECTOR_ALIGNED_H_ */
