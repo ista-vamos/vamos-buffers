@@ -35,7 +35,7 @@ typedef struct _vms_stream {
      * shared memory buffer */
     size_t substreams_no;
     /* cached info about events in 'incoming_events_buffer' */
-    struct event_record *events_cache;
+    struct vms_event_record *events_cache;
     /* callbacks */
     vms_stream_is_ready_fn is_ready;
     vms_stream_filter_fn filter;
@@ -70,9 +70,9 @@ const char *vms_stream_get_type(vms_stream *);
 size_t vms_stream_event_size(vms_stream *);
 size_t vms_stream_id(vms_stream *);
 
-struct event_record *vms_stream_get_avail_events(vms_stream *, size_t *);
-struct event_record *vms_stream_get_event_record(vms_stream *, vms_kind);
-struct event_record *vms_stream_get_event_record_no_cache(vms_stream *,
+struct vms_event_record *vms_stream_get_avail_events(vms_stream *, size_t *);
+struct vms_event_record *vms_stream_get_vms_event_record(vms_stream *, vms_kind);
+struct vms_event_record *vms_stream_get_vms_event_record_no_cache(vms_stream *,
                                                           vms_kind);
 
 /* register to receiving events particular events */

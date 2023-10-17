@@ -180,13 +180,13 @@ vms_stream *vms_stream_create_substream(
     return substream;
 }
 
-struct event_record *vms_stream_get_avail_events(vms_stream *s, size_t *sz) {
+struct vms_event_record *vms_stream_get_avail_events(vms_stream *s, size_t *sz) {
     return buffer_get_avail_events(s->incoming_events_buffer, sz);
 }
 
 #define MAX_EVENTS_CACHE_SIZE 128
 
-static vms_kind get_max_kind(struct event_record *recs, size_t size) {
+static vms_kind get_max_kind(struct vms_event_record *recs, size_t size) {
     vms_kind ret = 0;
     for (size_t i = 0; i < size; ++i) {
         if (recs[i].kind > ret)
@@ -196,22 +196,22 @@ static vms_kind get_max_kind(struct event_record *recs, size_t size) {
     return ret;
 }
 
-struct event_record *vms_stream_get_event_record(vms_stream *stream,
+struct vms_event_record *vms_stream_get_vms_event_record(vms_stream *stream,
                                                  vms_kind kind) {
     assert(kind > 0 && "Got invalid kind");
-    struct event_record *rec = NULL;
+    struct vms_event_record *rec = NULL;
     if (stream->events_cache) {
         if (kind < MAX_EVENTS_CACHE_SIZE) {
             rec = &stream->events_cache[kind];
             assert(rec->kind == kind);
             return rec;
         } else {
-            return vms_stream_get_event_record_no_cache(stream, kind);
+            return vms_stream_get_vms_event_record_no_cache(stream, kind);
         }
     } else {
         /* create cache */
         size_t sz;
-        struct event_record *recs =
+        struct vms_event_record *recs =
             buffer_get_avail_events(stream->incoming_events_buffer, &sz);
         size_t max_kind = get_max_kind(recs, sz);
         size_t cache_sz =
@@ -219,7 +219,7 @@ struct event_record *vms_stream_get_event_record(vms_stream *stream,
                                               : max_kind) +
             1;
         assert(cache_sz > 0 && "Invalid cache size");
-        stream->events_cache = malloc(cache_sz * sizeof(struct event_record));
+        stream->events_cache = malloc(cache_sz * sizeof(struct vms_event_record));
         /* cache elements that fit into the cache (cache is indexed by kinds) */
         for (size_t i = 0; i < sz; ++i) {
             if (recs[i].kind < cache_sz) {
@@ -232,10 +232,10 @@ struct event_record *vms_stream_get_event_record(vms_stream *stream,
     }
 }
 
-struct event_record *vms_stream_get_event_record_no_cache(vms_stream *stream,
+struct vms_event_record *vms_stream_get_vms_event_record_no_cache(vms_stream *stream,
                                                           vms_kind kind) {
     size_t sz;
-    struct event_record *recs =
+    struct vms_event_record *recs =
         buffer_get_avail_events(stream->incoming_events_buffer, &sz);
     for (size_t i = 0; i < sz; ++i) {
         if (recs[i].kind == kind)
@@ -331,7 +331,7 @@ void vms_stream_detach(vms_stream *stream) {
 
 void vms_stream_dump_events(vms_stream *stream) {
     size_t evs_num;
-    struct event_record *events =
+    struct vms_event_record *events =
         buffer_get_avail_events(stream->incoming_events_buffer, &evs_num);
     for (size_t i = 0; i < evs_num; ++i) {
         fprintf(stderr,

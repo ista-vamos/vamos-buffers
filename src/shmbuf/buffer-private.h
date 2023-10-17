@@ -12,7 +12,7 @@
 #include "vamos-buffers/core/vector-macro.h"
 
 struct vms_source_control;
-struct event_record;
+struct vms_event_record;
 struct buffer;
 
 #define MAX_AUX_BUF_KEY_SIZE 16
