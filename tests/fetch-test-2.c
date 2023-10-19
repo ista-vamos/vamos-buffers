@@ -107,7 +107,7 @@ int main(void) {
 
     struct event* ev;
     for (size_t i = 1; i <= 10000; ++i) {
-        ev = stream_fetch(stream, arbiter_buffer);
+        ev = vms_stream_fetch(stream, arbiter_buffer);
         /* there should be no dropped event generated */
         assert(vms_arbiter_buffer_size(arbiter_buffer) == 0);
 
@@ -121,7 +121,7 @@ int main(void) {
         vms_stream_consume(stream, 1);
     }
 
-    ev = stream_fetch(stream, arbiter_buffer);
+    ev = vms_stream_fetch(stream, arbiter_buffer);
     assert(!ev);
 
     main_finished = 1;
