@@ -31,7 +31,7 @@ static double report_time(const char *msg, struct timespec *start,
 #if 0
 static void run_shmbuf_push_pop_st() {
     struct vms_source_control *ctrl = vms_source_control_define(1, "dummy", "i");
-    vms_shm_buffer *buff = create_shared_buffer("/test", sizeof(int), ctrl);
+    vms_shm_buffer *buff = vms_shm_buffer_create("/test", sizeof(int), ctrl);
 	assert(buff);
 
     assert(buffer_capacity(buff) >= N);
@@ -59,7 +59,7 @@ static void run_shmbuf_push_pop_st() {
     printf("\033[34m[shmbuf], single-threaded, push/pop: %lf seconds.\033[0m\n", elapsed);
 
     assert(buffer_size(buff) == 0);
-    destroy_shared_buffer(buff);
+    vms_shm_buffer_destroy(buff);
 }
 
 

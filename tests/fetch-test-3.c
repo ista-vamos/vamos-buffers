@@ -34,7 +34,7 @@ void *filler_thread(void *data) {
         ev.n = i;
         // printf("PUSH Event: {{%lu, %lu}, %lu}\n", ev.base.id, ev.base.kind,
         // ev.n);
-        while (!buffer_push(buffer, &ev, sizeof(ev))) ++failed_push;
+        while (!vms_shm_buffer_push(buffer, &ev, sizeof(ev))) ++failed_push;
     }
     stream_ready = 0;
     pthread_exit(NULL);

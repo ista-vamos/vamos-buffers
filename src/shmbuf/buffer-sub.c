@@ -7,7 +7,7 @@
 #include "vamos-buffers/core/vector-macro.h"
 #include "vamos-buffers/shmbuf/buffer.h"
 
-char *get_sub_buffer_key(const char *key, size_t idx) {
+char *vms_shm_buffer_compute_sub_buffer_key(const char *key, size_t idx) {
     size_t tmpsize = strlen(key) + 16 /* space for index */;
     char *tmp = xalloc(tmpsize);
     int written = snprintf(tmp, tmpsize, "%s.sub.%lu", key, idx);
@@ -18,10 +18,11 @@ char *get_sub_buffer_key(const char *key, size_t idx) {
     return tmp;
 }
 
-vms_shm_buffer *create_shared_sub_buffer(
+vms_shm_buffer *vms_shm_buffer_create_sub_buffer(
     vms_shm_buffer *buffer, size_t capacity,
     const struct vms_source_control *control) {
-    char *key = get_sub_buffer_key(buffer->key, ++buffer->last_subbufer_no);
+    char *key = vms_shm_buffer_compute_sub_buffer_key(
+        buffer->key, ++buffer->last_subbufer_no);
     struct vms_source_control *ctrl =
         create_shared_control_buffer(key, S_IRWXU, control);
     if (!ctrl) {
@@ -31,9 +32,9 @@ vms_shm_buffer *create_shared_sub_buffer(
 
     size_t elem_size = vms_source_control_max_event_size(ctrl);
     if (capacity == 0)
-        capacity = buffer_capacity(buffer);
+        capacity = vms_shm_buffer_capacity(buffer);
     vms_shm_buffer *sbuf =
-        initialize_shared_buffer(key, S_IRWXU, elem_size, capacity, ctrl);
+        _vms_shm_buffer_initialize(key, S_IRWXU, elem_size, capacity, ctrl);
     /* XXX: we copy the key in 'initialize_shared_buffer' which is redundant as
      * we have created it in `get_sub_buffer_key` and can just move it */
     free(key);
@@ -43,7 +44,7 @@ vms_shm_buffer *create_shared_sub_buffer(
     return sbuf;
 }
 
-size_t buffer_get_sub_buffers_no(vms_shm_buffer *buffer) {
+size_t vms_shm_buffer_get_sub_buffers_no(vms_shm_buffer *buffer) {
     return buffer->shmbuffer->info.subbuffers_no;
 }
 
@@ -56,12 +57,12 @@ size_t buffer_get_sub_buffers_no(vms_shm_buffer *buffer) {
  * therefore destroying the buffer entirely would lead to accessing
  * dangling data.
  */
-void buffer_set_destroyed(vms_shm_buffer *buff) {
+void vms_shm_buffer_set_destroyed(vms_shm_buffer *buff) {
     buff->shmbuffer->info.destroyed = 1;
 }
 
 /* for writers */
-void destroy_shared_sub_buffer(vms_shm_buffer *buff) {
+void vms_shm_buffer_destroy_sub_buffer(vms_shm_buffer *buff) {
     buff->shmbuffer->info.destroyed = 1;
 
     size_t vecsize = VEC_SIZE(buff->aux_buffers);
@@ -77,10 +78,10 @@ void destroy_shared_sub_buffer(vms_shm_buffer *buff) {
 #endif
 
     if (munmap(buff->shmbuffer, buff->shmbuffer->info.allocated_size) != 0) {
-        perror("destroy_shared_buffer: munmap failure");
+        perror("vms_shm_buffer_destroy: munmap failure");
     }
     if (close(buff->fd) == -1) {
-        perror("destroy_shared_buffer: failed closing mmap fd");
+        perror("vms_shm_buffer_destroy: failed closing mmap fd");
     }
 
     release_shared_control_buffer(buff->control);
@@ -90,7 +91,7 @@ void destroy_shared_sub_buffer(vms_shm_buffer *buff) {
 }
 
 /* for readers */
-void release_shared_sub_buffer(vms_shm_buffer *buff) {
+void vms_shm_buffer_release_sub_buffer(vms_shm_buffer *buff) {
     if (munmap(buff->shmbuffer, buff->shmbuffer->info.allocated_size) != 0) {
         perror("release_shared_sub_buffer: munmap failure");
     }

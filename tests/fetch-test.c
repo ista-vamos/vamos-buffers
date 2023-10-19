@@ -32,7 +32,7 @@ void *filler_thread(void *data) {
         ev.n = i;
         // printf("PUSH Event: {{%lu, %lu}, %d}\n", ev.base.id, ev.base.kind,
         // ev.n);
-        assert(buffer_push(buffer, &ev, sizeof(ev)) == true);
+        assert(vms_shm_buffer_push(buffer, &ev, sizeof(ev)) == true);
     }
     stream_ready = 0;
     pthread_exit(NULL);
