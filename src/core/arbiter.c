@@ -567,7 +567,7 @@ static bool handle_dropping_event(vms_stream *stream,
 }
 
 /* wait for an event on the 'stream' */
-void *stream_fetch(vms_stream *stream, vms_arbiter_buffer *buffer) {
+void *vms_stream_fetch(vms_stream *stream, vms_arbiter_buffer *buffer) {
     void *ev;
     size_t last_ev_id = 1;
     while (1) {
@@ -599,8 +599,8 @@ void *stream_fetch(vms_stream *stream, vms_arbiter_buffer *buffer) {
 }
 
 /* FIXME: do not duplicate the code */
-void *stream_filter_fetch(vms_stream *stream, vms_arbiter_buffer *buffer,
-                          vms_stream_filter_fn filter) {
+void *vms_stream_filter_fetch(vms_stream *stream, vms_arbiter_buffer *buffer,
+                              vms_stream_filter_fn filter) {
     void *ev;
     size_t last_ev_id = 1;
     while (1) {
@@ -683,10 +683,10 @@ void vms_arbiter_buffer_dump_stats(vms_arbiter_buffer *buffer) {
             s->last_event_id);
     COLOR_RESET
 #endif
-    fprintf(stderr, "   stream_fetch() fetched %lu events\n",
+    fprintf(stderr, "   vms_stream_fetch() fetched %lu events\n",
             s->fetched_events);
     fprintf(stderr,
-            "   stream_fetch() totally dropped %lu events in %lu holes\n",
+            "   vms_stream_fetch() totally dropped %lu events in %lu holes\n",
             buffer->total_dropped_num, buffer->total_dropped_times);
     fprintf(stderr, "   Last event was drop: %s\n",
             buffer->last_was_drop ? "true" : "false");
