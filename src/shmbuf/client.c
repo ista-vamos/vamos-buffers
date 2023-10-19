@@ -25,12 +25,12 @@ static inline void restore_sigfunc(void (*sigfunc)(int)) {
     }
 }
 
-int buffer_wait_for_monitor(vms_shm_buffer *buff) {
+int vms_shm_buffer_wait_for_reader(vms_shm_buffer *buff) {
     void (*sigfunc)(int);
     sigfunc = signal(SIGINT, sig_int);
     int err = 0;
 
-    while (!buffer_monitor_attached(buff)) {
+    while (!vms_shm_buffer_reader_is_ready(buff)) {
         if (sleep_ms(SLEEP_TIME) != 0) {
             err = -errno;
             break;

@@ -42,9 +42,12 @@ typedef struct _vms_shm_buffer_info {
     _Atomic _Bool dropped_ranges_lock; /* spin lock */
     /* Number of sub-buffers. Sub-buffers are numbered from 1. */
     volatile _Atomic size_t subbuffers_no;
-    /* the monitored program exited/destroyed the buffer */
+    /* the writer program/thread exited/destroyed the buffer */
+    /* TODO: turn this into a flag */
     volatile _Bool destroyed;
-    volatile _Bool monitor_attached;
+    /* flags that are used to pass information (e.g., syncing) the writer and
+     * reader */
+    volatile _Atomic uint64_t flags;
 } vms_shm_buffer_info __attribute__((aligned(CACHELINE_SIZE)));
 
 struct shmbuffer {
@@ -87,12 +90,12 @@ typedef struct _vms_shm_buffer {
 
 #define _ringbuf(buff) (&buff->shmbuffer->info.ringbuf)
 
-vms_shm_buffer *initialize_shared_buffer(const char *key, mode_t mode,
-                                         size_t elem_size, size_t capacity,
-                                         struct vms_source_control *control);
+vms_shm_buffer *_vms_shm_buffer_initialize(const char *key, mode_t mode,
+                                           size_t elem_size, size_t capacity,
+                                           struct vms_source_control *control);
 
-vms_shm_buffer *get_shared_buffer(const char *key);
-vms_shm_buffer *try_get_shared_buffer(const char *key, size_t retry);
+// vms_shm_buffer *get_shared_buffer(const char *key);
+// vms_shm_buffer *try_get_shared_buffer(const char *key, size_t retry);
 
 size_t compute_vms_size(size_t elem_size, size_t capacity);
 size_t compute_vms_buffer_size(size_t nondata_size, size_t elem_size,

@@ -94,7 +94,7 @@ static void vms_substream_destroy(vms_stream *stream) {
     free(stream->name);
     free(stream->events_cache);
 
-    release_shared_sub_buffer(stream->incoming_events_buffer);
+    vms_shm_buffer_release_sub_buffer(stream->incoming_events_buffer);
     free(stream);
 }
 
@@ -120,7 +120,7 @@ void vms_stream_destroy(vms_stream *stream) {
     free(stream->name);
     free(stream->events_cache);
 
-    release_shared_buffer(stream->incoming_events_buffer);
+    vms_shm_buffer_release(stream->incoming_events_buffer);
     free(stream);
 }
 
@@ -137,7 +137,7 @@ const char *vms_stream_get_type(vms_stream *stream) {
 }
 
 _Bool vms_stream_has_new_substreams(vms_stream *stream) {
-    return buffer_get_sub_buffers_no(stream->incoming_events_buffer) >
+    return vms_shm_buffer_get_sub_buffers_no(stream->incoming_events_buffer) >
            stream->substreams_no;
 }
 
@@ -153,18 +153,18 @@ vms_stream *vms_stream_create_substream(
         return NULL;
     }
     size_t substream_no = ++stream->substreams_no;
-    char *key = get_sub_buffer_key(
-        buffer_get_key(stream->incoming_events_buffer), substream_no);
-    vms_shm_buffer *shmbuffer = get_shared_buffer(key);
+    char *key = vms_shm_buffer_compute_sub_buffer_key(
+        vms_shm_buffer_key(stream->incoming_events_buffer), substream_no);
+    vms_shm_buffer *shmbuffer = vms_shm_buffer_connect(key);
     assert(shmbuffer && "Getting the shm buffer failed");
 
     vms_stream *substream = xalloc(sizeof *substream);
 
-    size_t elem_size = buffer_elem_size(shmbuffer);
+    size_t elem_size = vms_shm_buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
 
-    char *substream_name =
-        get_sub_buffer_key(vms_stream_get_name(stream), substream_no);
+    char *substream_name = vms_shm_buffer_compute_sub_buffer_key(
+        vms_stream_get_name(stream), substream_no);
 
     vms_stream_init(
         substream, shmbuffer, elem_size, is_ready ? is_ready : stream->is_ready,
@@ -181,7 +181,7 @@ vms_stream *vms_stream_create_substream(
 }
 
 struct vms_event_record *vms_stream_get_avail_events(vms_stream *s, size_t *sz) {
-    return buffer_get_avail_events(s->incoming_events_buffer, sz);
+    return vms_shm_buffer_get_avail_events(s->incoming_events_buffer, sz);
 }
 
 #define MAX_EVENTS_CACHE_SIZE 128
@@ -211,8 +211,8 @@ struct vms_event_record *vms_stream_get_vms_event_record(vms_stream *stream,
     } else {
         /* create cache */
         size_t sz;
-        struct vms_event_record *recs =
-            buffer_get_avail_events(stream->incoming_events_buffer, &sz);
+        struct vms_event_record *recs = vms_shm_buffer_get_avail_events(
+            stream->incoming_events_buffer, &sz);
         size_t max_kind = get_max_kind(recs, sz);
         size_t cache_sz =
             (max_kind > MAX_EVENTS_CACHE_SIZE ? MAX_EVENTS_CACHE_SIZE
@@ -236,7 +236,7 @@ struct vms_event_record *vms_stream_get_vms_event_record_no_cache(vms_stream *st
                                                           vms_kind kind) {
     size_t sz;
     struct vms_event_record *recs =
-        buffer_get_avail_events(stream->incoming_events_buffer, &sz);
+        vms_shm_buffer_get_avail_events(stream->incoming_events_buffer, &sz);
     for (size_t i = 0; i < sz; ++i) {
         if (recs[i].kind == kind)
             return &recs[i];
@@ -246,12 +246,12 @@ struct vms_event_record *vms_stream_get_vms_event_record_no_cache(vms_stream *st
 
 /* the number of elements in the (shared memory) buffer of the stream */
 size_t vms_stream_buffer_size(vms_stream *s) {
-    return buffer_size(s->incoming_events_buffer);
+    return vms_shm_buffer_size(s->incoming_events_buffer);
 }
 
 /* the capacity the (shared memory) buffer of the stream */
 size_t vms_stream_buffer_capacity(vms_stream *s) {
-    return buffer_capacity(s->incoming_events_buffer);
+    return vms_shm_buffer_capacity(s->incoming_events_buffer);
 }
 
 /* FIXME: no longer related to stream */
@@ -277,18 +277,18 @@ void *vms_stream_read_events(vms_stream *s, size_t *num) {
     /* the buffer may be already destroyed on the client's side,
      * but still may have some events to read */
     /* assert(vms_stream_is_ready(s)); */
-    return buffer_read_pointer(s->incoming_events_buffer, num);
+    return vms_shm_buffer_read_pointer(s->incoming_events_buffer, num);
 }
 
 bool vms_stream_consume(vms_stream *stream, size_t num) {
 #ifdef DUMP_STATS
     stream->consumed_events += num;
 #endif
-    return buffer_drop_k(stream->incoming_events_buffer, num);
+    return vms_shm_buffer_drop_k(stream->incoming_events_buffer, num);
 }
 
 const char *vms_stream_get_str(vms_stream *stream, uint64_t elem) {
-    return buffer_get_str(stream->incoming_events_buffer, elem);
+    return vms_shm_buffer_read_str(stream->incoming_events_buffer, elem);
 }
 
 size_t vms_stream_event_size(vms_stream *s) { return s->event_size; }
@@ -296,43 +296,45 @@ size_t vms_stream_event_size(vms_stream *s) { return s->event_size; }
 int vms_stream_register_event(vms_stream *stream, const char *name,
                               size_t kind) {
     assert(kind > vms_event_get_last_special_kind() && "Invalid event kind, it overlaps special kinds");
-    return buffer_register_event(stream->incoming_events_buffer, name, kind);
+    return vms_shm_buffer_register_event(stream->incoming_events_buffer, name,
+                                         kind);
 }
 
 int vms_stream_register_events(vms_stream *stream, size_t ev_nums, ...) {
     va_list ap;
     va_start(ap, ev_nums);
-    int ret =
-        buffer_register_events(stream->incoming_events_buffer, ev_nums, ap);
+    int ret = vms_shm_buffer_register_events(stream->incoming_events_buffer,
+                                             ev_nums, ap);
     va_end(ap);
     return ret;
 }
 
 int vms_stream_register_all_events(vms_stream *stream) {
-    return buffer_register_all_events(stream->incoming_events_buffer);
+    return vms_shm_buffer_register_all_events(stream->incoming_events_buffer);
 }
 
 void vms_stream_notify_last_processed_id(vms_stream *stream, vms_eventid id) {
-    buffer_set_last_processed_id(stream->incoming_events_buffer, id);
+    vms_shm_buffer_set_last_processed_id(stream->incoming_events_buffer, id);
 }
 
 void vms_stream_notify_dropped(vms_stream *stream, uint64_t begin_id,
                                uint64_t end_id) {
-    buffer_notify_dropped(stream->incoming_events_buffer, begin_id, end_id);
+    vms_shm_buffer_notify_dropped(stream->incoming_events_buffer, begin_id,
+                                  end_id);
 }
 
 void vms_stream_attach(vms_stream *stream) {
-    buffer_set_attached(stream->incoming_events_buffer, true);
+    vms_shm_buffer_set_reader_is_ready(stream->incoming_events_buffer);
 }
 
 void vms_stream_detach(vms_stream *stream) {
-    buffer_set_attached(stream->incoming_events_buffer, false);
+    vms_shm_buffer_unset_flags(stream->incoming_events_buffer, READER_IS_READY);
 }
 
 void vms_stream_dump_events(vms_stream *stream) {
     size_t evs_num;
-    struct vms_event_record *events =
-        buffer_get_avail_events(stream->incoming_events_buffer, &evs_num);
+    struct vms_event_record *events = vms_shm_buffer_get_avail_events(
+        stream->incoming_events_buffer, &evs_num);
     for (size_t i = 0; i < evs_num; ++i) {
         fprintf(stderr,
                 "[%s:%s] event: %-20s, kind: %-3lu, size: %-3lu, sig: %s\n",

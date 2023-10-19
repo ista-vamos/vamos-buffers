@@ -12,7 +12,7 @@ bool funs_is_ready(vms_stream *stream) {
     vms_shm_buffer *b = ((vms_stream_funs *)stream)->shmbuffer;
     /* buffer must be ready or it may not be ready anymore, but it
      * still has some data that we haven't read */
-    return buffer_is_ready(b) || buffer_size(b) > 0;
+    return vms_shm_buffer_reader_is_ready(b) || vms_shm_buffer_size(b) > 0;
 }
 
 void funs_alter(vms_stream *stream, vms_event *in, vms_event *out) {
@@ -24,9 +24,9 @@ size_t stream_mk_event_kinds(const char *stream_name, vms_shm_buffer *shmbuffer,
 
 vms_stream *vms_create_funs_stream(const char *key, const char *name) {
     vms_stream_funs *ss = malloc(sizeof *ss);
-    vms_shm_buffer *shmbuffer = get_shared_buffer(key);
+    vms_shm_buffer *shmbuffer = vms_shm_buffer_connect(key);
     assert(shmbuffer && "Getting the shm buffer failed");
-    size_t elem_size = buffer_elem_size(shmbuffer);
+    size_t elem_size = vms_shm_buffer_elem_size(shmbuffer);
     assert(elem_size > 0);
     vms_stream_init((vms_stream *)ss, shmbuffer, elem_size, funs_is_ready, NULL,
                     funs_alter, NULL, NULL, "funs-stream", name);
@@ -38,7 +38,7 @@ vms_stream *vms_create_funs_stream(const char *key, const char *name) {
 }
 
 const char *vms_stream_funs_get_str(vms_stream_funs *fstream, uint64_t elem) {
-    return buffer_get_str(fstream->shmbuffer, elem);
+    return vms_shm_buffer_read_str(fstream->shmbuffer, elem);
 }
 
 struct vms_event_record *vms_funs_stream_get_event_spec(vms_stream_funs *stream,
