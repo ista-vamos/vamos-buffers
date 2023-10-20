@@ -196,7 +196,7 @@ static vms_kind get_max_kind(struct vms_event_record *recs, size_t size) {
     return ret;
 }
 
-struct vms_event_record *vms_stream_get_vms_event_record(vms_stream *stream,
+struct vms_event_record *vms_stream_get_event_record(vms_stream *stream,
                                                  vms_kind kind) {
     assert(kind > 0 && "Got invalid kind");
     struct vms_event_record *rec = NULL;
@@ -206,7 +206,7 @@ struct vms_event_record *vms_stream_get_vms_event_record(vms_stream *stream,
             assert(rec->kind == kind);
             return rec;
         } else {
-            return vms_stream_get_vms_event_record_no_cache(stream, kind);
+            return vms_stream_get_event_record_no_cache(stream, kind);
         }
     } else {
         /* create cache */
@@ -232,7 +232,7 @@ struct vms_event_record *vms_stream_get_vms_event_record(vms_stream *stream,
     }
 }
 
-struct vms_event_record *vms_stream_get_vms_event_record_no_cache(vms_stream *stream,
+struct vms_event_record *vms_stream_get_event_record_no_cache(vms_stream *stream,
                                                           vms_kind kind) {
     size_t sz;
     struct vms_event_record *recs =

@@ -90,7 +90,7 @@ int main(void) {
     vms_stream_init(stream, buffer, sizeof(struct event), is_ready, NULL, NULL,
                     NULL, NULL, "dummy-stream", "dummy");
 
-    /* into this buffer, stream_fetch() will push dropped() events if any */
+    /* into this buffer, vms_stream_fetch() will push dropped() events if any */
     vms_arbiter_buffer* arbiter_buffer =
         vms_arbiter_buffer_create(stream, sizeof(struct event), 10);
 

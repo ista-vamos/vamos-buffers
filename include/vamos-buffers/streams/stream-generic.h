@@ -7,7 +7,7 @@
 #include "vamos-buffers/core/event.h"
 #include "vamos-buffers/core/stream.h"
 
-vms_shm_buffer;
+typedef struct _vms_shm_buffer vms_shm_buffer;
 
 /* A generic stream for events stored in shared memory buffer,
    no filter nor modification of events supported (unless done manually). */
