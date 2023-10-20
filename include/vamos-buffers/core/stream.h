@@ -72,9 +72,8 @@ size_t vms_stream_event_size(vms_stream *);
 size_t vms_stream_id(vms_stream *);
 
 struct vms_event_record *vms_stream_get_avail_events(vms_stream *, size_t *);
-struct vms_event_record *vms_stream_get_vms_event_record(vms_stream *, vms_kind);
-struct vms_event_record *vms_stream_get_vms_event_record_no_cache(vms_stream *,
-                                                          vms_kind);
+struct vms_event_record *vms_stream_get_event_record(vms_stream *, vms_kind);
+struct vms_event_record *vms_stream_get_event_record_no_cache(vms_stream *, vms_kind);
 
 /* register to receiving events particular events */
 int vms_stream_register_event(vms_stream *, const char *, vms_kind);
