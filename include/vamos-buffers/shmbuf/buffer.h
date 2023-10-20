@@ -88,6 +88,11 @@ void vms_shm_buffer_unset_flags(vms_shm_buffer *, uint64_t);
 bool vms_shm_buffer_reader_is_ready(vms_shm_buffer *);
 void vms_shm_buffer_set_reader_is_ready(vms_shm_buffer *);
 
+/* buffer is ready to transmit data (it can be written to if there is space) */
+bool vms_shm_buffer_is_ready(vms_shm_buffer *);
+/* buffer was not destroyed on the writer's side */
+bool vms_shm_buffer_is_destroyed(vms_shm_buffer *);
+
 void vms_shm_buffer_set_destroyed(vms_shm_buffer *buff);
 
 const char *vms_shm_buffer_key(vms_shm_buffer *);

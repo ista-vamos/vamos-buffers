@@ -24,7 +24,11 @@
 #include "vamos-buffers/core/vector-macro.h"
 
 bool vms_shm_buffer_is_destroyed(vms_shm_buffer *buff) {
-    return !buff->shmbuffer->info.destroyed;
+    return buff->shmbuffer->info.destroyed;
+}
+
+bool vms_shm_buffer_is_ready(vms_shm_buffer *buff) {
+    return !vms_shm_buffer_is_destroyed(buff);
 }
 
 bool vms_shm_buffer_reader_is_ready(vms_shm_buffer *buff) {
@@ -426,12 +430,12 @@ size_t vms_shm_buffer_consume(vms_shm_buffer *buff, size_t k) {
 
 /* buffer_push broken down into several operations:
  *
- *  p = buffer_start_push(...)
- *  p = buffer_partial_push(..., p, ...)
+ *  p = vms_shm_buffer_start_push(...)
+ *  p = vms_shm_buffer_partial_push(..., p, ...)
  *  ...
- *  p = buffer_partial_push(..., p, ...)
- *  buffer_partial_push(..., p, ...)
- *  buffer_finish_push(...)
+ *  p = vms_shm_buffer_partial_push(..., p, ...)
+ *  vms_shm_buffer_partial_push(..., p, ...)
+ *  vms_shm_buffer_finish_push(...)
  *
  * All the partial push may push only a single element in sum,
  * i.e., what can be done with buffer_push. Partial pushes
