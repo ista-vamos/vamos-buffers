@@ -15,6 +15,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <immintrin.h> /* _mm_mfence */
+
 #include "buffer-private.h"
 #include "shm.h"
 #include "vamos-buffers/core/list.h"
@@ -331,6 +333,8 @@ struct vms_event_record *vms_shm_buffer_get_avail_events(vms_shm_buffer *buff,
     assert(evs_num);
     assert(buff->control);
 
+    /* make sure that concurrent writes to the source control buffer are visible now */
+    _mm_mfence();
     *evs_num = vms_source_control_get_records_num(buff->control);
     return buff->control->events;
 }
