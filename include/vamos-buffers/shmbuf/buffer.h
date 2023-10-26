@@ -56,6 +56,10 @@ void *vms_shm_buffer_read_pointer(vms_shm_buffer *buff, size_t *size);
 bool vms_shm_buffer_drop_k(vms_shm_buffer *buff, size_t size);
 size_t vms_shm_buffer_consume(vms_shm_buffer *buff, size_t k);
 
+/* The reader is supposed to let the writer know what events it wants
+ * to receive. This is done via this set of "register_event" functions.
+ * These functions must be called before `set_reader_is_ready`.
+ */
 int vms_shm_buffer_register_event(vms_shm_buffer *b, const char *name,
                                   uint64_t kind);
 int vms_shm_buffer_register_events(vms_shm_buffer *b, size_t ev_nums, ...);
@@ -73,9 +77,11 @@ size_t vms_shm_buffer_elem_size(vms_shm_buffer *buff);
 enum _vms_shm_buffer_flag {
     READER_IS_READY = 1UL << 0,
     READER_FINISHED = 1UL << 1,
+    EVENTS_REGISTERED = 1UL << 2,
     LAST_FLAG = READER_FINISHED
 };
 
+uint64_t vms_shm_buffer_get_flags(vms_shm_buffer *);
 void vms_shm_buffer_set_flags(vms_shm_buffer *, uint64_t);
 void vms_shm_buffer_unset_flags(vms_shm_buffer *, uint64_t);
 

@@ -41,13 +41,13 @@ typedef struct _vms_shm_buffer_info {
     size_t dropped_ranges_next;
     _Atomic _Bool dropped_ranges_lock; /* spin lock */
     /* Number of sub-buffers. Sub-buffers are numbered from 1. */
-    volatile _Atomic size_t subbuffers_no;
+    _Atomic size_t subbuffers_no;
     /* the writer program/thread exited/destroyed the buffer */
     /* TODO: turn this into a flag */
-    volatile _Bool destroyed;
+    _Atomic _Bool destroyed;
     /* flags that are used to pass information (e.g., syncing) the writer and
      * reader */
-    volatile _Atomic uint64_t flags;
+    _Atomic uint64_t flags;
 } vms_shm_buffer_info __attribute__((aligned(CACHELINE_SIZE)));
 
 struct shmbuffer {

@@ -221,7 +221,7 @@ void vms_arbiter_buffer_set_active(vms_arbiter_buffer *buffer, bool val) {
     if (val) {
         vms_stream_attach(buffer->stream);
     } else {
-        vms_stream_attach(buffer->stream);
+        vms_stream_detach(buffer->stream);
     }
 }
 
