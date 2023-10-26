@@ -46,8 +46,6 @@ vms_kind vms_event_get_last_special_kind(void) {
 
 vms_eventid vms_event_id(const vms_event *event) { return event->id; }
 
-void vms_event_set_id(vms_event *event, vms_eventid id) {
-    event->id = id;
-}
+void vms_event_set_id(vms_event *event, vms_eventid id) { event->id = id; }
 
 vms_kind vms_event_kind(const vms_event *event) { return event->kind; }

@@ -18,13 +18,9 @@ struct Event : public vms_event {
         return Event(vms_event_get_done_kind(), id);
     }
 
-    static constexpr vms_kind holeKind() {
-        return VMS_EVENT_HOLE_KIND;
-    }
+    static constexpr vms_kind holeKind() { return VMS_EVENT_HOLE_KIND; }
 
-    static constexpr vms_kind doneKind() {
-        return VMS_EVENT_DONE_KIND;
-    }
+    static constexpr vms_kind doneKind() { return VMS_EVENT_DONE_KIND; }
 
     static constexpr vms_kind lastSpecialKind() {
         return VMS_EVENT_LAST_SPECIAL_KIND;

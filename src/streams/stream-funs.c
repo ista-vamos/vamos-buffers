@@ -42,7 +42,7 @@ const char *vms_stream_funs_get_str(vms_stream_funs *fstream, uint64_t elem) {
 }
 
 struct vms_event_record *vms_funs_stream_get_event_spec(vms_stream_funs *stream,
-                                                    vms_kind kind) {
+                                                        vms_kind kind) {
     for (size_t i = 0; i < stream->spec_count; ++i)
         if (stream->events[i].kind == kind)
             return stream->events + i;
