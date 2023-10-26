@@ -364,7 +364,7 @@ void vms_shm_buffer_set_reader_is_ready(vms_shm_buffer *buff) {
            "No events registered before going to the ready state");
 
     if (!buff->shmbuffer->info.destroyed)
-        buff->shmbuffer->info.flags |= READER_IS_READY;
+	vms_shm_buffer_set_flags(buff, READER_IS_READY);
 }
 
 /* set the ID of the last processed event */
