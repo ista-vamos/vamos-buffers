@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <immintrin.h> /* _mm_mfence */
 #include <limits.h>
 #include <stdarg.h>
 #include <stdatomic.h>
@@ -14,8 +15,6 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
-
-#include <immintrin.h> /* _mm_mfence */
 
 #include "buffer-private.h"
 #include "shm.h"
@@ -364,7 +363,7 @@ void vms_shm_buffer_set_reader_is_ready(vms_shm_buffer *buff) {
            "No events registered before going to the ready state");
 
     if (!buff->shmbuffer->info.destroyed)
-	vms_shm_buffer_set_flags(buff, READER_IS_READY);
+        vms_shm_buffer_set_flags(buff, READER_IS_READY);
 }
 
 /* set the ID of the last processed event */
@@ -628,11 +627,13 @@ void vms_shm_buffer_notify_dropped(vms_shm_buffer *buff, uint64_t begin_id,
 
 int vms_shm_buffer_register_event(vms_shm_buffer *b, const char *name,
                                   uint64_t kind) {
-    assert(kind > vms_event_get_last_special_kind() && "Invalid event kind, it overlaps special kinds");
+    assert(kind > vms_event_get_last_special_kind() &&
+           "Invalid event kind, it overlaps special kinds");
 
     vms_shm_buffer_set_flags(b, EVENTS_REGISTERED);
 
-    struct vms_event_record *rec = vms_source_control_get_event(b->control, name);
+    struct vms_event_record *rec =
+        vms_source_control_get_event(b->control, name);
     if (rec == NULL) {
         return -1;
     }
@@ -648,7 +649,8 @@ int vms_shm_buffer_register_events(vms_shm_buffer *b, size_t ev_nums, ...) {
     for (size_t i = 0; i < ev_nums; ++i) {
         const char *name = va_arg(ap, const char *);
         vms_kind kind = va_arg(ap, vms_kind);
-        assert(kind > vms_event_get_last_special_kind() && "Invalid event kind, it overlaps special kinds");
+        assert(kind > vms_event_get_last_special_kind() &&
+               "Invalid event kind, it overlaps special kinds");
         if (vms_shm_buffer_register_event(b, name, kind) < 0) {
             va_end(ap);
             return -1;

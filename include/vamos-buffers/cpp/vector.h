@@ -13,13 +13,10 @@ class vec {
     size_t _size{0};
     size_t _alloc_size{0};
 
+   public:
+    ~vec() { free(_data); }
 
-public:
-    ~vec() {
-        free(_data);
-    }
-
-    void swap(vec& rhs) {
+    void swap(vec &rhs) {
         auto tmp = rhs;
         rhs = *this;
         *this = rhs;
@@ -60,21 +57,21 @@ public:
     ElemTy *extend_n(size_t n) {
         if (_size >= _alloc_size) {
             _alloc_size += n;
-            _data = static_cast<ElemTy*>(realloc(_data, _alloc_size * elem_size()));
+            _data = static_cast<ElemTy *>(
+                realloc(_data, _alloc_size * elem_size()));
             assert(_data != nullptr && "Memory re-allocation failed");
         }
         assert((_size < _alloc_size) && "Vector too small");
         return _data[_size++];
     }
 
-    ElemTy *extend()  {
-        return extend_n(16);
-    }
+    ElemTy *extend() { return extend_n(16); }
 
     size_t push(const ElemTy &e) {
         if (_size >= _alloc_size) {
             _alloc_size += 10;
-            _data = static_cast<ElemTy*>(realloc(_data, _alloc_size * elem_size()));
+            _data = static_cast<ElemTy *>(
+                realloc(_data, _alloc_size * elem_size()));
             assert(_data != nullptr && "Memory re-allocation failed");
         }
         assert((_size < _alloc_size) && "Vector too small");
@@ -82,14 +79,13 @@ public:
         return _size;
     }
 
-    size_t push(const ElemTy *e) {
-        return push(*e);
-    }
+    size_t push(const ElemTy *e) { return push(*e); }
 
     size_t push(ElemTy &&e) {
         if (_size >= _alloc_size) {
             _alloc_size += 10;
-            _data = static_cast<ElemTy*>(realloc(_data, _alloc_size * elem_size()));
+            _data = static_cast<ElemTy *>(
+                realloc(_data, _alloc_size * elem_size()));
             assert(_data != nullptr && "Memory re-allocation failed");
         }
         assert((_size < _alloc_size) && "Vector too small");
@@ -98,8 +94,8 @@ public:
     }
 
     /**
-    * Remove the last element from the vector (decrease its size by 1)
-    */
+     * Remove the last element from the vector (decrease its size by 1)
+     */
     size_t pop() { return --_size; }
     void clear() { _size = 0; }
 
@@ -108,18 +104,18 @@ public:
 
     template <typename VecTy>
     class _iterator {
-    protected:
+       protected:
         VecTy *v;
         size_t pos;
         static const size_t npos = ~static_cast<size_t>(0);
 
-        _iterator(VecTy& v0) : v(&v0), pos(v0._size == 0 ? npos : 0) {}
+        _iterator(VecTy &v0) : v(&v0), pos(v0._size == 0 ? npos : 0) {}
         _iterator() : pos(npos) {}
-        _iterator(const _iterator&) = default;
+        _iterator(const _iterator &) = default;
 
         friend class vec;
 
-    public:
+       public:
         _iterator &operator++() {
             ++pos;
             if (pos == v->_size)
@@ -133,27 +129,25 @@ public:
             return tmp;
         }
 
-        bool operator==(const _iterator& rhs) const {
-            return pos == rhs.pos;
-        }
-        bool operator!=(const _iterator& rhs) const { return !operator==(rhs); }
+        bool operator==(const _iterator &rhs) const { return pos == rhs.pos; }
+        bool operator!=(const _iterator &rhs) const { return !operator==(rhs); }
     };
 
     struct iterator : public _iterator<vec> {
-        iterator(vec& v) : _iterator<vec>(v) {}
+        iterator(vec &v) : _iterator<vec>(v) {}
         iterator() : _iterator<vec>() {}
-        iterator(const iterator&) = default;
+        iterator(const iterator &) = default;
 
-        ElemTy& operator*() { return this->v->_data[this->pos]; }
+        ElemTy &operator*() { return this->v->_data[this->pos]; }
         ElemTy *operator->() { return &this->v->_data[this->pos]; }
     };
 
     struct const_iterator : public _iterator<const vec> {
-        const_iterator(const vec& v) : _iterator<const vec>(v) {}
+        const_iterator(const vec &v) : _iterator<const vec>(v) {}
         const_iterator() : _iterator<const vec>() {}
-        const_iterator(const const_iterator&) = default;
+        const_iterator(const const_iterator &) = default;
 
-        const ElemTy& operator*() const { return this->v->_data[this->pos]; }
+        const ElemTy &operator*() const { return this->v->_data[this->pos]; }
         const ElemTy *operator->() const { return &this->v->_data[this->pos]; }
     };
 
@@ -163,6 +157,6 @@ public:
     const_iterator end() const { return const_iterator(); }
 };
 
-} // namespace vamos
+}  // namespace vamos
 
 #endif

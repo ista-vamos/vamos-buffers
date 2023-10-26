@@ -312,8 +312,9 @@ class RingBufferReader : public RingBufferAccessor<RingBufferTy> {
     }
 
     size_t available() const {
-        return _written_num<RingBufferTy::Capacity>(this->rb.load_head(std::memory_order_relaxed),
-                                                    this->rb.load_tail(std::memory_order_relaxed));
+        return _written_num<RingBufferTy::Capacity>(
+            this->rb.load_head(std::memory_order_relaxed),
+            this->rb.load_tail(std::memory_order_relaxed));
     }
 
     size_t acquire(size_t &n) {

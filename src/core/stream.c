@@ -180,7 +180,8 @@ vms_stream *vms_stream_create_substream(
     return substream;
 }
 
-struct vms_event_record *vms_stream_get_avail_events(vms_stream *s, size_t *sz) {
+struct vms_event_record *vms_stream_get_avail_events(vms_stream *s,
+                                                     size_t *sz) {
     return vms_shm_buffer_get_avail_events(s->incoming_events_buffer, sz);
 }
 
@@ -197,7 +198,7 @@ static vms_kind get_max_kind(struct vms_event_record *recs, size_t size) {
 }
 
 struct vms_event_record *vms_stream_get_event_record(vms_stream *stream,
-                                                 vms_kind kind) {
+                                                     vms_kind kind) {
     assert(kind > 0 && "Got invalid kind");
     struct vms_event_record *rec = NULL;
     if (stream->events_cache) {
@@ -219,7 +220,8 @@ struct vms_event_record *vms_stream_get_event_record(vms_stream *stream,
                                               : max_kind) +
             1;
         assert(cache_sz > 0 && "Invalid cache size");
-        stream->events_cache = malloc(cache_sz * sizeof(struct vms_event_record));
+        stream->events_cache =
+            malloc(cache_sz * sizeof(struct vms_event_record));
         /* cache elements that fit into the cache (cache is indexed by kinds) */
         for (size_t i = 0; i < sz; ++i) {
             if (recs[i].kind < cache_sz) {
@@ -232,8 +234,8 @@ struct vms_event_record *vms_stream_get_event_record(vms_stream *stream,
     }
 }
 
-struct vms_event_record *vms_stream_get_event_record_no_cache(vms_stream *stream,
-                                                          vms_kind kind) {
+struct vms_event_record *vms_stream_get_event_record_no_cache(
+    vms_stream *stream, vms_kind kind) {
     size_t sz;
     struct vms_event_record *recs =
         vms_shm_buffer_get_avail_events(stream->incoming_events_buffer, &sz);
@@ -295,7 +297,8 @@ size_t vms_stream_event_size(vms_stream *s) { return s->event_size; }
 
 int vms_stream_register_event(vms_stream *stream, const char *name,
                               size_t kind) {
-    assert(kind > vms_event_get_last_special_kind() && "Invalid event kind, it overlaps special kinds");
+    assert(kind > vms_event_get_last_special_kind() &&
+           "Invalid event kind, it overlaps special kinds");
     return vms_shm_buffer_register_event(stream->incoming_events_buffer, name,
                                          kind);
 }

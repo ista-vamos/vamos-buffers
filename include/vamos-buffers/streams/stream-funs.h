@@ -28,7 +28,7 @@ vms_event_funcall *funs_get_next_event(vms_stream *stream);
 vms_stream *vms_create_funs_stream(const char *key, const char *name);
 
 struct vms_event_record *vms_funs_stream_get_event_spec(vms_stream_funs *stream,
-                                                    vms_kind kind);
+                                                        vms_kind kind);
 
 void vms_event_funcall_release(vms_event_funcall *fev);
 
