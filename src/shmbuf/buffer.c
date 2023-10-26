@@ -333,10 +333,22 @@ struct vms_event_record *vms_shm_buffer_get_avail_events(vms_shm_buffer *buff,
     assert(evs_num);
     assert(buff->control);
 
-    /* make sure that concurrent writes to the source control buffer are visible now */
+#ifndef NDEBUG
+    /* NOTE: this assert does the fence */
+    assert((vms_shm_buffer_get_flags(buff) & EVENTS_REGISTERED) &&
+           "Events were not registered");
+#else
+    /* make sure that any concurrent changes to the source control buffer are
+     * visible now */
     _mm_mfence();
+#endif
+
     *evs_num = vms_source_control_get_records_num(buff->control);
     return buff->control->events;
+}
+
+uint64_t vms_shm_buffer_get_flags(vms_shm_buffer *buff) {
+    return buff->shmbuffer->info.flags;
 }
 
 void vms_shm_buffer_set_flags(vms_shm_buffer *buff, uint64_t flags) {
@@ -348,6 +360,9 @@ void vms_shm_buffer_unset_flags(vms_shm_buffer *buff, uint64_t flags) {
 }
 
 void vms_shm_buffer_set_reader_is_ready(vms_shm_buffer *buff) {
+    assert((vms_shm_buffer_get_flags(buff) & EVENTS_REGISTERED) &&
+           "No events registered before going to the ready state");
+
     if (!buff->shmbuffer->info.destroyed)
         buff->shmbuffer->info.flags |= READER_IS_READY;
 }
@@ -614,6 +629,9 @@ void vms_shm_buffer_notify_dropped(vms_shm_buffer *buff, uint64_t begin_id,
 int vms_shm_buffer_register_event(vms_shm_buffer *b, const char *name,
                                   uint64_t kind) {
     assert(kind > vms_event_get_last_special_kind() && "Invalid event kind, it overlaps special kinds");
+
+    vms_shm_buffer_set_flags(b, EVENTS_REGISTERED);
+
     struct vms_event_record *rec = vms_source_control_get_event(b->control, name);
     if (rec == NULL) {
         return -1;
@@ -645,6 +663,8 @@ int vms_shm_buffer_register_events(vms_shm_buffer *b, size_t ev_nums, ...) {
 int vms_shm_buffer_register_all_events(vms_shm_buffer *b) {
     struct vms_event_record *recs = b->control->events;
     const size_t ev_nums = vms_source_control_get_records_num(b->control);
+
+    vms_shm_buffer_set_flags(b, EVENTS_REGISTERED);
 
     for (size_t i = 0; i < ev_nums; ++i) {
         recs[i].kind = 1 + i + vms_event_get_last_special_kind();

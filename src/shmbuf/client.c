@@ -39,6 +39,11 @@ int vms_shm_buffer_wait_for_reader(vms_shm_buffer *buff) {
             err = -EINTR;
             break;
         }
+
+        if (vms_shm_buffer_is_destroyed(buff)) {
+            err = -EOWNERDEAD;
+            break;
+        }
     }
 
     restore_sigfunc(sigfunc);
