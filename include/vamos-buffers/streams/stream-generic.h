@@ -24,6 +24,6 @@ typedef struct _vms_stream_generic {
 } vms_stream_generic;
 
 vms_stream *vms_create_generic_stream(const char *key, const char *name,
-                                      vms_stream_hole_handling *hole_handling);
+                                      const vms_stream_hole_handling *hole_handling);
 
 #endif /* SHMN_STREAM_GENERIC_H_ */
