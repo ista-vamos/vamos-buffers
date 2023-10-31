@@ -23,7 +23,7 @@ static void generic_alter(vms_stream *stream, vms_event *in, vms_event *out) {
 }
 
 vms_stream *vms_create_generic_stream(const char *key, const char *name,
-                                      vms_stream_hole_handling *hole_handling) {
+                                      const vms_stream_hole_handling *hole_handling) {
     vms_stream_generic *ss = malloc(sizeof *ss);
     vms_shm_buffer *shmbuffer = vms_shm_buffer_connect(key);
     assert(shmbuffer && "Getting the shm buffer failed");
