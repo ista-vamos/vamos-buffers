@@ -62,10 +62,12 @@ size_t vms_arbiter_buffer_drop_older_than(vms_arbiter_buffer *buffer,
                                           vms_eventid id);
 bool vms_arbiter_buffer_pop(vms_arbiter_buffer *q, void *buff);
 
-void *vms_stream_fetch(vms_stream *stream, vms_arbiter_buffer *buffer);
+void *vms_stream_fetch(vms_stream *stream);
+void *vms_stream_fetch_dropping(vms_stream *stream, vms_arbiter_buffer *buffer);
 
-void *vms_stream_filter_fetch(vms_stream *stream, vms_arbiter_buffer *buffer,
-                              vms_stream_filter_fn filter);
+void *vms_stream_fetch_dropping_filter(vms_stream *stream,
+                                       vms_arbiter_buffer *buffer,
+                                       vms_stream_filter_fn filter);
 
 bool vms_arbiter_buffer_is_done(vms_arbiter_buffer *buffer);
 

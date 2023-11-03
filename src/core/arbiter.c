@@ -567,7 +567,26 @@ static bool handle_dropping_event(vms_stream *stream,
 }
 
 /* wait for an event on the 'stream' */
-void *vms_stream_fetch(vms_stream *stream, vms_arbiter_buffer *buffer) {
+void *vms_stream_fetch(vms_stream *stream) {
+    void *ev;
+    if ((ev = get_event(stream))) {
+        assert(ev && "Dont have event");
+        assert(!vms_event_is_hole((vms_event *)ev) && "Got dropped event");
+        assert(vms_event_id(ev) == ++stream->last_event_id &&
+               "IDs are inconsistent");
+        /*
+           printf("FETCH: read event { kind = %lu, id = %lu}\n",
+                  ((vms_event*)ev)->kind,
+                  ((vms_event*)ev)->id);
+         */
+    }
+
+    return ev;
+}
+
+/* Wait for an event on the 'stream'. If `buffer` is full, start dropping. */
+void *vms_stream_fetch_dropping(vms_stream *stream,
+                                vms_arbiter_buffer *buffer) {
     void *ev;
     size_t last_ev_id = 1;
     while (1) {
@@ -594,13 +613,14 @@ void *vms_stream_fetch(vms_stream *stream, vms_arbiter_buffer *buffer) {
             return ev;
         }
 
-        /* got to next iteration to try the next event */
+        /* go to next iteration to try the next event */
     }
 }
 
 /* FIXME: do not duplicate the code */
-void *vms_stream_filter_fetch(vms_stream *stream, vms_arbiter_buffer *buffer,
-                              vms_stream_filter_fn filter) {
+void *vms_stream_fetch_dropping_filter(vms_stream *stream,
+                                       vms_arbiter_buffer *buffer,
+                                       vms_stream_filter_fn filter) {
     void *ev;
     size_t last_ev_id = 1;
     while (1) {
@@ -634,7 +654,7 @@ void *vms_stream_filter_fetch(vms_stream *stream, vms_arbiter_buffer *buffer,
             return ev;
         }
 
-        /* got to next iteration to try the next event */
+        /* go to next iteration to try the next event */
     }
 }
 
@@ -683,10 +703,10 @@ void vms_arbiter_buffer_dump_stats(vms_arbiter_buffer *buffer) {
             s->last_event_id);
     COLOR_RESET
 #endif
-    fprintf(stderr, "   vms_stream_fetch() fetched %lu events\n",
+    fprintf(stderr, "   vms_stream_fetch*() fetched %lu events\n",
             s->fetched_events);
     fprintf(stderr,
-            "   vms_stream_fetch() totally dropped %lu events in %lu holes\n",
+            "   vms_stream_fetch*() totally dropped %lu events in %lu holes\n",
             buffer->total_dropped_num, buffer->total_dropped_times);
     fprintf(stderr, "   Last event was drop: %s\n",
             buffer->last_was_drop ? "true" : "false");

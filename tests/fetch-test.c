@@ -57,7 +57,7 @@ int main(void) {
 
     struct event *ev;
     for (int i = 0; i < 4; ++i) {
-        ev = vms_stream_fetch(stream, arbiter_buffer);
+        ev = vms_stream_fetch_dropping(stream, arbiter_buffer);
         assert(ev);
         assert(ev->n == i);
         // printf("POP Event: {{%lu, %lu}, %d}\n", ev->base.id, ev->base.kind,
@@ -65,7 +65,7 @@ int main(void) {
         vms_stream_consume(stream, 1);
     }
 
-    ev = vms_stream_fetch(stream, arbiter_buffer);
+    ev = vms_stream_fetch_dropping(stream, arbiter_buffer);
     assert(!ev);
 
     pthread_join(tid, NULL);

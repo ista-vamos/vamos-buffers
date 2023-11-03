@@ -150,6 +150,23 @@
     } while (0)
 
 /**
+ * Remove the first occurence of  `elem` from `vec`. `elem` must be a simple
+ * type, since we use == with it.
+ * IMPORTANT: The removal does shuffle the elements, in particular,
+ * the last element will be copied to the place of the removed one.
+ */
+#define VEC_UNORD_REMOVE(vec, elem)               \
+    do {                                          \
+        for (int i = 0; i < VEC_SIZE(vec); ++i) { \
+            if (VEC_AT(i) == elem) {              \
+                vec[i] = vec[VEC_SIZE(vec) - 1];  \
+                --VEC_SIZE(vec);                  \
+                break;                            \
+            }                                     \
+        }                                         \
+        while (0)
+
+/**
  * Return the pointer to the top element in the vector.
  * There is no check if there is any element. If there is none,
  * the pointer underflows and causes UB.
