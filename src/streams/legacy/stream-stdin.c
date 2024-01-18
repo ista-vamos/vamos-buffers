@@ -7,11 +7,11 @@
 
 #include "arbiter.h"
 
-bool stdin_is_ready(shm_stream *stream) { return true; }
+bool stdin_is_ready(vms_stream *stream) { return true; }
 
-void stdin_copy_event(shm_stream *stream, shm_event *in, shm_event *out) {
-    static shm_event_stdin ev;
-    shm_stream_stdin *ss = (shm_stream_stdin *)stream;
+void stdin_copy_event(vms_stream *stream, vms_event *in, vms_event *out) {
+    static vms_event_stdin ev;
+    vms_stream_stdin *ss = (vms_stream_stdin *)stream;
     ssize_t len = getline(&ss->line, &ss->line_len, stdin);
 
     // TODO: return end-of-stream event
@@ -26,22 +26,22 @@ void stdin_copy_event(shm_stream *stream, shm_event *in, shm_event *out) {
     ev.str_ref.size = len;
     ev.str_ref.data = ss->line;
 
-    shm_arbiter_buffer_push(buffer, &ev, sizeof(ev));
+    vms_arbiter_buffer_push(buffer, &ev, sizeof(ev));
     return 1;
 }
 
-shm_stream *shm_create_stdin_stream() {
-    shm_stream_stdin *ss = malloc(sizeof *ss);
-    shm_stream_init((shm_stream *)ss, sizeof(shm_event_stdin), stdin_is_ready,
+vms_stream *vms_create_stdin_stream() {
+    vms_stream_stdin *ss = malloc(sizeof *ss);
+    vms_stream_init((vms_stream *)ss, sizeof(vms_event_stdin), stdin_is_ready,
                     /* filter */ NULL, copy_event, "stdin-stream");
     ss->line = NULL;
     ss->line_len = 0;
-    ss->ev_kind = shm_mk_event_kind("stdin", (shm_stream *)ss,
-                                    sizeof(shm_event_stdin), NULL, NULL);
-    return (shm_stream *)ss;
+    ss->ev_kind = vms_mk_event_kind("stdin", (vms_stream *)ss,
+                                    sizeof(vms_event_stdin), NULL, NULL);
+    return (vms_stream *)ss;
 }
 
-void shm_destroy_stdin_stream(shm_stream_stdin *ss) {
+void vms_destroy_stdin_stream(vms_stream_stdin *ss) {
     free(ss->line);
     free(ss);
 }

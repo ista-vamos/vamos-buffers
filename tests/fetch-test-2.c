@@ -7,29 +7,28 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "vamos-buffers/core/arbiter.h"
-#include "vamos-buffers/shmbuf/buffer.h"
-#include "vamos-buffers/core/stream.h"
-
 #include "shmbuf/buffer-private.h"
+#include "vamos-buffers/core/arbiter.h"
+#include "vamos-buffers/core/stream.h"
+#include "vamos-buffers/shmbuf/buffer.h"
 
 static int stream_ready = 1;
 static int main_finished = 0;
-static bool is_ready(shm_stream* s) {
+static bool is_ready(vms_stream* s) {
     (void)s;
     return !!stream_ready;
 }
 
 struct event {
-    shm_event base;
+    vms_event base;
     size_t n;
 };
 
 static size_t failed_push = 0;
 void* filler_thread(void* data) {
-    struct buffer* buffer = (struct buffer*)data;
+    vms_shm_buffer* buffer = (vms_shm_buffer*)data;
     struct event ev;
-    ev.base.kind = shm_get_last_special_kind() + 1;
+    ev.base.kind = vms_event_get_last_special_kind() + 1;
     for (size_t i = 1; i <= 10000; ++i) {
         ev.base.id = i;
         ev.n = i;
@@ -37,21 +36,21 @@ void* filler_thread(void* data) {
         printf("PUSH Event: {{%lu, %lu}, %lu}\n", ev.base.id, ev.base.kind,
                ev.n);
                */
-        while (!buffer_push(buffer, &ev, sizeof(ev))) ++failed_push;
+        while (!vms_shm_buffer_push(buffer, &ev, sizeof(ev))) ++failed_push;
     }
     stream_ready = 0;
     pthread_exit(NULL);
 }
 
 void* reader_thread(void* data) {
-    shm_arbiter_buffer* arbiter_buffer_r = (shm_arbiter_buffer*)data;
+    vms_arbiter_buffer* arbiter_buffer_r = (vms_arbiter_buffer*)data;
     struct event* ev;
     size_t num;
     size_t next_id = 1;
     while (1) {
-        num = shm_arbiter_buffer_peek1(arbiter_buffer_r, (void**)&ev);
+        num = vms_arbiter_buffer_peek1(arbiter_buffer_r, (void**)&ev);
         if (num > 0) {
-            if (shm_event_is_hole((shm_event*)ev)) {
+            if (vms_event_is_hole((vms_event*)ev)) {
                 next_id = 0;
             } else {
                 assert(ev->n > 0);
@@ -63,16 +62,16 @@ void* reader_thread(void* data) {
                 if (ev->n != next_id) {
                     fprintf(stderr, "%lu != %lu\n", ev->n, next_id);
                 }
-                assert(next_id == shm_event_id((shm_event*)ev));
+                assert(next_id == vms_event_id((vms_event*)ev));
                 assert(ev->n == next_id);
-                assert(ev->n == shm_event_id((shm_event*)ev));
+                assert(ev->n == vms_event_id((vms_event*)ev));
                 ++next_id;
             }
             /*
             printf("Abuf Event: {{%lu, %lu}, %lu}\n", ev->base.id,
                    ev->base.kind, ev->n);
                    */
-            assert(shm_arbiter_buffer_drop(arbiter_buffer_r, 1) == 1);
+            assert(vms_arbiter_buffer_drop(arbiter_buffer_r, 1) == 1);
         }
         if (num == 0 && stream_ready == 0 && main_finished == 1)
             break;
@@ -82,25 +81,25 @@ void* reader_thread(void* data) {
 }
 
 int main(void) {
-    struct buffer* buffer =
+    vms_shm_buffer* buffer =
         initialize_local_buffer("/dummy", sizeof(struct event), 30, NULL);
     assert(buffer);
-    shm_stream dummy_stream;
-    shm_stream* stream = &dummy_stream;
+    vms_stream dummy_stream;
+    vms_stream* stream = &dummy_stream;
 
-    shm_stream_init(stream, buffer, sizeof(struct event), is_ready, NULL, NULL,
+    vms_stream_init(stream, buffer, sizeof(struct event), is_ready, NULL, NULL,
                     NULL, NULL, "dummy-stream", "dummy");
 
-    /* into this buffer, stream_fetch() will push dropped() events if any */
-    shm_arbiter_buffer* arbiter_buffer =
-        shm_arbiter_buffer_create(stream, sizeof(struct event), 10);
+    /* into this buffer, vms_stream_fetch() will push dropped() events if any */
+    vms_arbiter_buffer* arbiter_buffer =
+        vms_arbiter_buffer_create(stream, sizeof(struct event), 10);
 
     /* into this buffer, we will push events here and read them */
-    shm_arbiter_buffer* arbiter_buffer_r =
-        shm_arbiter_buffer_create(stream, sizeof(struct event), 3);
+    vms_arbiter_buffer* arbiter_buffer_r =
+        vms_arbiter_buffer_create(stream, sizeof(struct event), 3);
 
-    shm_arbiter_buffer_set_active(arbiter_buffer, 1);
-    shm_arbiter_buffer_set_active(arbiter_buffer_r, 1);
+    vms_arbiter_buffer_set_active(arbiter_buffer, 1);
+    vms_arbiter_buffer_set_active(arbiter_buffer_r, 1);
 
     pthread_t tid, tida;
     pthread_create(&tid, NULL, filler_thread, buffer);
@@ -108,9 +107,9 @@ int main(void) {
 
     struct event* ev;
     for (size_t i = 1; i <= 10000; ++i) {
-        ev = stream_fetch(stream, arbiter_buffer);
+        ev = vms_stream_fetch_dropping(stream, arbiter_buffer);
         /* there should be no dropped event generated */
-        assert(shm_arbiter_buffer_size(arbiter_buffer) == 0);
+        assert(vms_arbiter_buffer_size(arbiter_buffer) == 0);
 
         assert(ev);
         assert(ev->n == i);
@@ -118,11 +117,11 @@ int main(void) {
         // printf("POP Event: {{%lu, %lu}, %lu}\n", ev->base.id, ev->base.kind,
         // ev->n);
 
-        shm_arbiter_buffer_push(arbiter_buffer_r, ev, sizeof(struct event));
-        shm_stream_consume(stream, 1);
+        vms_arbiter_buffer_push(arbiter_buffer_r, ev, sizeof(struct event));
+        vms_stream_consume(stream, 1);
     }
 
-    ev = stream_fetch(stream, arbiter_buffer);
+    ev = vms_stream_fetch_dropping(stream, arbiter_buffer);
     assert(!ev);
 
     main_finished = 1;

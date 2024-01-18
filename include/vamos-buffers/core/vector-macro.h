@@ -1,5 +1,5 @@
-#ifndef SHAMON_VECTOR_MACRO_H_
-#define SHAMON_VECTOR_MACRO_H_
+#ifndef VAMOS_VECTOR_MACRO_H_
+#define VAMOS_VECTOR_MACRO_H_
 
 /**
  * Macro for creating inlined vector, that is, a piece of continuous memory
@@ -46,7 +46,7 @@
  *
  *  VEC() can be usually also used in struct declarations, but not always.
  *  For example if a struct is opaque and the vector must be accessed from
- *  outside. In such cases, we provide `shm_vector` data type.
+ *  outside. In such cases, we provide `vms_vector` data type.
  */
 
 #include <string.h>
@@ -121,7 +121,6 @@
         VEC_SIZE(vec) += 1;                                                   \
     } while (0)
 
-
 #define VEC_EXTEND(vec, outptr) VEC_EXTEND_N(vec, outptr, 16)
 
 /**
@@ -151,6 +150,23 @@
     } while (0)
 
 /**
+ * Remove the first occurence of  `elem` from `vec`. `elem` must be a simple
+ * type, since we use == with it.
+ * IMPORTANT: The removal does shuffle the elements, in particular,
+ * the last element will be copied to the place of the removed one.
+ */
+#define VEC_UNORD_REMOVE(vec, elem)               \
+    do {                                          \
+        for (int i = 0; i < VEC_SIZE(vec); ++i) { \
+            if (VEC_AT(i) == elem) {              \
+                vec[i] = vec[VEC_SIZE(vec) - 1];  \
+                --VEC_SIZE(vec);                  \
+                break;                            \
+            }                                     \
+        }                                         \
+        while (0)
+
+/**
  * Return the pointer to the top element in the vector.
  * There is no check if there is any element. If there is none,
  * the pointer underflows and causes UB.
@@ -176,4 +192,4 @@
  */
 #define VEC_POP_TOP(vec) (--VEC_SIZE(vec), *((vec) + VEC_SIZE(vec)))
 
-#endif /* SHAMON_VECTOR_MACRO_H_ */
+#endif /* VAMOS_VECTOR_MACRO_H_ */

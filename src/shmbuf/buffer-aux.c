@@ -6,20 +6,19 @@
 #include "shm.h"
 
 HIDE_SYMBOL
-void drop_ranges_unlock(struct buffer *buff) {
+void drop_ranges_unlock(vms_shm_buffer *buff) {
     /* FIXME: use explicit memory ordering, seq_cnt is not needed here */
     buff->shmbuffer->info.dropped_ranges_lock = false;
 }
 
 HIDE_SYMBOL
-void drop_ranges_lock(struct buffer *buff) {
+void drop_ranges_lock(vms_shm_buffer *buff) {
     _Atomic bool *l = &buff->shmbuffer->info.dropped_ranges_lock;
     bool unlocked;
     do {
         unlocked = false;
     } while (atomic_compare_exchange_weak(l, &unlocked, true));
 }
-
 
 HIDE_SYMBOL
 void aux_buffer_release(struct aux_buffer *buffer) {
@@ -48,13 +47,13 @@ void aux_buffer_destroy(struct aux_buffer *buffer) {
 
     aux_buffer_release(buffer);
 
-    if (shamon_shm_unlink(key) != 0) {
-        perror("aux_buffer_destroy: shm_unlink failure");
+    if (vms_shm_unlink(key) != 0) {
+        perror("aux_buffer_destroy: vms_unlink failure");
     }
 }
 */
 
-static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
+static struct aux_buffer *new_aux_buffer(vms_shm_buffer *buff, size_t size) {
     size_t idx = buff->aux_buf_idx++;
     const size_t pg_size = sysconf(_SC_PAGESIZE);
     size = (((size + sizeof(struct aux_buffer)) / pg_size) + 2) * pg_size;
@@ -65,9 +64,9 @@ static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
 
     /* printf("Initializing aux buffer %s\n", key); */
 
-    int fd = shamon_shm_open(key, O_RDWR | O_CREAT, buff->mode);
+    int fd = vms_shm_open(key, O_RDWR | O_CREAT, buff->mode);
     if (fd < 0) {
-        perror("shm_open");
+        perror("vms_shm_open");
         abort();
     }
 
@@ -82,8 +81,8 @@ static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
         if (close(fd) == -1) {
             perror("closing fd after mmap failure");
         }
-        if (shamon_shm_unlink(key) != 0) {
-            perror("shm_unlink after mmap failure");
+        if (vms_shm_unlink(key) != 0) {
+            perror("vms_unlink after mmap failure");
         }
         abort();
     }
@@ -98,15 +97,15 @@ static struct aux_buffer *new_aux_buffer(struct buffer *buff, size_t size) {
 
     VEC_PUSH(buff->aux_buffers, &ab);
     assert(VEC_TOP(buff->aux_buffers) == ab);
-    shm_list_append(&buff->aux_buffers_age, ab);
-    assert(shm_list_last(&buff->aux_buffers_age)->data == ab);
+    vms_list_append(&buff->aux_buffers_age, ab);
+    assert(vms_list_last(&buff->aux_buffers_age)->data == ab);
     buff->cur_aux_buff = ab;
 
     return ab;
 }
 
-static inline bool ab_was_dropped(struct aux_buffer *ab, struct buffer *buff) {
-    struct buffer_info *info = &buff->shmbuffer->info;
+static inline bool ab_was_dropped(struct aux_buffer *ab, vms_shm_buffer *buff) {
+    vms_shm_buffer_info *info = &buff->shmbuffer->info;
     drop_ranges_lock(buff);
     for (size_t i = 0; i < DROPPED_RANGES_NUM; ++i) {
         struct dropped_range *r = &info->dropped_ranges[i];
@@ -123,12 +122,12 @@ static inline bool ab_was_dropped(struct aux_buffer *ab, struct buffer *buff) {
 }
 
 HIDE_SYMBOL
-struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size) {
+struct aux_buffer *writer_get_aux_buffer(vms_shm_buffer *buff, size_t size) {
     if (!buff->cur_aux_buff ||
         aux_buffer_free_space(buff->cur_aux_buff) < size) {
         /* try to find a free buffer */
         struct aux_buffer *ab;
-        shm_list_elem *cur = shm_list_first(&buff->aux_buffers_age);
+        vms_list_elem *cur = vms_list_first(&buff->aux_buffers_age);
         while (cur) {
             ab = (struct aux_buffer *)cur->data;
             if (ab->last_event_id <= buff->shmbuffer->info.last_processed_id ||
@@ -139,10 +138,10 @@ struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size) {
                 ab->last_event_id = ~(0LL);
             }
             if (ab->reusable && ab->size >= size) {
-                assert(shm_list_last(&buff->aux_buffers_age)->data ==
+                assert(vms_list_last(&buff->aux_buffers_age)->data ==
                        buff->cur_aux_buff);
-                shm_list_remove(&buff->aux_buffers_age, cur);
-                shm_list_append_elem(&buff->aux_buffers_age, cur);
+                vms_list_remove(&buff->aux_buffers_age, cur);
+                vms_list_append_elem(&buff->aux_buffers_age, cur);
                 buff->cur_aux_buff = ab;
                 ab->reusable = false;
                 return ab;
@@ -156,12 +155,12 @@ struct aux_buffer *writer_get_aux_buffer(struct buffer *buff, size_t size) {
 
     /* use the current buffer */
     /* it must always be the last in the aux_buffers_age */
-    assert(shm_list_last(&buff->aux_buffers_age)->data == buff->cur_aux_buff);
+    assert(vms_list_last(&buff->aux_buffers_age)->data == buff->cur_aux_buff);
     return buff->cur_aux_buff;
 }
 
 HIDE_SYMBOL
-struct aux_buffer *reader_get_aux_buffer(struct buffer *buff, size_t idx) {
+struct aux_buffer *reader_get_aux_buffer(vms_shm_buffer *buff, size_t idx) {
     /* cache the last use */
     if (buff->cur_aux_buff && buff->cur_aux_buff->idx == idx)
         return buff->cur_aux_buff;
@@ -182,9 +181,9 @@ struct aux_buffer *reader_get_aux_buffer(struct buffer *buff, size_t idx) {
 
     // printf("Getting aux buffer %s\n", key);
 
-    int fd = shamon_shm_open(key, O_RDWR, S_IRWXU);
+    int fd = vms_shm_open(key, O_RDWR, S_IRWXU);
     if (fd < 0) {
-        perror("shm_open");
+        perror("vms_shm_open");
         abort();
     }
 
@@ -202,8 +201,8 @@ struct aux_buffer *reader_get_aux_buffer(struct buffer *buff, size_t idx) {
         if (close(fd) == -1) {
             perror("closing fd after mmap failure");
         }
-        if (shamon_shm_unlink(key) != 0) {
-            perror("shm_unlink after mmap failure");
+        if (vms_shm_unlink(key) != 0) {
+            perror("vms_unlink after mmap failure");
         }
         abort();
     }

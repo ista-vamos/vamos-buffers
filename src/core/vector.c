@@ -4,15 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-void shm_vector_init(shm_vector *vec, size_t elem_size) {
+void vms_vector_init(vms_vector *vec, size_t elem_size) {
     assert(elem_size > 0);
     memset(vec, 0, sizeof(*vec));
     vec->element_size = elem_size;
 }
 
-void shm_vector_destroy(shm_vector *vec) { free(vec->data); }
+void vms_vector_destroy(vms_vector *vec) { free(vec->data); }
 
-void shm_vector_swap(shm_vector *vec, shm_vector *with) {
+void vms_vector_swap(vms_vector *vec, vms_vector *with) {
     assert(vec->element_size == with->element_size);
     void *data = vec->data;
     size_t size = vec->size;
@@ -25,7 +25,7 @@ void shm_vector_swap(shm_vector *vec, shm_vector *with) {
     with->alloc_size = asize;
 }
 
-void shm_vector_resize(shm_vector *vec, size_t size) {
+void vms_vector_resize(vms_vector *vec, size_t size) {
     if (vec->size >= size) {
         return;
     }
@@ -46,7 +46,7 @@ void shm_vector_resize(shm_vector *vec, size_t size) {
     vec->size = size;
 }
 
-void *shm_vector_extend(shm_vector *vec) {
+void *vms_vector_extend(vms_vector *vec) {
     if (vec->size >= vec->alloc_size) {
         // TODO: exp. growth?
         vec->alloc_size += 10;
@@ -62,30 +62,30 @@ void *shm_vector_extend(shm_vector *vec) {
     return addr;
 }
 
-size_t shm_vector_push(shm_vector *vec, void *elem) {
-    memcpy(shm_vector_extend(vec), elem, vec->element_size);
+size_t vms_vector_push(vms_vector *vec, void *elem) {
+    memcpy(vms_vector_extend(vec), elem, vec->element_size);
     return vec->size;
 }
 
-size_t shm_vector_pop(shm_vector *vec) {
+size_t vms_vector_pop(vms_vector *vec) {
     assert(vec->size > 0);
     return --vec->size;
 }
 
-size_t shm_vector_size(shm_vector *vec) { return vec->size; }
+size_t vms_vector_size(vms_vector *vec) { return vec->size; }
 
-size_t shm_vector_elem_size(shm_vector *vec) {
+size_t vms_vector_elem_size(vms_vector *vec) {
     assert(0 < vec->element_size);
     return vec->element_size;
 }
 
-void *shm_vector_at(shm_vector *vec, size_t idx) {
+void *vms_vector_at(vms_vector *vec, size_t idx) {
     assert(idx < vec->size);
     assert(0 < vec->element_size);
     return (void *)(((unsigned char *)vec->data) + idx * vec->element_size);
 }
 
-void *shm_vector_at_checked(shm_vector *vec, size_t idx) {
+void *vms_vector_at_checked(vms_vector *vec, size_t idx) {
     assert(0 < vec->element_size);
 
     if (idx < vec->size) {
@@ -95,7 +95,7 @@ void *shm_vector_at_checked(shm_vector *vec, size_t idx) {
     return NULL;
 }
 
-void *shm_vector_top(shm_vector *vec) {
+void *vms_vector_top(vms_vector *vec) {
     if (vec->size == 0)
         return NULL;
     assert(0 < vec->element_size);

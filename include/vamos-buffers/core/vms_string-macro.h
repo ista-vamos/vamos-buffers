@@ -1,5 +1,5 @@
-#ifndef SHAMON_STRING_MACRO_H_
-#define SHAMON_STRING_MACRO_H_
+#ifndef VAMOS_STRING_MACRO_H_
+#define VAMOS_STRING_MACRO_H_
 
 #include "vector-macro.h"
 
@@ -57,4 +57,4 @@
 #define STRING_TOP_PTR(s) ((s) + STRING_SIZE(s) - 1)
 #define STRING_TOP(s) (*STRING_TOP_PTR(s))
 
-#endif /* SHAMON_STRING_MACRO_H_ */
+#endif /* VAMOS_STRING_MACRO_H_ */

@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <immintrin.h> /* _mm_mfence */
 #include <limits.h>
 #include <stdarg.h>
 #include <stdatomic.h>
@@ -23,51 +24,55 @@
 #include "vamos-buffers/core/utils.h"
 #include "vamos-buffers/core/vector-macro.h"
 
-bool buffer_is_ready(struct buffer *buff) {
-    return !buff->shmbuffer->info.destroyed;
+bool vms_shm_buffer_is_destroyed(vms_shm_buffer *buff) {
+    return buff->shmbuffer->info.destroyed;
 }
 
-bool buffer_monitor_attached(struct buffer *buff) {
-    return buff->shmbuffer->info.monitor_attached;
+bool vms_shm_buffer_is_ready(vms_shm_buffer *buff) {
+    return !vms_shm_buffer_is_destroyed(buff);
 }
 
-size_t buffer_capacity(struct buffer *buff) {
+bool vms_shm_buffer_reader_is_ready(vms_shm_buffer *buff) {
+    return (buff->shmbuffer->info.flags & READER_IS_READY);
+}
+
+size_t vms_shm_buffer_capacity(vms_shm_buffer *buff) {
     return buff->shmbuffer->info.capacity;
 }
 
-size_t buffer_size(struct buffer *buff) {
-    return shm_spsc_ringbuf_size(_ringbuf(buff));
+size_t vms_shm_buffer_size(vms_shm_buffer *buff) {
+    return vms_spsc_ringbuf_size(_ringbuf(buff));
 }
 
-size_t buffer_elem_size(struct buffer *buff) {
+size_t vms_shm_buffer_elem_size(vms_shm_buffer *buff) {
     return buff->shmbuffer->info.elem_size;
 }
 
-const char *buffer_get_key(struct buffer *buffer) { return buffer->key; }
+const char *vms_shm_buffer_key(vms_shm_buffer *buffer) { return buffer->key; }
 
-int buffer_get_key_path(struct buffer *buff, char keypath[],
-                        size_t keypathsize) {
+int vms_shm_buffer_compute_key_path(vms_shm_buffer *buff, char keypath[],
+                                    size_t keypathsize) {
     if (SHM_NAME_MAXLEN <= keypathsize)
         return -1;
 
-    if (shm_mapname(buff->key, keypath) == NULL) {
+    if (vms_shm_mapname(buff->key, keypath) == NULL) {
         return -2;
     }
 
     return 0;
 }
 
-int buffer_get_ctrl_key_path(struct buffer *buff, char keypath[],
-                             size_t keypathsize) {
+int vms_shm_buffer_compute_ctrl_key_path(vms_shm_buffer *buff, char keypath[],
+                                         size_t keypathsize) {
     if (SHM_NAME_MAXLEN <= keypathsize)
         return -1;
 
     char ctrlkey[SHM_NAME_MAXLEN];
-    if (shamon_map_ctrl_key(buff->key, ctrlkey) == NULL) {
+    if (vms_shm_map_ctrl_key(buff->key, ctrlkey) == NULL) {
         return -3;
     }
 
-    if (shm_mapname(ctrlkey, keypath) == NULL) {
+    if (vms_shm_mapname(ctrlkey, keypath) == NULL) {
         return -2;
     }
 
@@ -82,14 +87,14 @@ int buffer_get_ctrl_key_path(struct buffer *buff, char keypath[],
     ((unsigned char *)b->data + (b->info.elem_size * (b->info.capacity + 1)))
 
 HIDE_SYMBOL
-struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
-                                        size_t elem_size, size_t capacity,
-                                        struct source_control *control) {
+vms_shm_buffer *_vms_shm_buffer_initialize(const char *key, mode_t mode,
+                                           size_t elem_size, size_t capacity,
+                                           struct vms_source_control *control) {
     assert(elem_size > 0 && "Element size is 0");
     assert(capacity > 0 && "Capacity is 0");
     /* the ringbuffer has one unusable dummy element, so increase the capacity
      * by one */
-    const size_t memsize = compute_shm_size(elem_size, capacity + 1);
+    const size_t memsize = compute_vms_size(elem_size, capacity + 1);
 
 #ifndef NDEBUG
     fprintf(stderr,
@@ -104,14 +109,14 @@ struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
      * we avoid a race when the other side opens the SHM file and reads from
      * it before it is fully initialized */
     char tmpkey[SHM_NAME_MAXLEN] = "";
-    if (shamon_get_tmp_key(key, tmpkey, SHM_NAME_MAXLEN) == -1) {
+    if (vms_shm_get_tmp_key(key, tmpkey, SHM_NAME_MAXLEN) == -1) {
         fprintf(stderr, "Failed creating a tmpkey for '%s'\n", key);
         return NULL;
     }
 
-    int fd = shamon_shm_open(tmpkey, O_RDWR | O_CREAT | O_TRUNC, mode);
+    int fd = vms_shm_open(tmpkey, O_RDWR | O_CREAT | O_TRUNC, mode);
     if (fd < 0) {
-        perror("shm_open");
+        perror("vms_shm_open");
         return NULL;
     }
 
@@ -126,23 +131,23 @@ struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
         if (close(fd) == -1) {
             perror("closing fd after mmap failure");
         }
-        if (shamon_shm_unlink(tmpkey) != 0) {
-            perror("shm_unlink after mmap failure");
+        if (vms_shm_unlink(tmpkey) != 0) {
+            perror("vms_unlink after mmap failure");
         }
         return NULL;
     }
 
-    struct buffer *buff = xalloc(sizeof(struct buffer));
+    vms_shm_buffer *buff = xalloc(sizeof(vms_shm_buffer));
     buff->shmbuffer = (struct shmbuffer *)shmem;
     assert(ADDR_IS_CACHE_ALIGNED(buff->shmbuffer->data));
     assert(ADDR_IS_CACHE_ALIGNED(&buff->shmbuffer->info.ringbuf));
 
-    memset(buff->shmbuffer, 0, sizeof(struct buffer_info));
+    memset(buff->shmbuffer, 0, sizeof(vms_shm_buffer_info));
 
     buff->shmbuffer->info.allocated_size = memsize;
     buff->shmbuffer->info.capacity = capacity;
     /* ringbuf has one dummy element and we allocated the space for it */
-    shm_spsc_ringbuf_init(_ringbuf(buff), capacity + 1);
+    vms_spsc_ringbuf_init(_ringbuf(buff), capacity + 1);
     buff->shmbuffer->info.elem_size = elem_size;
     buff->shmbuffer->info.last_processed_id = 0;
     buff->shmbuffer->info.dropped_ranges_next = 0;
@@ -169,7 +174,7 @@ struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
 
     buff->key = strdup(key);
     VEC_INIT(buff->aux_buffers);
-    shm_list_init(&buff->aux_buffers_age);
+    vms_list_init(&buff->aux_buffers_age);
     buff->aux_buf_idx = 0;
     buff->cur_aux_buff = NULL;
     buff->fd = fd;
@@ -177,14 +182,14 @@ struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
     buff->mode = mode;
     buff->last_subbufer_no = 0;
 
-    if (shamon_shm_rename(tmpkey, key) < 0) {
+    if (vms_shm_rename(tmpkey, key) < 0) {
         perror("renaming SHM file");
 
         if (close(fd) == -1) {
             perror("closing fd after mmap failure");
         }
-        if (shamon_shm_unlink(tmpkey) != 0) {
-            perror("shm_unlink after mmap failure");
+        if (vms_shm_unlink(tmpkey) != 0) {
+            perror("vms_unlink after mmap failure");
         }
         free(buff);
         return NULL;
@@ -193,23 +198,24 @@ struct buffer *initialize_shared_buffer(const char *key, mode_t mode,
     return buff;
 }
 
-struct buffer *create_shared_buffer(const char *key, size_t capacity,
-                                    const struct source_control *control) {
-    struct source_control *ctrl =
+vms_shm_buffer *vms_shm_buffer_create(
+    const char *key, size_t capacity,
+    const struct vms_source_control *control) {
+    struct vms_source_control *ctrl =
         create_shared_control_buffer(key, S_IRWXU, control);
     if (!ctrl) {
         fprintf(stderr, "Failed creating control buffer\n");
         return NULL;
     }
 
-    size_t elem_size = source_control_max_event_size(ctrl);
-    return initialize_shared_buffer(key, S_IRWXU, elem_size, capacity, ctrl);
+    size_t elem_size = vms_source_control_max_event_size(ctrl);
+    return _vms_shm_buffer_initialize(key, S_IRWXU, elem_size, capacity, ctrl);
 }
 
-struct buffer *create_shared_buffer_adv(const char *key, mode_t mode,
-                                        size_t elem_size, size_t capacity,
-                                        const struct source_control *control) {
-    struct source_control *ctrl =
+vms_shm_buffer *vms_shm_buffer_create_adv(
+    const char *key, mode_t mode, size_t elem_size, size_t capacity,
+    const struct vms_source_control *control) {
+    struct vms_source_control *ctrl =
         create_shared_control_buffer(key, mode, control);
     if (!ctrl) {
         fprintf(stderr, "Failed creating control buffer\n");
@@ -217,23 +223,23 @@ struct buffer *create_shared_buffer_adv(const char *key, mode_t mode,
     }
 
     if (elem_size == 0) {
-        elem_size = source_control_max_event_size(ctrl);
+        elem_size = vms_source_control_max_event_size(ctrl);
     }
 
     if (mode == 0) {
         mode = S_IRWXU;
     }
 
-    return initialize_shared_buffer(key, mode, elem_size, capacity, ctrl);
+    return _vms_shm_buffer_initialize(key, mode, elem_size, capacity, ctrl);
 }
 
-struct buffer *try_get_shared_buffer(const char *key, size_t retry) {
+vms_shm_buffer *vms_shm_buffer_try_connect(const char *key, size_t retry) {
     // fprintf(stderr, "getting shared buffer '%s'\n", key);
 
     int fd = -1;
     ++retry;
     do {
-        fd = shamon_shm_open(key, O_RDWR, S_IRWXU);
+        fd = vms_shm_open(key, O_RDWR, S_IRWXU);
         if (fd >= 0) {
             break;
         }
@@ -241,12 +247,12 @@ struct buffer *try_get_shared_buffer(const char *key, size_t retry) {
     } while (--retry > 0);
 
     if (fd == -1) {
-        perror("shm_open");
+        perror("vms_shm_open");
         fprintf(stderr, "Failed getting shared buffer '%s'\n", key);
         return NULL;
     }
 
-    struct buffer_info info;
+    vms_shm_buffer_info info;
     if (pread(fd, &info, sizeof(info), 0) == -1) {
         perror("reading info of shared buffer");
         close(fd);
@@ -268,7 +274,7 @@ struct buffer *try_get_shared_buffer(const char *key, size_t retry) {
         goto before_mmap_clean;
     }
 
-    struct buffer *buff = malloc(sizeof(*buff));
+    vms_shm_buffer *buff = malloc(sizeof(*buff));
     if (!buff) {
         fprintf(stderr, "%s:%d: memory allocation failed\n", __func__,
                 __LINE__);
@@ -310,40 +316,66 @@ before_mmap_clean:
     if (close(fd) == -1) {
         perror("closing fd after mmap failure");
     }
-    if (shamon_shm_unlink(key) != 0) {
-        perror("shm_unlink after mmap failure");
+    if (vms_shm_unlink(key) != 0) {
+        perror("vms_unlink after mmap failure");
     }
     return NULL;
 }
 
-struct buffer *get_shared_buffer(const char *key) {
-    return try_get_shared_buffer(key, 10);
+vms_shm_buffer *vms_shm_buffer_connect(const char *key) {
+    return vms_shm_buffer_try_connect(key, 10);
 }
 
-struct event_record *buffer_get_avail_events(struct buffer *buff,
-                                             size_t *evs_num) {
+struct vms_event_record *vms_shm_buffer_get_avail_events(vms_shm_buffer *buff,
+                                                         size_t *evs_num) {
     assert(buff);
     assert(evs_num);
     assert(buff->control);
 
-    *evs_num = source_control_get_records_num(buff->control);
+#ifndef NDEBUG
+    /* NOTE: this assert does the fence */
+    assert((vms_shm_buffer_get_flags(buff) & EVENTS_REGISTERED) &&
+           "Events were not registered");
+#else
+    /* make sure that any concurrent changes to the source control buffer are
+     * visible now */
+    _mm_mfence();
+#endif
+
+    *evs_num = vms_source_control_get_records_num(buff->control);
     return buff->control->events;
 }
 
-void buffer_set_attached(struct buffer *buff, bool val) {
+uint64_t vms_shm_buffer_get_flags(vms_shm_buffer *buff) {
+    return buff->shmbuffer->info.flags;
+}
+
+void vms_shm_buffer_set_flags(vms_shm_buffer *buff, uint64_t flags) {
+    buff->shmbuffer->info.flags |= flags;
+}
+
+void vms_shm_buffer_unset_flags(vms_shm_buffer *buff, uint64_t flags) {
+    buff->shmbuffer->info.flags &= (~flags);
+}
+
+void vms_shm_buffer_set_reader_is_ready(vms_shm_buffer *buff) {
+    assert((vms_shm_buffer_get_flags(buff) & EVENTS_REGISTERED) &&
+           "No events registered before going to the ready state");
+
     if (!buff->shmbuffer->info.destroyed)
-        buff->shmbuffer->info.monitor_attached = val;
+        vms_shm_buffer_set_flags(buff, READER_IS_READY);
 }
 
 /* set the ID of the last processed event */
-void buffer_set_last_processed_id(struct buffer *buff, shm_eventid id) {
+void vms_shm_buffer_set_last_processed_id(vms_shm_buffer *buff,
+                                          vms_eventid id) {
     assert(buff->shmbuffer->info.last_processed_id <= id &&
            "The IDs are not monotonic");
     buff->shmbuffer->info.last_processed_id = id;
 }
 
 /* for readers */
-void release_shared_buffer(struct buffer *buff) {
+void vms_shm_buffer_release(vms_shm_buffer *buff) {
     if (munmap(buff->shmbuffer, buff->shmbuffer->info.allocated_size) != 0) {
         perror("release_shared_buffer: munmap failure");
     }
@@ -365,7 +397,7 @@ void release_shared_buffer(struct buffer *buff) {
 }
 
 /* for writers */
-void destroy_shared_buffer(struct buffer *buff) {
+void vms_shm_buffer_destroy(vms_shm_buffer *buff) {
     buff->shmbuffer->info.destroyed = 1;
 
     size_t vecsize = VEC_SIZE(buff->aux_buffers);
@@ -381,13 +413,13 @@ void destroy_shared_buffer(struct buffer *buff) {
 #endif
 
     if (munmap(buff->shmbuffer, buff->shmbuffer->info.allocated_size) != 0) {
-        perror("destroy_shared_buffer: munmap failure");
+        perror("vms_shm_buffer_destroy: munmap failure");
     }
     if (close(buff->fd) == -1) {
-        perror("destroy_shared_buffer: failed closing mmap fd");
+        perror("vms_shm_buffer_destroy: failed closing mmap fd");
     }
-    if (shamon_shm_unlink(buff->key) != 0) {
-        perror("destroy_shared_buffer: shm_unlink failure");
+    if (vms_shm_unlink(buff->key) != 0) {
+        perror("vms_shm_buffer_destroy: vms_unlink failure");
     }
 
     destroy_shared_control_buffer(buff->key, buff->control);
@@ -396,9 +428,9 @@ void destroy_shared_buffer(struct buffer *buff) {
     free(buff);
 }
 
-void *buffer_read_pointer(struct buffer *buff, size_t *size) {
-    struct buffer_info *info = &buff->shmbuffer->info;
-    size_t tail = shm_spsc_ringbuf_read_off_nowrap(&info->ringbuf, size);
+void *vms_shm_buffer_read_pointer(vms_shm_buffer *buff, size_t *size) {
+    vms_shm_buffer_info *info = &buff->shmbuffer->info;
+    size_t tail = vms_spsc_ringbuf_read_off_nowrap(&info->ringbuf, size);
     if (*size == 0)
         return NULL;
     /* TODO: get rid of the multiplication,
@@ -406,22 +438,22 @@ void *buffer_read_pointer(struct buffer *buff, size_t *size) {
     return buff->shmbuffer->data + tail * info->elem_size;
 }
 
-bool buffer_drop_k(struct buffer *buff, size_t k) {
-    return shm_spsc_ringbuf_consume_upto(_ringbuf(buff), k) == k;
+bool vms_shm_buffer_drop_k(vms_shm_buffer *buff, size_t k) {
+    return vms_spsc_ringbuf_consume_upto(_ringbuf(buff), k) == k;
 }
 
-size_t buffer_consume(struct buffer *buff, size_t k) {
-    return shm_spsc_ringbuf_consume_upto(_ringbuf(buff), k);
+size_t vms_shm_buffer_consume(vms_shm_buffer *buff, size_t k) {
+    return vms_spsc_ringbuf_consume_upto(_ringbuf(buff), k);
 }
 
 /* buffer_push broken down into several operations:
  *
- *  p = buffer_start_push(...)
- *  p = buffer_partial_push(..., p, ...)
+ *  p = vms_shm_buffer_start_push(...)
+ *  p = vms_shm_buffer_partial_push(..., p, ...)
  *  ...
- *  p = buffer_partial_push(..., p, ...)
- *  buffer_partial_push(..., p, ...)
- *  buffer_finish_push(...)
+ *  p = vms_shm_buffer_partial_push(..., p, ...)
+ *  vms_shm_buffer_partial_push(..., p, ...)
+ *  vms_shm_buffer_finish_push(...)
  *
  * All the partial push may push only a single element in sum,
  * i.e., what can be done with buffer_push. Partial pushes
@@ -430,12 +462,12 @@ size_t buffer_consume(struct buffer *buff, size_t k) {
  * multiple steps.
  */
 
-void *buffer_start_push(struct buffer *buff) {
-    struct buffer_info *info = &buff->shmbuffer->info;
+void *vms_shm_buffer_start_push(vms_shm_buffer *buff) {
+    vms_shm_buffer_info *info = &buff->shmbuffer->info;
     assert(!info->destroyed && "Writing to a destroyed buffer");
 
     size_t n;
-    size_t off = shm_spsc_ringbuf_write_off_nowrap(_ringbuf(buff), &n);
+    size_t off = vms_spsc_ringbuf_write_off_nowrap(_ringbuf(buff), &n);
     if (n == 0) {
         /* ++info->dropped; */
         return NULL;
@@ -450,9 +482,10 @@ void *buffer_start_push(struct buffer *buff) {
     return mem;
 }
 
-void *buffer_partial_push(struct buffer *buff, void *prev_push,
-                          const void *elem, size_t size) {
-    assert(buffer_is_ready(buff) && "Writing to a destroyed buffer");
+void *vms_shm_buffer_partial_push(vms_shm_buffer *buff, void *prev_push,
+                                  const void *elem, size_t size) {
+    assert(!vms_shm_buffer_is_destroyed(buff) &&
+           "Writing to a destroyed buffer");
     assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
     assert((unsigned char *)prev_push < BUFF_END(buff->shmbuffer));
     assert((unsigned char *)prev_push <= BUFF_END(buff->shmbuffer) - size);
@@ -462,15 +495,15 @@ void *buffer_partial_push(struct buffer *buff, void *prev_push,
     return (unsigned char *)prev_push + size;
 }
 
-static size_t _buffer_push_strn(struct buffer *buff, const void *data,
+static size_t _buffer_push_strn(vms_shm_buffer *buff, const void *data,
                                 size_t size);
-static uint64_t buffer_push_str(struct buffer *buff, uint64_t evid,
+static uint64_t buffer_push_str(vms_shm_buffer *buff, uint64_t evid,
                                 const char *str);
-static uint64_t buffer_push_strn(struct buffer *buff, uint64_t evid,
+static uint64_t buffer_push_strn(vms_shm_buffer *buff, uint64_t evid,
                                  const char *str, size_t len);
 
-void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
-                              uint64_t evid, const char *str) {
+void *vms_shm_buffer_partial_push_str(vms_shm_buffer *buff, void *prev_push,
+                                      uint64_t evid, const char *str) {
     assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
     assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
     assert((unsigned char *)prev_push < BUFF_END(buff->shmbuffer));
@@ -480,8 +513,9 @@ void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
     return (unsigned char *)prev_push + sizeof(uint64_t);
 }
 
-void *buffer_partial_push_str_n(struct buffer *buff, void *prev_push,
-                                uint64_t evid, const char *str, size_t len) {
+void *vms_shm_buffer_partial_push_str_n(vms_shm_buffer *buff, void *prev_push,
+                                        uint64_t evid, const char *str,
+                                        size_t len) {
     assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
     assert(BUFF_START(buff->shmbuffer) <= (unsigned char *)prev_push);
     assert((unsigned char *)prev_push < BUFF_END(buff->shmbuffer));
@@ -491,46 +525,46 @@ void *buffer_partial_push_str_n(struct buffer *buff, void *prev_push,
     return (unsigned char *)prev_push + sizeof(uint64_t);
 }
 
-void buffer_finish_push(struct buffer *buff) {
+void vms_shm_buffer_finish_push(vms_shm_buffer *buff) {
     assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
-    shm_spsc_ringbuf_write_finish(_ringbuf(buff), 1);
+    vms_spsc_ringbuf_write_finish(_ringbuf(buff), 1);
 }
 
-bool buffer_push(struct buffer *buff, const void *elem, size_t size) {
+bool vms_shm_buffer_push(vms_shm_buffer *buff, const void *elem, size_t size) {
     assert(!buff->shmbuffer->info.destroyed && "Writing to a destroyed buffer");
     assert(buff->shmbuffer->info.elem_size >= size &&
            "Size does not fit the slot");
 
-    void *dst = buffer_start_push(buff);
+    void *dst = vms_shm_buffer_start_push(buff);
     if (dst == NULL)
         return false;
 
     memcpy(dst, elem, size);
-    buffer_finish_push(buff);
+    vms_shm_buffer_finish_push(buff);
 
     return true;
 }
 
-bool buffer_pop(struct buffer *buff, void *dst) {
+bool vms_shm_buffer_pop(vms_shm_buffer *buff, void *dst) {
     assert(!buff->shmbuffer->info.destroyed &&
            "Reading from a destroyed buffer");
 
     size_t size;
-    void *pos = buffer_read_pointer(buff, &size);
+    void *pos = vms_shm_buffer_read_pointer(buff, &size);
     if (size > 0) {
         memcpy(dst, pos, buff->shmbuffer->info.elem_size);
-        shm_spsc_ringbuf_consume(_ringbuf(buff), 1);
+        vms_spsc_ringbuf_consume(_ringbuf(buff), 1);
         return true;
     }
 
     return false;
 }
 
-size_t _buffer_push_strn(struct buffer *buff, const void *data, size_t size) {
+size_t _buffer_push_strn(vms_shm_buffer *buff, const void *data, size_t size) {
     struct aux_buffer *ab = writer_get_aux_buffer(buff, size);
     assert(ab);
     assert(ab == buff->cur_aux_buff);
-    assert(shm_list_last(&buff->aux_buffers_age)->data == buff->cur_aux_buff);
+    assert(vms_list_last(&buff->aux_buffers_age)->data == buff->cur_aux_buff);
 
     size_t off = ab->head;
     assert(off < (1LU << 32));
@@ -540,21 +574,21 @@ size_t _buffer_push_strn(struct buffer *buff, const void *data, size_t size) {
     return off;
 }
 
-void *buffer_get_str(struct buffer *buff, uint64_t elem) {
+void *vms_shm_buffer_read_str(vms_shm_buffer *buff, uint64_t elem) {
     size_t idx = elem >> 32;
     struct aux_buffer *ab = reader_get_aux_buffer(buff, idx);
     size_t off = elem & 0xffffffff;
     return ab->data + off;
 }
 
-uint64_t buffer_push_str(struct buffer *buff, uint64_t evid, const char *str) {
+uint64_t buffer_push_str(vms_shm_buffer *buff, uint64_t evid, const char *str) {
     size_t len = strlen(str) + 1;
     size_t off = buffer_push_strn(buff, evid, str, len);
     assert(buff->cur_aux_buff);
     return (off | (buff->cur_aux_buff->idx << 32));
 }
 
-uint64_t buffer_push_strn(struct buffer *buff, uint64_t evid, const char *str,
+uint64_t buffer_push_strn(vms_shm_buffer *buff, uint64_t evid, const char *str,
                           size_t len) {
     size_t off = _buffer_push_strn(buff, str, len);
     struct aux_buffer *ab = buff->cur_aux_buff;
@@ -565,9 +599,9 @@ uint64_t buffer_push_strn(struct buffer *buff, uint64_t evid, const char *str,
     return (off | (buff->cur_aux_buff->idx << 32));
 }
 
-void buffer_notify_dropped(struct buffer *buff, uint64_t begin_id,
-                           uint64_t end_id) {
-    struct buffer_info *info = &buff->shmbuffer->info;
+void vms_shm_buffer_notify_dropped(vms_shm_buffer *buff, uint64_t begin_id,
+                                   uint64_t end_id) {
+    vms_shm_buffer_info *info = &buff->shmbuffer->info;
     size_t idx = info->dropped_ranges_next;
     struct dropped_range *r = &info->dropped_ranges[idx];
     if (r->begin == begin_id || r->end == r->begin - 1) {
@@ -591,8 +625,15 @@ void buffer_notify_dropped(struct buffer *buff, uint64_t begin_id,
     drop_ranges_unlock(buff);
 }
 
-int buffer_register_event(struct buffer *b, const char *name, uint64_t kind) {
-    struct event_record *rec = source_control_get_event(b->control, name);
+int vms_shm_buffer_register_event(vms_shm_buffer *b, const char *name,
+                                  uint64_t kind) {
+    assert(kind > vms_event_get_last_special_kind() &&
+           "Invalid event kind, it overlaps special kinds");
+
+    vms_shm_buffer_set_flags(b, EVENTS_REGISTERED);
+
+    struct vms_event_record *rec =
+        vms_source_control_get_event(b->control, name);
     if (rec == NULL) {
         return -1;
     }
@@ -601,14 +642,16 @@ int buffer_register_event(struct buffer *b, const char *name, uint64_t kind) {
     return 0;
 }
 
-int buffer_register_events(struct buffer *b, size_t ev_nums, ...) {
+int vms_shm_buffer_register_events(vms_shm_buffer *b, size_t ev_nums, ...) {
     va_list ap;
     va_start(ap, ev_nums);
 
     for (size_t i = 0; i < ev_nums; ++i) {
         const char *name = va_arg(ap, const char *);
-        shm_kind kind = va_arg(ap, shm_kind);
-        if (buffer_register_event(b, name, kind) < 0) {
+        vms_kind kind = va_arg(ap, vms_kind);
+        assert(kind > vms_event_get_last_special_kind() &&
+               "Invalid event kind, it overlaps special kinds");
+        if (vms_shm_buffer_register_event(b, name, kind) < 0) {
             va_end(ap);
             return -1;
         }
@@ -619,12 +662,14 @@ int buffer_register_events(struct buffer *b, size_t ev_nums, ...) {
     return 0;
 }
 
-int buffer_register_all_events(struct buffer *b) {
-    struct event_record *recs = b->control->events;
-    const size_t ev_nums = source_control_get_records_num(b->control);
+int vms_shm_buffer_register_all_events(vms_shm_buffer *b) {
+    struct vms_event_record *recs = b->control->events;
+    const size_t ev_nums = vms_source_control_get_records_num(b->control);
+
+    vms_shm_buffer_set_flags(b, EVENTS_REGISTERED);
 
     for (size_t i = 0; i < ev_nums; ++i) {
-        recs[i].kind = 1 + i + shm_get_last_special_kind();
+        recs[i].kind = 1 + i + vms_event_get_last_special_kind();
     }
 
     return 0;

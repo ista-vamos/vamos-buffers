@@ -1,101 +1,124 @@
-#ifndef SHAMON_SHM_BUFFER_H
-#define SHAMON_SHM_BUFFER_H
+#ifndef VAMOS_SHM_BUFFER_H
+#define VAMOS_SHM_BUFFER_H
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <sys/file.h>
 
-struct source_control;
-struct event_record;
-struct buffer;
+struct vms_source_control;
+struct vms_event_record;
+typedef struct _vms_shm_buffer vms_shm_buffer;
 
-struct buffer *create_shared_buffer(const char *key, size_t capacity,
-                                    const struct source_control *control);
-struct buffer *create_shared_buffer_adv(const char *key, mode_t mode,
-                                        size_t elem_size, size_t capacity,
-                                        const struct source_control *control);
-struct buffer *create_shared_sub_buffer(struct buffer *buffer, size_t capacity,
-                                        const struct source_control *control);
-size_t buffer_get_sub_buffers_no(struct buffer *buffer);
+/* ---------------------------------------------------------------------- */
+/* WRITER API                                                             */
+/* ---------------------------------------------------------------------- */
+vms_shm_buffer *vms_shm_buffer_create(const char *key, size_t capacity,
+                                      const struct vms_source_control *control);
+vms_shm_buffer *vms_shm_buffer_create_adv(
+    const char *key, mode_t mode, size_t elem_size, size_t capacity,
+    const struct vms_source_control *control);
+vms_shm_buffer *vms_shm_buffer_create_sub_buffer(
+    vms_shm_buffer *buffer, size_t capacity,
+    const struct vms_source_control *control);
+size_t vms_shm_buffer_get_sub_buffers_no(vms_shm_buffer *buffer);
 
-struct buffer *try_get_shared_buffer(const char *key, size_t retry);
-struct buffer *get_shared_buffer(const char *key);
-struct event_record *buffer_get_avail_events(struct buffer *, size_t *);
+void vms_shm_buffer_destroy(vms_shm_buffer *);
+void vms_shm_buffer_destroy_sub_buffer(vms_shm_buffer *);
 
-int buffer_get_key_path(struct buffer *, char keypath[], size_t keypathsize);
-int buffer_get_ctrl_key_path(struct buffer *, char keypath[],
-                             size_t keypathsize);
-const char *buffer_get_key(struct buffer *);
-char *get_sub_buffer_key(const char *key, size_t idx);
+bool vms_shm_buffer_push(vms_shm_buffer *buff, const void *elem, size_t size);
+void *vms_shm_buffer_start_push(vms_shm_buffer *buff);
 
-void release_shared_buffer(struct buffer *);
-void destroy_shared_buffer(struct buffer *);
-void destroy_shared_sub_buffer(struct buffer *);
-void release_shared_sub_buffer(struct buffer *);
-
-bool buffer_is_ready(struct buffer *);
-bool buffer_monitor_attached(struct buffer *);
-void buffer_set_attached(struct buffer *, bool);
-void buffer_set_destroyed(struct buffer *buff);
-
-bool buffer_pop(struct buffer *buff, void *dst);
-bool buffer_push(struct buffer *buff, const void *elem, size_t size);
-void *buffer_get_str(struct buffer *buff, uint64_t elem);
-
-void *buffer_read_pointer(struct buffer *buff, size_t *size);
-bool buffer_drop_k(struct buffer *buff, size_t size);
-size_t buffer_consume(struct buffer *buff, size_t k);
-
-size_t buffer_size(struct buffer *buff);
-size_t buffer_capacity(struct buffer *buff);
-size_t buffer_elem_size(struct buffer *buff);
-
-void *buffer_start_push(struct buffer *buff);
-
-void *buffer_partial_push(struct buffer *buff, void *prev_push,
-                          const void *elem, size_t size);
+void *vms_shm_buffer_partial_push(vms_shm_buffer *buff, void *prev_push,
+                                  const void *elem, size_t size);
 /* evid may be ~(0LL), but then there's no garbage collection */
-void *buffer_partial_push_str(struct buffer *buff, void *prev_push,
-                              uint64_t evid, const char *str);
-void *buffer_partial_push_str_n(struct buffer *buff, void *prev_push,
-                                uint64_t evid, const char *str, size_t len);
-void buffer_finish_push(struct buffer *buff);
+void *vms_shm_buffer_partial_push_str(vms_shm_buffer *buff, void *prev_push,
+                                      uint64_t evid, const char *str);
+void *vms_shm_buffer_partial_push_str_n(vms_shm_buffer *buff, void *prev_push,
+                                        uint64_t evid, const char *str,
+                                        size_t len);
+void vms_shm_buffer_finish_push(vms_shm_buffer *buff);
+
+/* ---------------------------------------------------------------------- */
+/* READER API                                                             */
+/* ---------------------------------------------------------------------- */
+vms_shm_buffer *vms_shm_buffer_try_connect(const char *key, size_t retry);
+vms_shm_buffer *vms_shm_buffer_connect(const char *key);
+struct vms_event_record *vms_shm_buffer_get_avail_events(vms_shm_buffer *,
+                                                         size_t *);
+
+void vms_shm_buffer_release(vms_shm_buffer *);
+void vms_shm_buffer_release_sub_buffer(vms_shm_buffer *);
+
+bool vms_shm_buffer_pop(vms_shm_buffer *buff, void *dst);
+void *vms_shm_buffer_read_str(vms_shm_buffer *buff, uint64_t elem);
+void *vms_shm_buffer_read_pointer(vms_shm_buffer *buff, size_t *size);
+bool vms_shm_buffer_drop_k(vms_shm_buffer *buff, size_t size);
+size_t vms_shm_buffer_consume(vms_shm_buffer *buff, size_t k);
+
+/* The reader is supposed to let the writer know what events it wants
+ * to receive. This is done via this set of "register_event" functions.
+ * These functions must be called before `set_reader_is_ready`.
+ */
+int vms_shm_buffer_register_event(vms_shm_buffer *b, const char *name,
+                                  uint64_t kind);
+int vms_shm_buffer_register_events(vms_shm_buffer *b, size_t ev_nums, ...);
+int vms_shm_buffer_register_all_events(vms_shm_buffer *b);
+
+/* ---------------------------------------------------------------------- */
+/* GENERIC AND AUXILIARY API                                              */
+/* ---------------------------------------------------------------------- */
+
+size_t vms_shm_buffer_size(vms_shm_buffer *buff);
+size_t vms_shm_buffer_capacity(vms_shm_buffer *buff);
+size_t vms_shm_buffer_elem_size(vms_shm_buffer *buff);
+
+/* default flags */
+enum _vms_shm_buffer_flag {
+    READER_IS_READY = 1UL << 0,
+    READER_FINISHED = 1UL << 1,
+    EVENTS_REGISTERED = 1UL << 2,
+    LAST_FLAG = READER_FINISHED
+};
+
+uint64_t vms_shm_buffer_get_flags(vms_shm_buffer *);
+void vms_shm_buffer_set_flags(vms_shm_buffer *, uint64_t);
+void vms_shm_buffer_unset_flags(vms_shm_buffer *, uint64_t);
+
+/**
+ * @brief vms_shm_buffer_reader_is_ready checks if the reader has called
+ * vms_shm_buffer_set_reader_is_ready();
+ * vms_shm_buffer_reader_is_ready and vms_shm_buffer_reader_is_ready _may_ be
+ * used to synchronize the writer and the reader before transmiting data.
+ */
+bool vms_shm_buffer_reader_is_ready(vms_shm_buffer *);
+void vms_shm_buffer_set_reader_is_ready(vms_shm_buffer *);
+
+/* buffer is ready to transmit data (it can be written to if there is space) */
+bool vms_shm_buffer_is_ready(vms_shm_buffer *);
+/* buffer was not destroyed on the writer's side */
+bool vms_shm_buffer_is_destroyed(vms_shm_buffer *);
+
+void vms_shm_buffer_set_destroyed(vms_shm_buffer *buff);
+
+const char *vms_shm_buffer_key(vms_shm_buffer *);
+
+int vms_shm_buffer_compute_key_path(vms_shm_buffer *, char keypath[],
+                                    size_t keypathsize);
+int vms_shm_buffer_compute_ctrl_key_path(vms_shm_buffer *, char keypath[],
+                                         size_t keypathsize);
+char *vms_shm_buffer_compute_sub_buffer_key(const char *key, size_t idx);
+
+/* ---------------------------------------------------------------------- */
+/* AUXILIARY BUFFERS                                                      */
+/* ---------------------------------------------------------------------- */
 
 struct aux_buff_ptr {
     uint32_t buffer_id;
     uint32_t offset;
 } __attribute__((packed, aligned(64)));
 
-void buffer_set_last_processed_id(struct buffer *buff, uint64_t id);
-void buffer_notify_dropped(struct buffer *buffer, uint64_t begin_id,
-                           uint64_t end_id);
-
-int buffer_register_event(struct buffer *b, const char *name, uint64_t kind);
-int buffer_register_events(struct buffer *b, size_t ev_nums, ...);
-int buffer_register_all_events(struct buffer *b);
-
-/**
- * dbg buffers
- */
-
-typedef struct _vms_shm_dbg_buffer vms_shm_dbg_buffer;
-vms_shm_dbg_buffer *vms_shm_dbg_buffer_create(const char *key, size_t capacity,
-                                              uint16_t key_size,
-                                              uint16_t element_size);
-vms_shm_dbg_buffer *vms_shm_dbg_buffer_get(const char *key);
-void vms_shm_dbg_buffer_release(vms_shm_dbg_buffer *);
-void vms_shm_dbg_buffer_destroy(vms_shm_dbg_buffer *);
-
-size_t vms_shm_dbg_buffer_size(vms_shm_dbg_buffer *b);
-size_t vms_shm_dbg_buffer_capacity(vms_shm_dbg_buffer *b);
-size_t vms_shm_dbg_buffer_key_size(vms_shm_dbg_buffer *b);
-size_t vms_shm_dbg_buffer_value_size(vms_shm_dbg_buffer *b);
-size_t vms_shm_dbg_buffer_rec_size(vms_shm_dbg_buffer *b);
-unsigned char *vms_shm_dbg_buffer_data(vms_shm_dbg_buffer *b);
-
-void vms_shm_dbg_buffer_inc_size(vms_shm_dbg_buffer *b, size_t size);
-size_t vms_shm_dbg_buffer_version(vms_shm_dbg_buffer *b);
-void vms_shm_dbg_buffer_bump_version(vms_shm_dbg_buffer *b);
-
-#endif /* SHAMON_SHM_BUFFER_H */
+void vms_shm_buffer_set_last_processed_id(vms_shm_buffer *buff, uint64_t id);
+void vms_shm_buffer_notify_dropped(vms_shm_buffer *buffer, uint64_t begin_id,
+                                   uint64_t end_id);
+#endif /* VAMOS_SHM_BUFFER_H */

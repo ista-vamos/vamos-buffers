@@ -1,5 +1,5 @@
-#ifndef SHAMON_SIGNATURES_H_
-#define SHAMON_SIGNATURES_H_
+#ifndef VAMOS_SIGNATURES_H_
+#define VAMOS_SIGNATURES_H_
 
 #include <stddef.h>
 #include <stdint.h>

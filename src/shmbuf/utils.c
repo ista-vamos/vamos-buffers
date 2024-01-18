@@ -3,7 +3,7 @@
 
 #include "buffer-private.h"
 
-size_t compute_shm_size(size_t elem_size, size_t capacity) {
+size_t compute_vms_size(size_t elem_size, size_t capacity) {
     /* compute how much memory we need */
     size_t size = (elem_size * capacity) + sizeof(struct shmbuffer);
     /* round it up to page size.
@@ -24,7 +24,7 @@ size_t compute_shm_size(size_t elem_size, size_t capacity) {
     return size;
 }
 
-size_t compute_shm_buffer_size(size_t nondata_size, size_t elem_size,
+size_t compute_vms_buffer_size(size_t nondata_size, size_t elem_size,
                                size_t capacity) {
     /* compute how much memory we need */
     size_t size = (elem_size * capacity) + nondata_size;

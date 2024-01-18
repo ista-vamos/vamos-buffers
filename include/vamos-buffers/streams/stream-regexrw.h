@@ -2,19 +2,19 @@
 #include <unistd.h>
 
 #include "vamos-buffers/core/event.h"
-#include "vamos-buffers/shmbuf/buffer.h"
 #include "vamos-buffers/core/stream.h"
+#include "vamos-buffers/shmbuf/buffer.h"
 
-typedef struct _shm_event_regexrw {
-    shm_event base;
+typedef struct _vms_event_regexrw {
+    vms_event base;
     /* the event arguments */
     unsigned char args[];
-} shm_event_regexrw;
+} vms_event_regexrw;
 
-typedef struct _shm_stream_sregexrw {
-    shm_stream base;
-    struct buffer *shmbuffer;
-} shm_stream_sregexrw;
+typedef struct _vms_stream_sregexrw {
+    vms_stream base;
+    vms_shm_buffer *shmbuffer;
+} vms_stream_sregexrw;
 
-shm_stream *shm_create_sregexrw_stream(const char *key, const char *name);
-void shm_destroy_sregexrw_stream(shm_stream_sregexrw *ss);
+vms_stream *vms_create_sregexrw_stream(const char *key, const char *name);
+void vms_destroy_sregexrw_stream(vms_stream_sregexrw *ss);

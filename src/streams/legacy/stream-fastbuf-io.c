@@ -7,7 +7,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "fastbuf/shm_monitor.h"
+#include "fastbuf/vms_monitor.h"
 
 // FIXME: do these local to a stream
 static int monitoring_active = 0;
@@ -82,11 +82,11 @@ int register_monitored_thread(monitor_buffer buffer) {
     thrd_create(&thrd, &monitoring_thread, buffer);
 }
 
-static bool io_has_event(shm_stream *stream) {
-    // shm_stream_io *fs = (shm_stream_io *) stream;
+static bool io_has_event(vms_stream *stream) {
+    // vms_stream_io *fs = (vms_stream_io *) stream;
 
     //// dispatch pending events if available
-    // if (shm_queue_size(fs->pending_events) > 0)
+    // if (vms_queue_size(fs->pending_events) > 0)
     //     return true;
 
     //// check for new events
@@ -98,43 +98,43 @@ static bool io_has_event(shm_stream *stream) {
     //     size_t num = read_events(fs);
     //     // num can be 0 if all io get closed (which
     //     // is what poll detects)
-    //     assert(num == 0 || shm_queue_size(fs->pending_events));
+    //     assert(num == 0 || vms_queue_size(fs->pending_events));
     // }
 
-    // return shm_queue_size(fs->pending_events);
+    // return vms_queue_size(fs->pending_events);
     return true;
 }
 
-static shm_event_io *io_get_next_event(shm_stream *stream) {
-    // shm_stream_io *ss = (shm_stream_io *) stream;
-    // static shm_event_fd_in ev;
-    // if (shm_queue_pop(ss->pending_events, &ev))
+static vms_event_io *io_get_next_event(vms_stream *stream) {
+    // vms_stream_io *ss = (vms_stream_io *) stream;
+    // static vms_event_fd_in ev;
+    // if (vms_queue_pop(ss->pending_events, &ev))
     //     return &ev;
 
     return NULL;
 }
 
-shm_stream *shm_create_io_stream(pid_t pid) {
+vms_stream *vms_create_io_stream(pid_t pid) {
     char *name = malloc(21);  // FIXME: we leak this
     assert(name);
     snprintf(name, 21, "io-stream(%d)", pid);
 
-    shm_stream_io *ss = malloc(sizeof *ss);
+    vms_stream_io *ss = malloc(sizeof *ss);
     assert(ss);
-    shm_stream_init((shm_stream *)ss, sizeof(shm_event_io),
-                    (shm_stream_has_event_fn)io_has_event,
-                    (shm_stream_get_next_event_fn)io_get_next_event, name);
+    vms_stream_init((vms_stream *)ss, sizeof(vms_event_io),
+                    (vms_stream_has_event_fn)io_has_event,
+                    (vms_stream_get_next_event_fn)io_get_next_event, name);
     ss->ev_kind_in =
-        shm_mk_event_kind("io-in", sizeof(shm_event_io), NULL, NULL);
+        vms_mk_event_kind("io-in", sizeof(vms_event_io), NULL, NULL);
     ss->ev_kind_out =
-        shm_mk_event_kind("io-out", sizeof(shm_event_io), NULL, NULL);
+        vms_mk_event_kind("io-out", sizeof(vms_event_io), NULL, NULL);
 
     monitoring_active = 1;
     monitored_process proc = attach_to_process(pid, &register_monitored_thread);
 
     // wait_for_process(proc);
 
-    return (shm_stream *)ss;
+    return (vms_stream *)ss;
 }
 
-void shm_destroy_io_stream(shm_stream_io *s) { monitoring_active = 0; }
+void vms_destroy_io_stream(vms_stream_io *s) { monitoring_active = 0; }
