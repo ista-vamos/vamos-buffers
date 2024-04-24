@@ -1,12 +1,12 @@
 #include "vamos-buffers/core/stream.h"
-#include "vamos-buffers/core/event.h"
 
 #include <assert.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
+#include "vamos-buffers/core/event.h"
 #include "vamos-buffers/core/utils.h"
 #include "vamos-buffers/core/vector-macro.h"
 #include "vamos-buffers/shmbuf/buffer.h"
