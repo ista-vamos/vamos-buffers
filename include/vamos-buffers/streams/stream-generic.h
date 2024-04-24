@@ -23,7 +23,8 @@ typedef struct _vms_stream_generic {
     vms_shm_buffer *shmbuffer;
 } vms_stream_generic;
 
-vms_stream *vms_create_generic_stream(const char *key, const char *name,
-                                      const vms_stream_hole_handling *hole_handling);
+vms_stream *vms_create_generic_stream(
+    const char *key, const char *name,
+    const vms_stream_hole_handling *hole_handling);
 
 #endif /* SHMN_STREAM_GENERIC_H_ */
