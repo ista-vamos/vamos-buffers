@@ -1,8 +1,10 @@
 #include "vamos-buffers/core/stream.h"
+#include "vamos-buffers/core/event.h"
 
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "vamos-buffers/core/utils.h"
