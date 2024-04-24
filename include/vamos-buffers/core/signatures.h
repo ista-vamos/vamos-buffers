@@ -6,7 +6,7 @@
 
 /*
  * c = (unsigned) char
- * s = (unsigned) short
+ * h = (unsigned) short
  * i = (unsigned) int
  * l = (unsigned) long
  * f = float
